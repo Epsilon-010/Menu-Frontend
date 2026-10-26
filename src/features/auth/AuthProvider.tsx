@@ -30,8 +30,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signOut = useCallback(async () => {
-    await logout()
-    setState({ status: 'anonymous' })
+    try {
+      await logout()
+    } catch {
+      // The local session ends anyway; the server-side session expires on its own.
+    } finally {
+      setState({ status: 'anonymous' })
+    }
   }, [])
 
   const value = useMemo<AuthContextValue>(() => ({ state, signIn, signOut }), [state, signIn, signOut])

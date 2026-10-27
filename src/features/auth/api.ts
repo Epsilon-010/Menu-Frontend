@@ -1,4 +1,4 @@
-import { apiFetch, publicFetch, setAccessToken, type Role, type TokenResponse } from '../../shared/api/http.ts'
+import { apiFetch, publicFetch, type Role, type SessionInfo } from '../../shared/api/http.ts'
 
 export interface Account {
   user: { id: string; email: string; full_name: string; role: Role }
@@ -16,7 +16,8 @@ export class LoginError extends Error {
   }
 }
 
-export async function login(email: string, password: string): Promise<TokenResponse> {
+/** Signs in; the API sets the session cookies, the body only says which role signed in. */
+export async function login(email: string, password: string): Promise<SessionInfo> {
   let response: Response
   try {
     response = await publicFetch('/auth/login', {
@@ -31,9 +32,7 @@ export async function login(email: string, password: string): Promise<TokenRespo
   if (response.status === 429) throw new LoginError('too-many-attempts')
   if (!response.ok) throw new LoginError('unavailable')
 
-  const tokens = (await response.json()) as TokenResponse
-  setAccessToken(tokens.access_token)
-  return tokens
+  return (await response.json()) as SessionInfo
 }
 
 export async function fetchAccount(): Promise<Account | null> {
@@ -42,12 +41,9 @@ export async function fetchAccount(): Promise<Account | null> {
   return (await response.json()) as Account
 }
 
+/** Revokes the session; the API clears both cookies. */
 export async function logout(): Promise<void> {
-  try {
-    await publicFetch('/auth/logout', { method: 'POST' })
-  } finally {
-    setAccessToken(null)
-  }
+  await publicFetch('/auth/logout', { method: 'POST' })
 }
 
 export function homePathFor(role: Role): string {

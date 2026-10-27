@@ -47,6 +47,8 @@ interface UploadSignature {
   signature: string
   public_id: string
   allowed_formats: string[]
+  /** Signed too: the storage refuses to replace an already uploaded file. */
+  overwrite: boolean
   max_bytes: number
 }
 
@@ -142,6 +144,7 @@ export async function uploadItemImage(itemId: string, file: File): Promise<Catal
   form.append('signature', signature.signature)
   form.append('public_id', signature.public_id)
   form.append('allowed_formats', signature.allowed_formats.join(','))
+  form.append('overwrite', String(signature.overwrite))
   let upload: Response
   try {
     // Cross-origin and without cookies: the signature is the only credential.

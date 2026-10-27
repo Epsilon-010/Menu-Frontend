@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { onSessionEnded, refreshSession, type Role } from '../../shared/api/http.ts'
+import { onSessionEnded, type Role } from '../../shared/api/http.ts'
 import { fetchAccount, login, logout, LoginError } from './api.ts'
 import { AuthContext, type AuthContextValue, type AuthState } from './authContext.ts'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: 'loading' })
 
-  // On page load the access token is gone (memory only): recover the session from the cookie.
+  // On page load ask who we are: the cookies carry the session, and an expired access
+  // cookie is renewed through the refresh cookie by apiFetch.
   useEffect(() => {
     let active = true
-    refreshSession()
-      .then((tokens) => (tokens ? fetchAccount() : null))
+    fetchAccount()
+      .catch(() => null)
       .then((account) => {
         if (active) setState(account ? { status: 'authenticated', account } : { status: 'anonymous' })
       })
@@ -21,12 +22,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => onSessionEnded(() => setState({ status: 'anonymous' })), [])
 
-  const signIn = useCallback(async (email: string, password: string): Promise<Role> => {
-    const tokens = await login(email, password)
+  const signIn = useCallback(async (username: string, password: string): Promise<Role> => {
+    const session = await login(username, password)
     const account = await fetchAccount()
     if (!account) throw new LoginError('unavailable')
     setState({ status: 'authenticated', account })
-    return tokens.role
+    return session.role
   }, [])
 
   const signOut = useCallback(async () => {

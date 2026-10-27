@@ -10,7 +10,7 @@ export type AuthState =
 export interface AuthContextValue {
   state: AuthState
   /** Signs in and returns the role so the caller can redirect. Throws LoginError. */
-  signIn: (email: string, password: string) => Promise<Role>
+  signIn: (username: string, password: string) => Promise<Role>
   signOut: () => Promise<void>
 }
 

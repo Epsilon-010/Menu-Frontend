@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuth } from '../../features/auth/useAuth.ts'
+import { CatalogPanel } from '../../features/catalog/CatalogPanel.tsx'
 import { StaffPanel } from '../../features/staff/StaffPanel.tsx'
 import { TablesPanel } from '../../features/tables/TablesPanel.tsx'
 
@@ -38,6 +39,7 @@ export function AdminPage() {
         </div>
       </header>
       <main className="mx-auto max-w-4xl space-y-12 p-6">
+        <CatalogPanel />
         <TablesPanel />
         <StaffPanel />
       </main>

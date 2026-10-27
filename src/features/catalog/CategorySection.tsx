@@ -25,7 +25,7 @@ export interface CategoryActions {
   move: (delta: -1 | 1) => Promise<string | null>
   remove: () => Promise<string | null>
   addItem: (values: ItemFormValues) => Promise<string | null>
-  itemActions: (itemId: string, index: number) => ItemActions
+  itemActions: (itemId: string) => ItemActions
 }
 
 interface CategorySectionProps {
@@ -151,7 +151,7 @@ export function CategorySection({ category, categories, isFirst, isLast, actions
               categories={categories}
               isFirst={index === 0}
               isLast={index === items.length - 1}
-              actions={actions.itemActions(item.id, index)}
+              actions={actions.itemActions(item.id)}
             />
           ))}
         </ul>

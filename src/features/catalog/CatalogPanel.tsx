@@ -1,5 +1,5 @@
 import { BowlFoodIcon, PlusIcon } from '@phosphor-icons/react'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Button } from '../../shared/ui/Button.tsx'
 import { TextInput } from '../../shared/ui/Field.tsx'
 import { EmptyState, ErrorText, ListSkeleton, LoadError } from '../../shared/ui/Feedback.tsx'
@@ -21,7 +21,8 @@ import {
 } from './api.ts'
 import { CategorySection, type CategoryActions } from './CategorySection.tsx'
 import type { ItemActions } from './ItemRow.tsx'
-import { moved } from './order.ts'
+import { movedById } from './order.ts'
+import { createLatestOnly, createSerialQueue } from './sync.ts'
 
 type ListState =
   | { status: 'loading' }
@@ -38,40 +39,54 @@ export function CatalogPanel() {
   const [name, setName] = useState('')
   const [saving, setSaving] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
+  // Stable for the panel's life (lazy initial state, not recreated on render).
+  const [enqueue] = useState(createSerialQueue)
+  const [latest] = useState(createLatestOnly)
+  // The catalog as last loaded; queued changes read it when they run, not when they were clicked.
+  const catalog = useRef<CategoryWithItems[]>([])
 
-  async function load() {
-    try {
-      setList({ status: 'loaded', categories: await listCatalog() })
-    } catch (error) {
-      setList({ status: 'error', message: messageOf(error) })
-    }
-  }
+  /** Loads the catalog; only the newest load is applied. Returns the error message, if any. */
+  const reload = useCallback(
+    async (showErrors: boolean): Promise<string | null> => {
+      let failure: string | null = null
+      await latest.run(
+        listCatalog,
+        (categories) => {
+          catalog.current = categories
+          setList({ status: 'loaded', categories })
+        },
+        (error) => {
+          failure = messageOf(error)
+          if (showErrors) setList({ status: 'error', message: failure })
+        },
+      )
+      return failure
+    },
+    [latest],
+  )
 
   useEffect(() => {
-    let active = true
-    listCatalog()
-      .then((categories) => {
-        if (active) setList({ status: 'loaded', categories })
-      })
-      .catch((error: unknown) => {
-        if (active) setList({ status: 'error', message: messageOf(error) })
-      })
-    return () => {
-      active = false
-    }
-  }, [])
+    void reload(true)
+    return () => latest.cancel()
+  }, [reload, latest])
 
-  /** Runs a change and reloads the catalog, so positions always match the server. */
-  async function change(action: () => Promise<unknown>): Promise<string | null> {
-    try {
-      await action()
-      await load()
-      return null
-    } catch (error) {
-      // Another tab may have changed the catalog: show the fresh state with the error.
-      await load()
-      return messageOf(error)
-    }
+  /**
+   * Runs a change after any earlier one finished, then reloads, so positions always match the server.
+   * A failed reload keeps what is on screen (and any open form) instead of replacing the panel.
+   */
+  function change(action: (current: CategoryWithItems[]) => Promise<unknown>): Promise<string | null> {
+    return enqueue(async () => {
+      let failure: string | null = null
+      try {
+        await action(catalog.current)
+      } catch (error) {
+        failure = messageOf(error)
+      }
+      // Reload even after a failure: another tab may have changed the catalog.
+      const reloadFailure = await reload(false)
+      if (failure !== null) return failure
+      return reloadFailure === null ? null : `Saved, but the menu could not refresh. ${reloadFailure}`
+    })
   }
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
@@ -123,7 +138,7 @@ export function CatalogPanel() {
             message={list.message}
             onRetry={() => {
               setList({ status: 'loading' })
-              void load()
+              void reload(true)
             }}
           />
         )}
@@ -132,26 +147,30 @@ export function CatalogPanel() {
   }
 
   const { categories } = list
-  const categoryIds = categories.map((category) => category.id)
 
-  function itemActions(category: CategoryWithItems): (itemId: string, index: number) => ItemActions {
-    const itemIds = category.items.map((item) => item.id)
-    return (itemId, index) => ({
+  // Moves are computed by id from the catalog current when they run, never from this render.
+  function itemActions(categoryId: string): (itemId: string) => ItemActions {
+    return (itemId) => ({
       update: (changes) => change(() => updateItem(itemId, changes)),
-      move: (delta) => change(() => reorderItems(category.id, moved(itemIds, index, delta))),
+      move: (delta) =>
+        change((current) => {
+          const items = current.find((category) => category.id === categoryId)?.items ?? []
+          return reorderItems(categoryId, movedById(items.map((item) => item.id), itemId, delta))
+        }),
       uploadImage: (file) => change(() => uploadItemImage(itemId, file)),
       removeImage: () => change(() => removeItemImage(itemId)),
       remove: () => change(() => deleteItem(itemId)),
     })
   }
 
-  function categoryActions(category: CategoryWithItems, index: number): CategoryActions {
+  function categoryActions(category: CategoryWithItems): CategoryActions {
     return {
       update: (changes) => change(() => updateCategory(category.id, changes)),
-      move: (delta) => change(() => reorderCategories(moved(categoryIds, index, delta))),
+      move: (delta) =>
+        change((current) => reorderCategories(movedById(current.map((entry) => entry.id), category.id, delta))),
       remove: () => change(() => deleteCategory(category.id)),
       addItem: (values) => change(() => createItem({ ...values, category_id: category.id })),
-      itemActions: itemActions(category),
+      itemActions: itemActions(category.id),
     }
   }
 
@@ -173,7 +192,7 @@ export function CatalogPanel() {
               categories={categories}
               isFirst={index === 0}
               isLast={index === categories.length - 1}
-              actions={categoryActions(category, index)}
+              actions={categoryActions(category)}
             />
           ))}
         </div>

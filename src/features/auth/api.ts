@@ -1,9 +1,15 @@
 import { apiFetch, publicFetch, type Role, type SessionInfo } from '../../shared/api/http.ts'
 
+/** Staff accounts carry `user`; table devices carry `table`. The other one is null. */
 export interface Account {
   /** Admins sign in with an email, waiters and cooks with a username. */
-  user: { id: string; email: string | null; username: string | null; full_name: string; role: Role }
+  user: { id: string; email: string | null; username: string | null; full_name: string; role: Role } | null
+  table: { id: string; name: string } | null
   tenant: { id: string; name: string }
+}
+
+export function accountRole(account: Account): Role {
+  return account.user?.role ?? 'table'
 }
 
 export type LoginFailure = 'invalid-credentials' | 'too-many-attempts' | 'unavailable'
@@ -17,17 +23,14 @@ export class LoginError extends Error {
   }
 }
 
-/**
- * Signs in with the admin's email or a staff member's username. The API sets the session
- * cookies; the body only says which role signed in.
- */
-export async function login(username: string, password: string): Promise<SessionInfo> {
+/** The API sets the session cookies; the body only says which role signed in. */
+async function postLogin(path: string, body: Record<string, string>): Promise<SessionInfo> {
   let response: Response
   try {
-    response = await publicFetch('/auth/login', {
+    response = await publicFetch(path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify(body),
     })
   } catch {
     throw new LoginError('unavailable')
@@ -37,6 +40,16 @@ export async function login(username: string, password: string): Promise<Session
   if (!response.ok) throw new LoginError('unavailable')
 
   return (await response.json()) as SessionInfo
+}
+
+/** Signs in with the admin's email or a staff member's username. */
+export function login(username: string, password: string): Promise<SessionInfo> {
+  return postLogin('/auth/login', { username, password })
+}
+
+/** Signs a tablet in as its table with the table code and PIN the admin handed out. */
+export function tableLogin(code: string, pin: string): Promise<SessionInfo> {
+  return postLogin('/auth/table-login', { code, pin })
 }
 
 export async function fetchAccount(): Promise<Account | null> {

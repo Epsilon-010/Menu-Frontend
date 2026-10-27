@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { CatalogError, listCatalog, uploadItemImage } from './api.ts'
+import { attachItemImage, CatalogError, listCatalog, uploadImageFile } from './api.ts'
 
 function jsonResponse(status: number, body: unknown, contentType = 'application/json'): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': contentType } })
@@ -75,7 +75,7 @@ describe('catalog API errors', () => {
   })
 })
 
-describe('uploadItemImage', () => {
+describe('image upload', () => {
   const signature = {
     upload_url: 'https://upload.test/image/upload',
     api_key: 'key-123',
@@ -88,11 +88,15 @@ describe('uploadItemImage', () => {
   }
   const item = { id: 'i1', image: { public_id: signature.public_id } }
 
-  it('posts exactly the signed fields without cookies, then attaches the public id', async () => {
+  it('uploads exactly the signed fields without cookies and returns the public id to attach', async () => {
     const calls = stubFetch(jsonResponse(200, signature), jsonResponse(200, { public_id: 'x' }), jsonResponse(200, item))
     const file = new File(['img'], 'taco.png', { type: 'image/png' })
 
-    await uploadItemImage('i1', file)
+    // Uploading and attaching are separate steps: only the attach goes through the panel's change queue.
+    const publicId = await uploadImageFile(file)
+    expect(publicId).toBe(signature.public_id)
+    expect(calls).toHaveLength(2)
+    await attachItemImage('i1', publicId)
 
     const upload = calls[1]
     expect(upload.url).toBe(signature.upload_url)
@@ -112,9 +116,9 @@ describe('uploadItemImage', () => {
     const calls = stubFetch(jsonResponse(200, signature), jsonResponse(200, signature))
 
     const gif = new File(['img'], 'taco.gif', { type: 'image/gif' })
-    expect((await failureOf(uploadItemImage('i1', gif))).message).toBe('Use a jpg, png, webp image.')
+    expect((await failureOf(uploadImageFile(gif))).message).toBe('Use a jpg, png, webp image.')
     const big = new File([new Uint8Array(signature.max_bytes + 1)], 'big.jpg', { type: 'image/jpeg' })
-    expect((await failureOf(uploadItemImage('i1', big))).message).toBe('The image must be at most 5 MB.')
+    expect((await failureOf(uploadImageFile(big))).message).toBe('The image must be at most 5 MB.')
 
     expect(calls.map((call) => call.url)).toEqual(['/api/v1/catalog/images/signature', '/api/v1/catalog/images/signature'])
   })

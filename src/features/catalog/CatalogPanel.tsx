@@ -5,6 +5,7 @@ import { TextInput } from '../../shared/ui/Field.tsx'
 import { EmptyState, ErrorText, ListSkeleton, LoadError } from '../../shared/ui/Feedback.tsx'
 import { Card, SectionHeader } from '../../shared/ui/Section.tsx'
 import {
+  attachItemImage,
   CatalogError,
   createCategory,
   createItem,
@@ -16,7 +17,7 @@ import {
   reorderItems,
   updateCategory,
   updateItem,
-  uploadItemImage,
+  uploadImageFile,
   type CategoryWithItems,
 } from './api.ts'
 import { CategorySection, type CategoryActions } from './CategorySection.tsx'
@@ -157,7 +158,17 @@ export function CatalogPanel() {
           const items = current.find((category) => category.id === categoryId)?.items ?? []
           return reorderItems(categoryId, movedById(items.map((item) => item.id), itemId, delta))
         }),
-      uploadImage: (file) => change(() => uploadItemImage(itemId, file)),
+      // The upload to the storage runs outside the queue (it can take seconds and touches no
+      // catalog data); only attaching it is queued like every other change.
+      uploadImage: async (file) => {
+        let publicId: string
+        try {
+          publicId = await uploadImageFile(file)
+        } catch (error) {
+          return messageOf(error)
+        }
+        return change(() => attachItemImage(itemId, publicId))
+      },
       removeImage: () => change(() => removeItemImage(itemId)),
       remove: () => change(() => deleteItem(itemId)),
     })

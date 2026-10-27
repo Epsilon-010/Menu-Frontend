@@ -129,9 +129,11 @@ const FORMAT_BY_TYPE: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png
 
 /**
  * Uploads straight from the browser to the image storage with a one-time signature for a public id
- * chosen by the server, then attaches that public id to the item (the server re-checks format and size).
+ * chosen (and recorded) by the server, and returns that public id. It does not touch the catalog, so
+ * the panel runs it outside its change queue: a slow upload never blocks other edits. If the file is
+ * never attached, the server's background cleanup deletes it.
  */
-export async function uploadItemImage(itemId: string, file: File): Promise<CatalogItem> {
+export async function uploadImageFile(file: File): Promise<string> {
   const signature = (await (await send('/catalog/images/signature', { method: 'POST' })).json()) as UploadSignature
   const format = FORMAT_BY_TYPE[file.type]
   if (!format || !signature.allowed_formats.includes(format)) {
@@ -157,8 +159,12 @@ export async function uploadItemImage(itemId: string, file: File): Promise<Catal
     throw new CatalogError('Could not upload the image. Please try again.')
   }
   if (!upload.ok) throw new CatalogError('The image storage rejected the file. Please try another image.')
+  return signature.public_id
+}
 
-  return (await (await send(`/catalog/items/${itemId}/image`, json('PUT', { public_id: signature.public_id }))).json()) as CatalogItem
+/** Attaches an uploaded image to the item; the server re-checks format and size and discards the old one. */
+export async function attachItemImage(itemId: string, publicId: string): Promise<CatalogItem> {
+  return (await (await send(`/catalog/items/${itemId}/image`, json('PUT', { public_id: publicId }))).json()) as CatalogItem
 }
 
 export async function removeItemImage(itemId: string): Promise<CatalogItem> {

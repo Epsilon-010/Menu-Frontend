@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Button } from '../../shared/ui/Button.tsx'
 import { Field, TextArea, TextInput } from '../../shared/ui/Field.tsx'
 import { ErrorText } from '../../shared/ui/Feedback.tsx'
-import { formatPrice, parsePrice } from './price.ts'
+import { formatPrice, MAX_PRICE_CENTS, parsePrice } from './price.ts'
 
 export interface ItemFormValues {
   name: string
@@ -29,7 +29,7 @@ export function ItemForm({ initial, submitLabel, onSubmit, onCancel }: ItemFormP
     event.preventDefault()
     const priceCents = parsePrice(price)
     if (priceCents === null) {
-      setError('Enter the price as a number, like 25 or 25.50.')
+      setError(`Enter a price from 0 to ${formatPrice(MAX_PRICE_CENTS)}, like 25 or 25.50.`)
       return
     }
     setBusy(true)

@@ -25,6 +25,7 @@ export const router = createBrowserRouter([
       { index: true, element: <CatalogPanel /> },
       { path: 'tables', element: <TablesPanel /> },
       { path: 'staff', element: <StaffPanel /> },
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
   {

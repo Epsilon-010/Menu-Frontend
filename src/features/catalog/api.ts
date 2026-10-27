@@ -56,14 +56,18 @@ interface UploadSignature {
 export class CatalogError extends Error {}
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
-const OFFLINE = 'Could not reach the server. Please try again.'
+const OFFLINE = 'Could not reach the server. Check your connection and try again.'
+const SERVER_FAILED = 'The server could not complete that. Please try again in a moment.'
 
 async function errorFrom(response: Response): Promise<CatalogError> {
   const body = (await response.json().catch(() => null)) as { detail?: unknown } | null
   // Domain errors carry a readable message; schema errors carry a list of field problems.
-  if (typeof body?.detail === 'string') return new CatalogError(`${body.detail}.`)
+  if (typeof body?.detail === 'string') {
+    return new CatalogError(body.detail.endsWith('.') ? body.detail : `${body.detail}.`)
+  }
   if (response.status === 422) return new CatalogError('Please check the fields and try again.')
-  return new CatalogError(OFFLINE)
+  if (response.status === 401) return new CatalogError('Your session ended. Sign in again to keep editing.')
+  return new CatalogError(SERVER_FAILED)
 }
 
 async function send(path: string, init: RequestInit = {}): Promise<Response> {

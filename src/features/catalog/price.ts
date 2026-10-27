@@ -2,6 +2,7 @@
 
 const PRICE_PATTERN = /^(\d{1,6})(?:[.,](\d{1,2}))?$/
 
+/** Same cap as the API (catalog domain MAX_PRICE_CENTS): 100000.00. */
 export const MAX_PRICE_CENTS = 10_000_000
 
 /** Cents for a typed price, or null if it is not a valid amount. */

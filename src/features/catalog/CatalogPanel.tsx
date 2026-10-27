@@ -21,7 +21,7 @@ import {
 } from './api.ts'
 import { CategorySection, type CategoryActions } from './CategorySection.tsx'
 import type { ItemActions } from './ItemRow.tsx'
-import { moved } from './styles.ts'
+import { moved } from './order.ts'
 
 type ListState =
   | { status: 'loading' }

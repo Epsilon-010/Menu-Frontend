@@ -4,6 +4,8 @@ import { AdminPage } from '../pages/admin/AdminPage.tsx'
 import { HomePage } from '../pages/HomePage.tsx'
 import { LoginPage } from '../pages/LoginPage.tsx'
 import { NotFoundPage } from '../pages/NotFoundPage.tsx'
+import { KitchenPage } from '../pages/staff/KitchenPage.tsx'
+import { WaiterPage } from '../pages/staff/WaiterPage.tsx'
 
 export const router = createBrowserRouter([
   { path: '/', element: <HomePage /> },
@@ -13,6 +15,22 @@ export const router = createBrowserRouter([
     element: (
       <RequireRole roles={['admin']}>
         <AdminPage />
+      </RequireRole>
+    ),
+  },
+  {
+    path: '/waiter',
+    element: (
+      <RequireRole roles={['waiter']}>
+        <WaiterPage />
+      </RequireRole>
+    ),
+  },
+  {
+    path: '/kitchen',
+    element: (
+      <RequireRole roles={['kitchen']}>
+        <KitchenPage />
       </RequireRole>
     ),
   },

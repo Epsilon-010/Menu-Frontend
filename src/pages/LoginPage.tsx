@@ -4,7 +4,7 @@ import { homePathFor, LoginError, type LoginFailure } from '../features/auth/api
 import { useAuth } from '../features/auth/useAuth.ts'
 
 const ERROR_MESSAGES: Record<LoginFailure, string> = {
-  'invalid-credentials': 'Invalid email or password.',
+  'invalid-credentials': 'Invalid username or password.',
   'too-many-attempts': 'Too many attempts. Please try again in a few minutes.',
   unavailable: 'Could not reach the server. Please try again.',
 }
@@ -12,7 +12,7 @@ const ERROR_MESSAGES: Record<LoginFailure, string> = {
 export function LoginPage() {
   const { state, signIn } = useAuth()
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<LoginFailure | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -26,7 +26,7 @@ export function LoginPage() {
     setSubmitting(true)
     setError(null)
     try {
-      const role = await signIn(email, password)
+      const role = await signIn(username, password)
       navigate(homePathFor(role), { replace: true })
     } catch (caught) {
       setError(caught instanceof LoginError ? caught.reason : 'unavailable')
@@ -40,13 +40,15 @@ export function LoginPage() {
         <h1 className="text-2xl font-semibold text-slate-900">Sign in</h1>
 
         <label className="block space-y-1">
-          <span className="text-sm font-medium text-slate-700">Email</span>
+          <span className="text-sm font-medium text-slate-700">Username or email</span>
           <input
-            type="email"
+            type="text"
             autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
             required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-slate-500 focus:outline-none"
           />
         </label>

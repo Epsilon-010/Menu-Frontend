@@ -22,8 +22,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => onSessionEnded(() => setState({ status: 'anonymous' })), [])
 
-  const signIn = useCallback(async (email: string, password: string): Promise<Role> => {
-    const session = await login(email, password)
+  const signIn = useCallback(async (username: string, password: string): Promise<Role> => {
+    const session = await login(username, password)
     const account = await fetchAccount()
     if (!account) throw new LoginError('unavailable')
     setState({ status: 'authenticated', account })

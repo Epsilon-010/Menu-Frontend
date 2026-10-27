@@ -1,7 +1,8 @@
 import { apiFetch, publicFetch, type Role, type SessionInfo } from '../../shared/api/http.ts'
 
 export interface Account {
-  user: { id: string; email: string; full_name: string; role: Role }
+  /** Admins sign in with an email, waiters and cooks with a username. */
+  user: { id: string; email: string | null; username: string | null; full_name: string; role: Role }
   tenant: { id: string; name: string }
 }
 
@@ -16,14 +17,17 @@ export class LoginError extends Error {
   }
 }
 
-/** Signs in; the API sets the session cookies, the body only says which role signed in. */
-export async function login(email: string, password: string): Promise<SessionInfo> {
+/**
+ * Signs in with the admin's email or a staff member's username. The API sets the session
+ * cookies; the body only says which role signed in.
+ */
+export async function login(username: string, password: string): Promise<SessionInfo> {
   let response: Response
   try {
     response = await publicFetch('/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, password }),
     })
   } catch {
     throw new LoginError('unavailable')

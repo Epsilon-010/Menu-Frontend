@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuth } from '../../features/auth/useAuth.ts'
+import { StaffPanel } from '../../features/staff/StaffPanel.tsx'
 
 export function AdminPage() {
   const { state, signOut } = useAuth()
@@ -35,8 +36,8 @@ export function AdminPage() {
           </button>
         </div>
       </header>
-      <main className="p-6">
-        <p className="text-slate-600">Welcome, {user.full_name}.</p>
+      <main className="mx-auto max-w-4xl p-6">
+        <StaffPanel />
       </main>
     </div>
   )

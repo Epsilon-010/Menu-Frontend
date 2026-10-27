@@ -11,6 +11,8 @@ export interface AuthContextValue {
   state: AuthState
   /** Signs in and returns the role so the caller can redirect. Throws LoginError. */
   signIn: (username: string, password: string) => Promise<Role>
+  /** Signs a tablet in as its table. Throws LoginError. */
+  signInTable: (code: string, pin: string) => Promise<Role>
   signOut: () => Promise<void>
 }
 

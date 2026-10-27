@@ -15,7 +15,7 @@ export function StaffShell({ title, children }: StaffShellProps) {
   const [signingOut, setSigningOut] = useState(false)
   useSessionHeartbeat()
 
-  if (state.status !== 'authenticated') return null
+  if (state.status !== 'authenticated' || state.account.user === null) return null
   const { user, tenant } = state.account
 
   async function handleSignOut() {

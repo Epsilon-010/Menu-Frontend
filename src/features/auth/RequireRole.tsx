@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router'
 import type { Role } from '../../shared/api/http.ts'
-import { homePathFor } from './api.ts'
+import { accountRole, homePathFor } from './api.ts'
 import { useAuth } from './useAuth.ts'
 
 interface RequireRoleProps {
@@ -20,7 +20,7 @@ export function RequireRole({ roles, children }: RequireRoleProps) {
   if (state.status === 'anonymous') {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
   }
-  const role = state.account.user.role
+  const role = accountRole(state.account)
   if (!roles.includes(role)) {
     return <Navigate to={homePathFor(role)} replace />
   }

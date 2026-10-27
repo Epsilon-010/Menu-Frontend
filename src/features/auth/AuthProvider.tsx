@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { onSessionEnded, type Role } from '../../shared/api/http.ts'
-import { fetchAccount, login, logout, LoginError } from './api.ts'
+import { onSessionEnded, type Role, type SessionInfo } from '../../shared/api/http.ts'
+import { fetchAccount, login, logout, LoginError, tableLogin } from './api.ts'
 import { AuthContext, type AuthContextValue, type AuthState } from './authContext.ts'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -22,13 +22,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => onSessionEnded(() => setState({ status: 'anonymous' })), [])
 
-  const signIn = useCallback(async (username: string, password: string): Promise<Role> => {
-    const session = await login(username, password)
+  const startSession = useCallback(async (session: Promise<SessionInfo>): Promise<Role> => {
+    const { role } = await session
     const account = await fetchAccount()
     if (!account) throw new LoginError('unavailable')
     setState({ status: 'authenticated', account })
-    return session.role
+    return role
   }, [])
+
+  const signIn = useCallback(
+    (username: string, password: string) => startSession(login(username, password)),
+    [startSession],
+  )
+
+  const signInTable = useCallback((code: string, pin: string) => startSession(tableLogin(code, pin)), [startSession])
 
   const signOut = useCallback(async () => {
     try {
@@ -40,7 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const value = useMemo<AuthContextValue>(() => ({ state, signIn, signOut }), [state, signIn, signOut])
+  const value = useMemo<AuthContextValue>(
+    () => ({ state, signIn, signInTable, signOut }),
+    [state, signIn, signInTable, signOut],
+  )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

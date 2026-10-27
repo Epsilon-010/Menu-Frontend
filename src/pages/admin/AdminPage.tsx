@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuth } from '../../features/auth/useAuth.ts'
 import { StaffPanel } from '../../features/staff/StaffPanel.tsx'
+import { TablesPanel } from '../../features/tables/TablesPanel.tsx'
 
 export function AdminPage() {
   const { state, signOut } = useAuth()
   const navigate = useNavigate()
   const [signingOut, setSigningOut] = useState(false)
 
-  if (state.status !== 'authenticated') return null
+  if (state.status !== 'authenticated' || state.account.user === null) return null
   const { user, tenant } = state.account
 
   async function handleSignOut() {
@@ -36,7 +37,8 @@ export function AdminPage() {
           </button>
         </div>
       </header>
-      <main className="mx-auto max-w-4xl p-6">
+      <main className="mx-auto max-w-4xl space-y-12 p-6">
+        <TablesPanel />
         <StaffPanel />
       </main>
     </div>

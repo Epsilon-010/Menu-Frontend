@@ -1,9 +1,11 @@
+import { CookingPotIcon, KeyIcon, PencilSimpleIcon, PowerIcon, CallBellIcon } from '@phosphor-icons/react'
 import { useState, type FormEvent } from 'react'
+import { Button, IconButton } from '../../shared/ui/Button.tsx'
+import { MOTION } from '../../shared/ui/classes.ts'
+import { Select, TextInput } from '../../shared/ui/Field.tsx'
+import { Badge, ErrorText, SuccessText } from '../../shared/ui/Feedback.tsx'
 import type { StaffMember, StaffMemberChanges, StaffRole } from './api.ts'
 import { ROLE_LABELS } from './labels.ts'
-
-const INPUT = 'rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none'
-const BUTTON = 'rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-50'
 
 type Mode = { kind: 'view' } | { kind: 'edit'; full_name: string; role: StaffRole } | { kind: 'password'; password: string }
 
@@ -41,109 +43,106 @@ export function StaffMemberRow({ member, onUpdate, onResetPassword }: StaffMembe
   function handleSavePassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (mode.kind !== 'password') return
-    void run(() => onResetPassword(mode.password), 'Password updated. They were signed out everywhere.')
+    void run(() => onResetPassword(mode.password), `Password updated. ${member.full_name} was signed out everywhere.`)
   }
 
+  const RoleIcon = member.role === 'kitchen' ? CookingPotIcon : CallBellIcon
+
   return (
-    <li className="space-y-2 p-4">
+    <li className={`space-y-4 rounded-lg p-3 hover:bg-zinc-50 ${MOTION}`} aria-busy={busy}>
       {mode.kind === 'edit' ? (
         <form onSubmit={handleSaveEdit} className="flex flex-wrap items-center gap-2">
-          <input
+          <TextInput
             aria-label="Full name"
             required
             maxLength={120}
+            autoFocus
             value={mode.full_name}
             onChange={(event) => setMode({ ...mode, full_name: event.target.value })}
-            className={INPUT}
+            className="max-w-xs"
           />
-          <select
+          <Select
             aria-label="Role"
             value={mode.role}
             onChange={(event) => setMode({ ...mode, role: event.target.value as StaffRole })}
-            className={INPUT}
+            className="max-w-40"
           >
             {Object.entries(ROLE_LABELS).map(([role, label]) => (
               <option key={role} value={role}>
                 {label}
               </option>
             ))}
-          </select>
-          <button type="submit" disabled={busy} className={BUTTON}>
+          </Select>
+          <Button type="submit" variant="primary" disabled={busy}>
             Save
-          </button>
-          <button type="button" disabled={busy} onClick={() => setMode({ kind: 'view' })} className={BUTTON}>
+          </Button>
+          <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
             Cancel
-          </button>
+          </Button>
         </form>
       ) : (
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className={member.is_active ? 'font-medium text-slate-900' : 'font-medium text-slate-400 line-through'}>
-              {member.full_name}
-            </p>
-            <p className="text-sm text-slate-500">
-              @{member.username} · {ROLE_LABELS[member.role]}
-              {!member.is_active && ' · Inactive'}
-            </p>
+        <div className="flex flex-wrap items-center gap-4">
+          <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${member.is_active ? 'bg-zinc-100 text-zinc-700' : 'bg-zinc-50 text-zinc-300'}`}>
+            <RoleIcon size={20} aria-hidden />
+          </span>
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className={`font-medium ${member.is_active ? 'text-zinc-950' : 'text-zinc-400'}`}>{member.full_name}</p>
+              <Badge>{ROLE_LABELS[member.role]}</Badge>
+              {!member.is_active && <Badge tone="warning">Inactive</Badge>}
+            </div>
+            <p className="text-sm text-zinc-500">@{member.username}</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
+          <div className="flex items-center gap-1">
+            <IconButton
+              label="Edit name and role"
+              icon={<PencilSimpleIcon size={16} />}
               disabled={busy}
               onClick={() => setMode({ kind: 'edit', full_name: member.full_name, role: member.role })}
-              className={BUTTON}
-            >
-              Edit
-            </button>
-            <button
-              type="button"
+            />
+            <IconButton
+              label="Set a new password"
+              icon={<KeyIcon size={16} />}
               disabled={busy}
               onClick={() => setMode({ kind: 'password', password: '' })}
-              className={BUTTON}
-            >
-              Reset password
-            </button>
-            <button
-              type="button"
+            />
+            <IconButton
+              label={member.is_active ? 'Deactivate' : 'Activate'}
+              tone={member.is_active ? 'danger' : 'default'}
+              icon={<PowerIcon size={16} />}
               disabled={busy}
               onClick={() => void run(() => onUpdate({ is_active: !member.is_active }))}
-              className={BUTTON}
-            >
-              {member.is_active ? 'Deactivate' : 'Activate'}
-            </button>
+            />
           </div>
         </div>
       )}
 
       {mode.kind === 'password' && (
-        <form onSubmit={handleSavePassword} className="flex flex-wrap items-center gap-2">
-          <input
+        <form onSubmit={handleSavePassword} className="flex flex-wrap items-center gap-2 rounded-xl bg-zinc-50 p-4">
+          <TextInput
             type="password"
             aria-label="New password"
-            placeholder="New password"
+            placeholder="New password, at least 8 characters"
             required
             minLength={8}
             maxLength={128}
             autoComplete="new-password"
+            autoFocus
             value={mode.password}
             onChange={(event) => setMode({ ...mode, password: event.target.value })}
-            className={INPUT}
+            className="min-w-0 flex-1"
           />
-          <button type="submit" disabled={busy} className={BUTTON}>
+          <Button type="submit" variant="primary" disabled={busy}>
             Save password
-          </button>
-          <button type="button" disabled={busy} onClick={() => setMode({ kind: 'view' })} className={BUTTON}>
+          </Button>
+          <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
             Cancel
-          </button>
+          </Button>
         </form>
       )}
 
-      {error && (
-        <p role="alert" className="text-sm text-red-600">
-          {error}
-        </p>
-      )}
-      {notice && <p className="text-sm text-emerald-700">{notice}</p>}
+      {error && <ErrorText>{error}</ErrorText>}
+      {notice && <SuccessText>{notice}</SuccessText>}
     </li>
   )
 }

@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
+import { Button } from '../../shared/ui/Button.tsx'
+import { Field, TextArea, TextInput } from '../../shared/ui/Field.tsx'
+import { ErrorText } from '../../shared/ui/Feedback.tsx'
 import { formatPrice, parsePrice } from './price.ts'
-import { BUTTON, INPUT, PRIMARY_BUTTON } from './styles.ts'
 
 export interface ItemFormValues {
   name: string
@@ -27,7 +29,7 @@ export function ItemForm({ initial, submitLabel, onSubmit, onCancel }: ItemFormP
     event.preventDefault()
     const priceCents = parsePrice(price)
     if (priceCents === null) {
-      setError('Enter a price like 25 or 25.50.')
+      setError('Enter the price as a number, like 25 or 25.50.')
       return
     }
     setBusy(true)
@@ -37,47 +39,45 @@ export function ItemForm({ initial, submitLabel, onSubmit, onCancel }: ItemFormP
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-lg bg-slate-50 p-3">
-      <div className="grid gap-3 sm:grid-cols-[1fr_8rem]">
-        <label className="space-y-1">
-          <span className="text-sm text-slate-700">Name</span>
-          <input required maxLength={80} value={name} onChange={(e) => setName(e.target.value)} className={INPUT} />
-        </label>
-        <label className="space-y-1">
-          <span className="text-sm text-slate-700">Price</span>
-          <input
-            required
-            inputMode="decimal"
-            placeholder="25.00"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            className={INPUT}
-          />
-        </label>
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-zinc-50 p-4">
+      <div className="grid gap-4 sm:grid-cols-[1fr_10rem]">
+        <Field label="Name">
+          <TextInput required maxLength={80} placeholder="Taco al pastor" value={name} onChange={(e) => setName(e.target.value)} />
+        </Field>
+        <Field label="Price">
+          <div className="relative">
+            <span aria-hidden className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-zinc-400">
+              $
+            </span>
+            <TextInput
+              required
+              inputMode="decimal"
+              placeholder="25.00"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className="pl-6 font-mono"
+            />
+          </div>
+        </Field>
       </div>
-      <label className="block space-y-1">
-        <span className="text-sm text-slate-700">Description (optional)</span>
-        <textarea
+      <Field label="Description" hint="Optional. Up to 500 characters.">
+        <TextArea
           maxLength={500}
           rows={2}
+          placeholder="Pork marinated with achiote, pineapple, onion and cilantro"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className={INPUT}
         />
-      </label>
+      </Field>
+      {error && <ErrorText>{error}</ErrorText>}
       <div className="flex flex-wrap gap-2">
-        <button type="submit" disabled={busy} className={PRIMARY_BUTTON}>
+        <Button type="submit" variant="primary" disabled={busy}>
           {busy ? 'Saving…' : submitLabel}
-        </button>
-        <button type="button" disabled={busy} onClick={onCancel} className={BUTTON}>
+        </Button>
+        <Button variant="ghost" disabled={busy} onClick={onCancel}>
           Cancel
-        </button>
+        </Button>
       </div>
-      {error && (
-        <p role="alert" className="text-sm text-red-600">
-          {error}
-        </p>
-      )}
     </form>
   )
 }

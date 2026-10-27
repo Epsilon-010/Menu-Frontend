@@ -1,5 +1,8 @@
+import { BowlFoodIcon } from '@phosphor-icons/react'
 import { useAuth } from '../../features/auth/useAuth.ts'
 import { useSessionHeartbeat } from '../../features/auth/useSessionHeartbeat.ts'
+import { AppShell } from '../../shared/ui/AppShell.tsx'
+import { EmptyState } from '../../shared/ui/Feedback.tsx'
 
 /**
  * Table tablet home. The menu itself arrives in a later slice; for now it shows which table this
@@ -15,14 +18,10 @@ export function MenuPage() {
   const { table, tenant } = state.account
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white px-6 py-4">
-        <p className="text-xs uppercase tracking-wide text-slate-500">{tenant.name}</p>
-        <h1 className="text-xl font-semibold text-slate-900">{table.name}</h1>
-      </header>
-      <main className="p-6">
-        <p className="text-slate-600">The menu will appear here soon.</p>
-      </main>
-    </div>
+    <AppShell business={tenant.name} identity={table.name}>
+      <EmptyState icon={<BowlFoodIcon size={24} aria-hidden />} title={`Welcome to ${table.name}`}>
+        The menu will appear here very soon. In the meantime, a waiter can help you with your order.
+      </EmptyState>
+    </AppShell>
   )
 }

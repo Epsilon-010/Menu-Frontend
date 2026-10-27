@@ -1,5 +1,8 @@
 import { createBrowserRouter } from 'react-router'
 import { RequireRole } from '../features/auth/RequireRole.tsx'
+import { CatalogPanel } from '../features/catalog/CatalogPanel.tsx'
+import { StaffPanel } from '../features/staff/StaffPanel.tsx'
+import { TablesPanel } from '../features/tables/TablesPanel.tsx'
 import { AdminPage } from '../pages/admin/AdminPage.tsx'
 import { HomePage } from '../pages/HomePage.tsx'
 import { LoginPage } from '../pages/LoginPage.tsx'
@@ -18,6 +21,11 @@ export const router = createBrowserRouter([
         <AdminPage />
       </RequireRole>
     ),
+    children: [
+      { index: true, element: <CatalogPanel /> },
+      { path: 'tables', element: <TablesPanel /> },
+      { path: 'staff', element: <StaffPanel /> },
+    ],
   },
   {
     path: '/waiter',

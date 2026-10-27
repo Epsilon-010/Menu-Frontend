@@ -1,4 +1,9 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { BowlFoodIcon, PlusIcon } from '@phosphor-icons/react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { Button } from '../../shared/ui/Button.tsx'
+import { TextInput } from '../../shared/ui/Field.tsx'
+import { EmptyState, ErrorText, ListSkeleton, LoadError } from '../../shared/ui/Feedback.tsx'
+import { Card, SectionHeader } from '../../shared/ui/Section.tsx'
 import {
   CatalogError,
   createCategory,
@@ -16,7 +21,7 @@ import {
 } from './api.ts'
 import { CategorySection, type CategoryActions } from './CategorySection.tsx'
 import type { ItemActions } from './ItemRow.tsx'
-import { INPUT, moved, PRIMARY_BUTTON } from './styles.ts'
+import { moved } from './styles.ts'
 
 type ListState =
   | { status: 'loading' }
@@ -34,13 +39,13 @@ export function CatalogPanel() {
   const [saving, setSaving] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
+  async function load() {
     try {
       setList({ status: 'loaded', categories: await listCatalog() })
     } catch (error) {
       setList({ status: 'error', message: messageOf(error) })
     }
-  }, [])
+  }
 
   useEffect(() => {
     let active = true
@@ -78,22 +83,51 @@ export function CatalogPanel() {
     if (failure === null) setName('')
   }
 
-  if (list.status === 'loading') return <p className="text-sm text-slate-500">Loading the menu…</p>
-  if (list.status === 'error') {
+  const header = (
+    <SectionHeader
+      title="Menu"
+      description="Tables show categories and items in this order. Hidden ones stay here for you, but guests do not see them."
+    />
+  )
+
+  const addCategory = (
+    <Card className="p-4">
+      <form onSubmit={handleCreate} className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <TextInput
+            aria-label="New category name"
+            required
+            maxLength={60}
+            placeholder="New category, like Tacos or Drinks"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            className="min-w-0 flex-1"
+          />
+          <Button type="submit" variant="primary" icon={<PlusIcon size={16} aria-hidden />} disabled={saving}>
+            {saving ? 'Adding…' : 'Add category'}
+          </Button>
+        </div>
+        {createError && <ErrorText>{createError}</ErrorText>}
+      </form>
+    </Card>
+  )
+
+  if (list.status !== 'loaded') {
     return (
-      <p role="alert" className="text-sm text-red-600">
-        {list.message}{' '}
-        <button
-          type="button"
-          onClick={() => {
-            setList({ status: 'loading' })
-            void load()
-          }}
-          className="underline"
-        >
-          Retry
-        </button>
-      </p>
+      <div className="space-y-8">
+        {header}
+        {list.status === 'loading' ? (
+          <ListSkeleton label="Loading the menu" rows={4} />
+        ) : (
+          <LoadError
+            message={list.message}
+            onRetry={() => {
+              setList({ status: 'loading' })
+              void load()
+            }}
+          />
+        )}
+      </div>
     )
   }
 
@@ -122,54 +156,28 @@ export function CatalogPanel() {
   }
 
   return (
-    <section className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-900">Menu</h2>
-        <p className="text-sm text-slate-600">
-          Categories and items appear on the tables in this order. Hidden categories and items stay here but are not
-          shown on the tables.
-        </p>
-      </div>
-
-      <form onSubmit={handleCreate} className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
-        <h3 className="font-medium text-slate-900">Add a category</h3>
-        <div className="flex flex-wrap items-end gap-3">
-          <label className="flex-1 space-y-1">
-            <span className="text-sm text-slate-700">Name</span>
-            <input
-              required
-              maxLength={60}
-              placeholder="Tacos"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              className={INPUT}
-            />
-          </label>
-          <button type="submit" disabled={saving} className={PRIMARY_BUTTON}>
-            {saving ? 'Adding…' : 'Add'}
-          </button>
-        </div>
-        {createError && (
-          <p role="alert" className="text-sm text-red-600">
-            {createError}
-          </p>
-        )}
-      </form>
-
+    <div className="space-y-8">
+      {header}
+      {addCategory}
       {categories.length === 0 ? (
-        <p className="text-sm text-slate-500">No categories yet.</p>
+        <EmptyState icon={<BowlFoodIcon size={24} aria-hidden />} title="Start your menu with a category">
+          Group your dishes the way guests look for them, like Tacos, Drinks or Desserts. Then add items with a price
+          and a photo.
+        </EmptyState>
       ) : (
-        categories.map((category, index) => (
-          <CategorySection
-            key={category.id}
-            category={category}
-            categories={categories}
-            isFirst={index === 0}
-            isLast={index === categories.length - 1}
-            actions={categoryActions(category, index)}
-          />
-        ))
+        <div className="space-y-4">
+          {categories.map((category, index) => (
+            <CategorySection
+              key={category.id}
+              category={category}
+              categories={categories}
+              isFirst={index === 0}
+              isLast={index === categories.length - 1}
+              actions={categoryActions(category, index)}
+            />
+          ))}
+        </div>
       )}
-    </section>
+    </div>
   )
 }

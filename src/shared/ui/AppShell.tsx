@@ -1,0 +1,173 @@
+import { ForkKnifeIcon, SignOutIcon } from '@phosphor-icons/react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { NavLink } from 'react-router'
+import { buttonClass, MOTION } from './classes.ts'
+
+export interface NavItem {
+  to: string
+  label: string
+  icon: ReactNode
+  /** Match the path exactly (for an index route like /admin). */
+  end?: boolean
+}
+
+interface AppShellProps {
+  business: string
+  /** Who or what is signed in on this device. */
+  identity: string
+  nav?: NavItem[]
+  onSignOut?: () => void
+  signingOut?: boolean
+  children: ReactNode
+}
+
+function navLinkClass({ isActive }: { isActive: boolean }): string {
+  const state = isActive ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'
+  return `inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold active:scale-[0.98] ${MOTION} ${state}`
+}
+
+/** The two lines of the menu toggle rotate into an X instead of swapping icons. */
+function MenuToggleIcon({ open }: { open: boolean }) {
+  const line = `absolute left-0 h-0.5 w-4 rounded-full bg-current transition-transform duration-500 ease-smooth`
+  return (
+    <span aria-hidden className="relative block h-4 w-4">
+      <span className={`${line} top-1 ${open ? 'translate-y-1 rotate-45' : ''}`} />
+      <span className={`${line} top-3 ${open ? '-translate-y-1 -rotate-45' : ''}`} />
+    </span>
+  )
+}
+
+/** Layout of every signed-in screen: a floating bar with the business, navigation and sign out. */
+export function AppShell({ business, identity, nav = [], onSignOut, signingOut = false, children }: AppShellProps) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const hasMenu = nav.length > 0 || onSignOut !== undefined
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const close = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false)
+    }
+    window.addEventListener('keydown', close)
+    return () => window.removeEventListener('keydown', close)
+  }, [menuOpen])
+
+  return (
+    <div className="min-h-screen">
+      <a
+        href="#main"
+        className="sr-only rounded-lg bg-zinc-950 px-3 py-2 text-sm font-semibold text-white focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50"
+      >
+        Skip to content
+      </a>
+
+      <header className="fixed inset-x-0 top-4 z-40 flex justify-center px-4">
+        <nav
+          aria-label="Main"
+          className="flex max-w-full items-center gap-2 rounded-2xl border border-zinc-200 bg-white/80 p-2 shadow-sm backdrop-blur-md"
+        >
+          <div className="flex min-w-0 items-center gap-3 pr-2">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-950 text-white">
+              <ForkKnifeIcon size={16} weight="bold" aria-hidden />
+            </span>
+            <div className="min-w-0 leading-tight">
+              <p className="truncate text-sm font-semibold text-zinc-950">{business}</p>
+              <p className="truncate text-xs text-zinc-500">{identity}</p>
+            </div>
+          </div>
+
+          {nav.length > 0 && (
+            <ul className="hidden items-center gap-1 sm:flex">
+              {nav.map((item) => (
+                <li key={item.to}>
+                  <NavLink to={item.to} end={item.end} className={navLinkClass}>
+                    {item.icon}
+                    {item.label}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {onSignOut && (
+            <button
+              type="button"
+              onClick={onSignOut}
+              disabled={signingOut}
+              className={`hidden sm:inline-flex ${buttonClass('ghost')}`}
+            >
+              <SignOutIcon size={16} aria-hidden />
+              {signingOut ? 'Signing out…' : 'Sign out'}
+            </button>
+          )}
+
+          {hasMenu && (
+            <button
+              type="button"
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-menu"
+              onClick={() => setMenuOpen((open) => !open)}
+              className={`rounded-lg p-2 text-zinc-700 hover:bg-zinc-100 active:scale-[0.98] sm:hidden ${MOTION}`}
+            >
+              <MenuToggleIcon open={menuOpen} />
+            </button>
+          )}
+        </nav>
+      </header>
+
+      {hasMenu && (
+        <div
+          id="mobile-menu"
+          inert={!menuOpen}
+          className={`fixed inset-0 z-30 bg-zinc-50/95 px-6 pt-24 backdrop-blur-xl transition-opacity duration-500 ease-smooth sm:hidden ${
+            menuOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+          }`}
+        >
+          <ul className="space-y-2">
+            {nav.map((item, index) => (
+              <li
+                key={item.to}
+                style={{ transitionDelay: menuOpen ? `${Math.min(index * 60, 400)}ms` : '0ms' }}
+                className={`transition duration-500 ease-smooth ${menuOpen ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
+              >
+                <NavLink
+                  to={item.to}
+                  end={item.end}
+                  onClick={() => setMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-xl px-4 py-3 text-lg font-semibold ${MOTION} ${
+                      isActive ? 'bg-zinc-950 text-white' : 'text-zinc-700 hover:bg-zinc-100'
+                    }`
+                  }
+                >
+                  {item.icon}
+                  {item.label}
+                </NavLink>
+              </li>
+            ))}
+            {onSignOut && (
+              <li
+                style={{ transitionDelay: menuOpen ? `${Math.min(nav.length * 60, 400)}ms` : '0ms' }}
+                className={`transition duration-500 ease-smooth ${menuOpen ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
+              >
+                <button
+                  type="button"
+                  onClick={onSignOut}
+                  disabled={signingOut}
+                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-lg font-semibold text-zinc-700 hover:bg-zinc-100 ${MOTION}`}
+                >
+                  <SignOutIcon size={20} aria-hidden />
+                  {signingOut ? 'Signing out…' : 'Sign out'}
+                </button>
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
+
+      <main id="main" className="mx-auto max-w-5xl px-4 pt-24 pb-16 sm:px-6">
+        {children}
+      </main>
+    </div>
+  )
+}

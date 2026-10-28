@@ -9,7 +9,7 @@
  *   and revoke the whole session.
  */
 
-export type Role = 'admin' | 'waiter' | 'kitchen' | 'table'
+export type Role = 'admin' | 'waiter' | 'kitchen' | 'table' | 'guest'
 
 export interface SessionInfo {
   expires_in: number

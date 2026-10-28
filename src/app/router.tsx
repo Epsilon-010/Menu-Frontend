@@ -5,6 +5,7 @@ import { StaffPanel } from '../features/staff/StaffPanel.tsx'
 import { TablesPanel } from '../features/tables/TablesPanel.tsx'
 import { AdminPage } from '../pages/admin/AdminPage.tsx'
 import { HomePage } from '../pages/HomePage.tsx'
+import { JoinTablePage } from '../pages/JoinTablePage.tsx'
 import { LoginPage } from '../pages/LoginPage.tsx'
 import { MenuPage } from '../pages/menu/MenuPage.tsx'
 import { NotFoundPage } from '../pages/NotFoundPage.tsx'
@@ -14,6 +15,8 @@ import { WaiterPage } from '../pages/staff/WaiterPage.tsx'
 export const router = createBrowserRouter([
   { path: '/', element: <HomePage /> },
   { path: '/login', element: <LoginPage /> },
+  // Printed in each table's QR: guests join the table's open visit from their phones.
+  { path: '/q/:token', element: <JoinTablePage /> },
   {
     path: '/admin',
     element: (
@@ -31,7 +34,7 @@ export const router = createBrowserRouter([
   {
     path: '/waiter',
     element: (
-      <RequireRole roles={['waiter']}>
+      <RequireRole roles={['waiter', 'admin']}>
         <WaiterPage />
       </RequireRole>
     ),
@@ -39,7 +42,7 @@ export const router = createBrowserRouter([
   {
     path: '/menu',
     element: (
-      <RequireRole roles={['table']}>
+      <RequireRole roles={['table', 'guest']}>
         <MenuPage />
       </RequireRole>
     ),

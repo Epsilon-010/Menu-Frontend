@@ -8,6 +8,7 @@ import {
   createTable,
   listTables,
   regenerateTablePin,
+  regenerateTableQr,
   TableError,
   updateTable,
   type Table,
@@ -28,7 +29,7 @@ function byName(a: Table, b: Table): number {
 }
 
 function withoutPin(table: TableWithPin): Table {
-  return { id: table.id, name: table.name, code: table.code, is_active: table.is_active }
+  return { id: table.id, name: table.name, code: table.code, is_active: table.is_active, qr_token: table.qr_token }
 }
 
 /** Admin section to manage the tenant's tables and the credentials of their tablets. */
@@ -114,12 +115,24 @@ export function TablesPanel() {
     }
   }
 
+  async function handleRegenerateQr(id: string): Promise<string | null> {
+    try {
+      upsert(await regenerateTableQr(id))
+      return null
+    } catch (error) {
+      return messageOf(error)
+    }
+  }
+
   return (
     <div className="space-y-8">
       <SectionHeader
         title="Tables"
-        description="Each tablet signs in with its table code and a PIN. The PIN is shown only once; a new PIN or deactivating the table signs its tablet out right away."
+        description="Each tablet signs in with its table code and a PIN. The PIN is shown only once; a new PIN or deactivating the table signs its tablet out right away. Guests without a tablet join from their phones with the table's QR link while a waiter has the table open."
       />
+      <p className="text-sm text-zinc-500">
+        To print a QR code for now, paste the table's link into any QR code generator.
+      </p>
 
       <Card className="p-4">
         <form onSubmit={handleCreate} className="space-y-2">
@@ -184,6 +197,7 @@ export function TablesPanel() {
                   table={table}
                   onUpdate={(changes) => handleUpdate(table.id, changes)}
                   onRegeneratePin={() => handleRegeneratePin(table.id)}
+                  onRegenerateQr={() => handleRegenerateQr(table.id)}
                 />
               ))}
             </ul>

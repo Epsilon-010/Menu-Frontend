@@ -18,6 +18,8 @@ interface AppShellProps {
   nav?: NavItem[]
   onSignOut?: () => void
   signingOut?: boolean
+  /** Text of the sign out button ("Leave" for a guest at a table). */
+  signOutLabel?: string
   children: ReactNode
 }
 
@@ -38,7 +40,15 @@ function MenuToggleIcon({ open }: { open: boolean }) {
 }
 
 /** Layout of every signed-in screen: a floating bar with the business, navigation and sign out. */
-export function AppShell({ business, identity, nav = [], onSignOut, signingOut = false, children }: AppShellProps) {
+export function AppShell({
+  business,
+  identity,
+  nav = [],
+  onSignOut,
+  signingOut = false,
+  signOutLabel = 'Sign out',
+  children,
+}: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const hasMenu = nav.length > 0 || onSignOut !== undefined
 
@@ -93,7 +103,7 @@ export function AppShell({ business, identity, nav = [], onSignOut, signingOut =
             <div className="hidden sm:block">
               <button type="button" onClick={onSignOut} disabled={signingOut} className={buttonClass('ghost')}>
                 <SignOutIcon size={16} aria-hidden />
-                {signingOut ? 'Signing out…' : 'Sign out'}
+                {signingOut ? 'Signing out…' : signOutLabel}
               </button>
             </div>
           )}
@@ -155,7 +165,7 @@ export function AppShell({ business, identity, nav = [], onSignOut, signingOut =
                   className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-lg font-semibold text-zinc-700 hover:bg-zinc-100 ${MOTION}`}
                 >
                   <SignOutIcon size={20} aria-hidden />
-                  {signingOut ? 'Signing out…' : 'Sign out'}
+                  {signingOut ? 'Signing out…' : signOutLabel}
                 </button>
               </li>
             )}

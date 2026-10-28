@@ -1,4 +1,4 @@
-import { BowlFoodIcon, ChairIcon, UsersThreeIcon } from '@phosphor-icons/react'
+import { BowlFoodIcon, CallBellIcon, ChairIcon, UsersThreeIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { Outlet, useNavigate } from 'react-router'
 import { useAuth } from '../../features/auth/useAuth.ts'
@@ -8,6 +8,8 @@ const ADMIN_NAV: NavItem[] = [
   { to: '/admin', label: 'Menu', icon: <BowlFoodIcon size={16} aria-hidden />, end: true },
   { to: '/admin/tables', label: 'Tables', icon: <ChairIcon size={16} aria-hidden /> },
   { to: '/admin/staff', label: 'Staff', icon: <UsersThreeIcon size={16} aria-hidden /> },
+  // The waiter's tables view: open tables, follow their orders and take payments.
+  { to: '/waiter', label: 'Service', icon: <CallBellIcon size={16} aria-hidden /> },
 ]
 
 /** Admin layout: the floating navigation and the selected section. */

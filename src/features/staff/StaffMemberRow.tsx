@@ -3,43 +3,34 @@ import { useState, type FormEvent } from 'react'
 import { Button, IconButton } from '../../shared/ui/Button.tsx'
 import { MOTION } from '../../shared/ui/classes.ts'
 import { Select, TextInput } from '../../shared/ui/Field.tsx'
-import { Badge, ErrorText, SuccessText } from '../../shared/ui/Feedback.tsx'
+import { Badge, ErrorText } from '../../shared/ui/Feedback.tsx'
 import { useRowAction } from '../../shared/ui/useRowAction.ts'
 import type { StaffMember, StaffMemberChanges, StaffRole } from './api.ts'
+import { normalizeStaffCode } from './credentials.ts'
 import { ROLE_LABELS } from './labels.ts'
 
-type Mode = { kind: 'view' } | { kind: 'edit'; full_name: string; role: StaffRole } | { kind: 'password'; password: string }
+type Mode = { kind: 'view' } | { kind: 'edit'; full_name: string; role: StaffRole } | { kind: 'confirm-pin' }
 
 interface StaffMemberRowProps {
   member: StaffMember
   /** Resolve to an error message, or null on success. */
   onUpdate: (changes: StaffMemberChanges) => Promise<string | null>
-  onResetPassword: (password: string) => Promise<string | null>
+  /** The panel shows the new credentials once. */
+  onRegeneratePin: () => Promise<string | null>
 }
 
-export function StaffMemberRow({ member, onUpdate, onResetPassword }: StaffMemberRowProps) {
+export function StaffMemberRow({ member, onUpdate, onRegeneratePin }: StaffMemberRowProps) {
   const [mode, setMode] = useState<Mode>({ kind: 'view' })
   const { busy, error, run: runAction } = useRowAction()
-  const [notice, setNotice] = useState<string | null>(null)
 
-  function run(action: () => Promise<string | null>, done: string | null = null) {
-    setNotice(null)
-    return runAction(action, () => {
-      setMode({ kind: 'view' })
-      setNotice(done)
-    })
+  function run(action: () => Promise<string | null>) {
+    return runAction(action, () => setMode({ kind: 'view' }))
   }
 
   function handleSaveEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (mode.kind !== 'edit') return
     void run(() => onUpdate({ full_name: mode.full_name, role: mode.role }))
-  }
-
-  function handleSavePassword(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (mode.kind !== 'password') return
-    void run(() => onResetPassword(mode.password), `Password updated. ${member.full_name} was signed out everywhere.`)
   }
 
   const RoleIcon = member.role === 'kitchen' ? CookingPotIcon : CallBellIcon
@@ -87,7 +78,9 @@ export function StaffMemberRow({ member, onUpdate, onResetPassword }: StaffMembe
               <Badge>{ROLE_LABELS[member.role]}</Badge>
               {!member.is_active && <Badge tone="warning">Inactive</Badge>}
             </div>
-            <p className="text-sm text-zinc-500">@{member.username}</p>
+            <p className="text-sm text-zinc-500">
+              Code <span className="font-mono tracking-widest text-zinc-700">{normalizeStaffCode(member.code)}</span>
+            </p>
           </div>
           <div className="flex items-center gap-1">
             <IconButton
@@ -97,10 +90,10 @@ export function StaffMemberRow({ member, onUpdate, onResetPassword }: StaffMembe
               onClick={() => setMode({ kind: 'edit', full_name: member.full_name, role: member.role })}
             />
             <IconButton
-              label="Set a new password"
+              label="Generate a new PIN"
               icon={<KeyIcon size={16} />}
               disabled={busy}
-              onClick={() => setMode({ kind: 'password', password: '' })}
+              onClick={() => setMode({ kind: 'confirm-pin' })}
             />
             <IconButton
               label={member.is_active ? 'Deactivate' : 'Activate'}
@@ -113,32 +106,23 @@ export function StaffMemberRow({ member, onUpdate, onResetPassword }: StaffMembe
         </div>
       )}
 
-      {mode.kind === 'password' && (
-        <form onSubmit={handleSavePassword} className="flex flex-wrap items-center gap-2 rounded-xl bg-zinc-50 p-4">
-          <TextInput
-            type="password"
-            aria-label="New password"
-            placeholder="New password, at least 8 characters"
-            required
-            minLength={8}
-            maxLength={128}
-            autoComplete="new-password"
-            autoFocus
-            value={mode.password}
-            onChange={(event) => setMode({ ...mode, password: event.target.value })}
-            className="min-w-0 flex-1"
-          />
-          <Button type="submit" variant="primary" disabled={busy}>
-            Save password
-          </Button>
-          <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-            Cancel
-          </Button>
-        </form>
+      {mode.kind === 'confirm-pin' && (
+        <div className="flex flex-wrap items-center gap-4 rounded-xl bg-amber-50 p-4">
+          <p className="flex-1 text-sm text-amber-900">
+            {member.full_name} signs out of every device right away and will need the new PIN. The code stays the same.
+          </p>
+          <div className="flex gap-2">
+            <Button variant="primary" disabled={busy} onClick={() => void run(onRegeneratePin)}>
+              Generate new PIN
+            </Button>
+            <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
+              Cancel
+            </Button>
+          </div>
+        </div>
       )}
 
       {error && <ErrorText>{error}</ErrorText>}
-      {notice && <SuccessText>{notice}</SuccessText>}
     </li>
   )
 }

@@ -8,11 +8,13 @@ import type { NewStaffMember, StaffRole } from './api.ts'
 import { ROLE_LABELS } from './labels.ts'
 import { createDraftIds } from '../../shared/api/idempotency.ts'
 
-const EMPTY: NewStaffMember = { username: '', full_name: '', role: 'waiter', password: '' }
+const EMPTY: NewStaffMember = { full_name: '', role: 'waiter' }
+
+/** What happened to a create: `clearForm` also starts a fresh draft (the member already exists). */
+export type CreateOutcome = { error: null } | { error: string; clearForm: boolean }
 
 interface NewStaffMemberFormProps {
-  /** Resolves to an error message, or null when the member was created. */
-  onCreate: (member: NewStaffMember) => Promise<string | null>
+  onCreate: (member: NewStaffMember) => Promise<CreateOutcome>
 }
 
 export function NewStaffMemberForm({ onCreate }: NewStaffMemberFormProps) {
@@ -20,15 +22,17 @@ export function NewStaffMemberForm({ onCreate }: NewStaffMemberFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   // Client ids for new members: a retry of the same data reuses its id, edited data gets a new one.
+  // Names may repeat, so after a success the next member always gets a new id.
   const [drafts] = useState(() => createDraftIds())
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setSaving(true)
-    const failure = await onCreate({ ...draft, id: drafts.idFor(JSON.stringify(draft)) })
+    const member = { full_name: draft.full_name.trim(), role: draft.role }
+    const outcome = await onCreate({ ...member, id: drafts.idFor(JSON.stringify(member)) })
     setSaving(false)
-    setError(failure)
-    if (failure === null) {
+    setError(outcome.error)
+    if (outcome.error === null || outcome.clearForm) {
       setDraft(EMPTY)
       drafts.reset()
     }
@@ -37,30 +41,19 @@ export function NewStaffMemberForm({ onCreate }: NewStaffMemberFormProps) {
   return (
     <Card className="p-6">
       <form onSubmit={handleSubmit} className="space-y-6">
-        <h2 className="font-semibold text-zinc-950">Add a staff member</h2>
+        <div className="space-y-1">
+          <h2 className="font-semibold text-zinc-950">Add a staff member</h2>
+          <p className="text-sm text-zinc-500">You get a code and a PIN to hand them. They sign in with those.</p>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Full name">
             <TextInput
               required
               maxLength={120}
-              placeholder="Full name"
+              placeholder="Cook 1"
+              autoComplete="off"
               value={draft.full_name}
               onChange={(event) => setDraft({ ...draft, full_name: event.target.value })}
-            />
-          </Field>
-          <Field label="Username" hint="Letters, digits, dots, hyphens and underscores. They sign in with it.">
-            <TextInput
-              required
-              minLength={3}
-              maxLength={40}
-              pattern="[A-Za-z0-9._\-]+"
-              title="Letters, digits, dots, hyphens or underscores"
-              autoCapitalize="none"
-              spellCheck={false}
-              autoComplete="off"
-              placeholder="cook.night"
-              value={draft.username}
-              onChange={(event) => setDraft({ ...draft, username: event.target.value })}
             />
           </Field>
           <Field label="Role">
@@ -71,17 +64,6 @@ export function NewStaffMemberForm({ onCreate }: NewStaffMemberFormProps) {
                 </option>
               ))}
             </Select>
-          </Field>
-          <Field label="Password" hint="At least 8 characters.">
-            <TextInput
-              type="password"
-              required
-              minLength={8}
-              maxLength={128}
-              autoComplete="new-password"
-              value={draft.password}
-              onChange={(event) => setDraft({ ...draft, password: event.target.value })}
-            />
           </Field>
         </div>
         {error && <ErrorText>{error}</ErrorText>}

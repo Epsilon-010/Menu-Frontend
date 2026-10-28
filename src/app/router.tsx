@@ -10,12 +10,15 @@ import { JoinTablePage } from '../pages/JoinTablePage.tsx'
 import { LoginPage } from '../pages/LoginPage.tsx'
 import { MenuPage } from '../pages/menu/MenuPage.tsx'
 import { NotFoundPage } from '../pages/NotFoundPage.tsx'
+import { RegisterPage } from '../pages/RegisterPage.tsx'
 import { KitchenPage } from '../pages/staff/KitchenPage.tsx'
 import { WaiterPage } from '../pages/staff/WaiterPage.tsx'
 
 export const router = createBrowserRouter([
   { path: '/', element: <HomePage /> },
   { path: '/login', element: <LoginPage /> },
+  // A business owner signs up alone and lands in the admin panel of the new business.
+  { path: '/register', element: <RegisterPage /> },
   // Printed in each table's QR: guests join the table's open visit from their phones.
   { path: '/q/:token', element: <JoinTablePage /> },
   {

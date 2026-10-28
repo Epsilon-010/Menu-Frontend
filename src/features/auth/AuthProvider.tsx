@@ -3,6 +3,7 @@ import { onSessionEnded, type Role, type SessionInfo } from '../../shared/api/ht
 import { accountRole, fetchAccount, login, logout, LoginError, qrLogin, tableLogin } from './api.ts'
 import { AuthContext, type AuthContextValue, type AuthState } from './authContext.ts'
 import { hadGuestVisit, rememberGuestVisit } from './guestMarker.ts'
+import { register as registerBusiness, type SignUp } from './register.ts'
 
 /** Where an ended session lands: a guest gets the visit-ended screen, everyone else the sign in. */
 function endedState(): AuthState {
@@ -67,6 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const joinTable = useCallback((token: string, name: string) => startSession(qrLogin(token, name)), [startSession])
 
+  const register = useCallback((signUp: SignUp) => startSession(registerBusiness(signUp)), [startSession])
+
   const signOut = useCallback(async () => {
     const wasGuest = roleRef.current === 'guest'
     try {
@@ -85,8 +88,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ state, signIn, signInTable, joinTable, signOut }),
-    [state, signIn, signInTable, joinTable, signOut],
+    () => ({ state, signIn, signInTable, joinTable, register, signOut }),
+    [state, signIn, signInTable, joinTable, register, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

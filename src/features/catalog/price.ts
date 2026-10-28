@@ -2,7 +2,11 @@
 
 const PRICE_PATTERN = /^(\d{1,6})(?:[.,](\d{1,2}))?$/
 
+/** Same cap as the API (catalog domain MAX_PRICE_CENTS): 100000.00. */
 export const MAX_PRICE_CENTS = 10_000_000
+
+/** The single place that knows the currency symbol (the business currency comes with theming later). */
+export const CURRENCY_SYMBOL = '$'
 
 /** Cents for a typed price, or null if it is not a valid amount. */
 export function parsePrice(text: string): number | null {
@@ -14,8 +18,14 @@ export function parsePrice(text: string): number | null {
   return cents <= MAX_PRICE_CENTS ? cents : null
 }
 
+/** The amount without symbol, as the admin types it ("25.50"). */
 export function formatPrice(cents: number): string {
   const whole = Math.floor(cents / 100)
   const fraction = String(cents % 100).padStart(2, '0')
   return `${whole}.${fraction}`
+}
+
+/** The amount as shown to people ("$25.50"). */
+export function formatMoney(cents: number): string {
+  return `${CURRENCY_SYMBOL}${formatPrice(cents)}`
 }

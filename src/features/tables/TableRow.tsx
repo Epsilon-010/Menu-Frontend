@@ -1,8 +1,11 @@
+import { ChairIcon, KeyIcon, PencilSimpleIcon, PowerIcon } from '@phosphor-icons/react'
 import { useState, type FormEvent } from 'react'
+import { Button, IconButton } from '../../shared/ui/Button.tsx'
+import { MOTION } from '../../shared/ui/classes.ts'
+import { TextInput } from '../../shared/ui/Field.tsx'
+import { Badge, ErrorText } from '../../shared/ui/Feedback.tsx'
+import { useRowAction } from '../../shared/ui/useRowAction.ts'
 import type { Table, TableChanges } from './api.ts'
-
-const INPUT = 'rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none'
-const BUTTON = 'rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-50'
 
 type Mode = { kind: 'view' } | { kind: 'rename'; name: string } | { kind: 'confirm-pin' }
 
@@ -15,15 +18,10 @@ interface TableRowProps {
 
 export function TableRow({ table, onUpdate, onRegeneratePin }: TableRowProps) {
   const [mode, setMode] = useState<Mode>({ kind: 'view' })
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { busy, error, run: runAction } = useRowAction()
 
-  async function run(action: () => Promise<string | null>) {
-    setBusy(true)
-    const failure = await action()
-    setBusy(false)
-    setError(failure)
-    if (failure === null) setMode({ kind: 'view' })
+  function run(action: () => Promise<string | null>) {
+    return runAction(action, () => setMode({ kind: 'view' }))
   }
 
   function handleRename(event: FormEvent<HTMLFormElement>) {
@@ -33,76 +31,75 @@ export function TableRow({ table, onUpdate, onRegeneratePin }: TableRowProps) {
   }
 
   return (
-    <li className="space-y-2 p-4">
+    <li className={`space-y-4 rounded-lg p-3 hover:bg-zinc-50 ${MOTION}`} aria-busy={busy}>
       {mode.kind === 'rename' ? (
         <form onSubmit={handleRename} className="flex flex-wrap items-center gap-2">
-          <input
+          <TextInput
             aria-label="Table name"
             required
             maxLength={60}
+            autoFocus
             value={mode.name}
             onChange={(event) => setMode({ kind: 'rename', name: event.target.value })}
-            className={INPUT}
+            className="max-w-xs"
           />
-          <button type="submit" disabled={busy} className={BUTTON}>
+          <Button type="submit" variant="primary" disabled={busy}>
             Save
-          </button>
-          <button type="button" disabled={busy} onClick={() => setMode({ kind: 'view' })} className={BUTTON}>
+          </Button>
+          <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
             Cancel
-          </button>
+          </Button>
         </form>
       ) : (
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className={table.is_active ? 'font-medium text-slate-900' : 'font-medium text-slate-400 line-through'}>
-              {table.name}
-            </p>
-            <p className="text-sm text-slate-500">
-              Code <span className="font-mono tracking-widest">{table.code}</span>
-              {!table.is_active && ' · Inactive'}
+        <div className="flex flex-wrap items-center gap-4">
+          <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${table.is_active ? 'bg-zinc-100 text-zinc-700' : 'bg-zinc-50 text-zinc-300'}`}>
+            <ChairIcon size={20} aria-hidden />
+          </span>
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className={`font-medium ${table.is_active ? 'text-zinc-950' : 'text-zinc-400'}`}>{table.name}</p>
+              {!table.is_active && <Badge>Inactive</Badge>}
+            </div>
+            <p className="text-sm text-zinc-500">
+              Code <span className="font-mono tracking-widest text-zinc-700">{table.code}</span>
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
+          <div className="flex items-center gap-1">
+            <IconButton
+              label="Rename table"
+              icon={<PencilSimpleIcon size={16} />}
               disabled={busy}
               onClick={() => setMode({ kind: 'rename', name: table.name })}
-              className={BUTTON}
-            >
-              Rename
-            </button>
-            <button type="button" disabled={busy} onClick={() => setMode({ kind: 'confirm-pin' })} className={BUTTON}>
-              New PIN
-            </button>
-            <button
-              type="button"
+            />
+            <IconButton label="Generate a new PIN" icon={<KeyIcon size={16} />} disabled={busy} onClick={() => setMode({ kind: 'confirm-pin' })} />
+            <IconButton
+              label={table.is_active ? 'Deactivate table' : 'Activate table'}
+              tone={table.is_active ? 'danger' : 'default'}
+              icon={<PowerIcon size={16} />}
               disabled={busy}
               onClick={() => void run(() => onUpdate({ is_active: !table.is_active }))}
-              className={BUTTON}
-            >
-              {table.is_active ? 'Deactivate' : 'Activate'}
-            </button>
+            />
           </div>
         </div>
       )}
 
       {mode.kind === 'confirm-pin' && (
-        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
-          <span>The tablet of this table will be signed out and need the new PIN.</span>
-          <button type="button" disabled={busy} onClick={() => void run(onRegeneratePin)} className={BUTTON}>
-            Generate new PIN
-          </button>
-          <button type="button" disabled={busy} onClick={() => setMode({ kind: 'view' })} className={BUTTON}>
-            Cancel
-          </button>
+        <div className="flex flex-wrap items-center gap-4 rounded-xl bg-amber-50 p-4">
+          <p className="flex-1 text-sm text-amber-900">
+            The tablet of {table.name} signs out right away and will need the new PIN.
+          </p>
+          <div className="flex gap-2">
+            <Button variant="primary" disabled={busy} onClick={() => void run(onRegeneratePin)}>
+              Generate new PIN
+            </Button>
+            <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
+              Cancel
+            </Button>
+          </div>
         </div>
       )}
 
-      {error && (
-        <p role="alert" className="text-sm text-red-600">
-          {error}
-        </p>
-      )}
+      {error && <ErrorText>{error}</ErrorText>}
     </li>
   )
 }

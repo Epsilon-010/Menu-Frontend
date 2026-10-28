@@ -1,8 +1,23 @@
+import {
+  BowlFoodIcon,
+  CaretDownIcon,
+  CaretUpIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  PencilSimpleIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@phosphor-icons/react'
 import { useState, type FormEvent } from 'react'
+import { Button, IconButton } from '../../shared/ui/Button.tsx'
+import { TextInput } from '../../shared/ui/Field.tsx'
+import { Badge, ErrorText } from '../../shared/ui/Feedback.tsx'
+import { Card } from '../../shared/ui/Section.tsx'
 import type { Category, CategoryChanges, CategoryWithItems } from './api.ts'
 import { ItemForm, type ItemFormValues } from './ItemForm.tsx'
 import { ItemRow, type ItemActions } from './ItemRow.tsx'
-import { BUTTON, DANGER_BUTTON, INPUT } from './styles.ts'
+import { createDraftIds } from '../../shared/api/idempotency.ts'
+import { useRowAction } from '../../shared/ui/useRowAction.ts'
 
 type Mode = { kind: 'view' } | { kind: 'rename'; name: string } | { kind: 'add-item' } | { kind: 'confirm-delete' }
 
@@ -11,8 +26,9 @@ export interface CategoryActions {
   update: (changes: CategoryChanges) => Promise<string | null>
   move: (delta: -1 | 1) => Promise<string | null>
   remove: () => Promise<string | null>
-  addItem: (values: ItemFormValues) => Promise<string | null>
-  itemActions: (itemId: string, index: number) => ItemActions
+  /** `id` identifies the new item: the same id on a retry returns the item instead of a duplicate. */
+  addItem: (values: ItemFormValues, id: string) => Promise<string | null>
+  itemActions: (itemId: string) => ItemActions
 }
 
 interface CategorySectionProps {
@@ -25,102 +41,118 @@ interface CategorySectionProps {
 
 export function CategorySection({ category, categories, isFirst, isLast, actions }: CategorySectionProps) {
   const [mode, setMode] = useState<Mode>({ kind: 'view' })
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { busy, error, run: runAction } = useRowAction()
+  // Client ids for new items: a retry of the same values reuses its id, edited values get a new one.
+  const [itemDrafts] = useState(() => createDraftIds())
 
-  async function run(action: () => Promise<string | null>): Promise<string | null> {
-    setBusy(true)
-    const failure = await action()
-    setBusy(false)
-    setError(failure)
-    if (failure === null) setMode({ kind: 'view' })
-    return failure
+  /** `close` returns to the plain view on success; quick actions keep an open form as it is. */
+  function run(action: () => Promise<string | null>, close = false): Promise<string | null> {
+    return runAction(action, close ? () => setMode({ kind: 'view' }) : undefined)
+  }
+
+  function addItem(values: ItemFormValues): Promise<string | null> {
+    return runAction(
+      () => actions.addItem(values, itemDrafts.idFor(JSON.stringify(values))),
+      () => {
+        itemDrafts.reset()
+        setMode({ kind: 'view' })
+      },
+    )
   }
 
   function handleRename(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (mode.kind === 'rename') void run(() => actions.update({ name: mode.name }))
+    if (mode.kind === 'rename') void run(() => actions.update({ name: mode.name }), true)
   }
 
   const { items } = category
+  const count = items.length === 1 ? '1 item' : `${items.length} items`
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white">
-      <header className="space-y-2 border-b border-slate-200 p-4">
+    <Card className="p-2">
+      <header className="space-y-4 p-2">
         {mode.kind === 'rename' ? (
           <form onSubmit={handleRename} className="flex flex-wrap items-center gap-2">
-            <input
+            <TextInput
               aria-label="Category name"
               required
               maxLength={60}
+              autoFocus
               value={mode.name}
               onChange={(e) => setMode({ kind: 'rename', name: e.target.value })}
-              className={`${INPUT} max-w-xs`}
+              className="max-w-xs"
             />
-            <button type="submit" disabled={busy} className={BUTTON}>
+            <Button type="submit" variant="primary" disabled={busy}>
               Save
-            </button>
-            <button type="button" disabled={busy} onClick={() => setMode({ kind: 'view' })} className={BUTTON}>
+            </Button>
+            <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
               Cancel
-            </button>
+            </Button>
           </form>
         ) : (
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h3 className={category.is_visible ? 'font-semibold text-slate-900' : 'font-semibold text-slate-400'}>
-              {category.name}
-              {!category.is_visible && <span className="ml-2 text-xs uppercase text-amber-700">Hidden</span>}
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              <button type="button" aria-label="Move category up" disabled={busy || isFirst} onClick={() => void run(() => actions.move(-1))} className={BUTTON}>
-                ↑
-              </button>
-              <button type="button" aria-label="Move category down" disabled={busy || isLast} onClick={() => void run(() => actions.move(1))} className={BUTTON}>
-                ↓
-              </button>
-              <button type="button" disabled={busy} onClick={() => setMode({ kind: 'rename', name: category.name })} className={BUTTON}>
-                Rename
-              </button>
-              <button
-                type="button"
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className={`text-lg font-semibold ${category.is_visible ? 'text-zinc-950' : 'text-zinc-400'}`}>
+                {category.name}
+              </h2>
+              <span className="text-sm text-zinc-500">{count}</span>
+              {!category.is_visible && <Badge tone="warning">Hidden</Badge>}
+            </div>
+            <div className="flex items-center gap-1">
+              <IconButton label="Move category up" icon={<CaretUpIcon size={16} />} disabled={busy || isFirst} onClick={() => void run(() => actions.move(-1))} />
+              <IconButton label="Move category down" icon={<CaretDownIcon size={16} />} disabled={busy || isLast} onClick={() => void run(() => actions.move(1))} />
+              <IconButton
+                label="Rename category"
+                icon={<PencilSimpleIcon size={16} />}
+                disabled={busy}
+                onClick={() => setMode({ kind: 'rename', name: category.name })}
+              />
+              <IconButton
+                label={category.is_visible ? 'Hide category from the tables' : 'Show category on the tables'}
+                icon={category.is_visible ? <EyeIcon size={16} /> : <EyeSlashIcon size={16} />}
                 disabled={busy}
                 onClick={() => void run(() => actions.update({ is_visible: !category.is_visible }))}
-                className={BUTTON}
-              >
-                {category.is_visible ? 'Hide' : 'Show'}
-              </button>
-              <button type="button" disabled={busy} onClick={() => setMode({ kind: 'confirm-delete' })} className={DANGER_BUTTON}>
-                Delete
-              </button>
+              />
+              <IconButton
+                label="Delete category"
+                tone="danger"
+                icon={<TrashIcon size={16} />}
+                disabled={busy}
+                onClick={() => setMode({ kind: 'confirm-delete' })}
+              />
             </div>
           </div>
         )}
 
         {mode.kind === 'confirm-delete' && (
-          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
-            <span>
-              {items.length > 0 ? 'Move or delete its items first.' : `Delete the category “${category.name}”?`}
-            </span>
-            {items.length === 0 && (
-              <button type="button" disabled={busy} onClick={() => void run(actions.remove)} className={DANGER_BUTTON}>
-                Delete category
-              </button>
-            )}
-            <button type="button" disabled={busy} onClick={() => setMode({ kind: 'view' })} className={BUTTON}>
-              Cancel
-            </button>
+          <div className="flex flex-wrap items-center gap-4 rounded-xl bg-red-50 p-4">
+            <p className="flex-1 text-sm text-red-800">
+              {items.length > 0
+                ? `${category.name} still has ${count}. Move or delete them first.`
+                : `Delete the ${category.name} category? This cannot be undone.`}
+            </p>
+            <div className="flex gap-2">
+              {items.length === 0 && (
+                <Button variant="danger" disabled={busy} onClick={() => void run(actions.remove, true)}>
+                  Delete category
+                </Button>
+              )}
+              <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
+                {items.length === 0 ? 'Keep it' : 'Got it'}
+              </Button>
+            </div>
           </div>
         )}
-        {error && (
-          <p role="alert" className="text-sm text-red-600">
-            {error}
-          </p>
-        )}
+        {error && <ErrorText>{error}</ErrorText>}
       </header>
 
       {items.length === 0 ? (
-        <p className="p-4 text-sm text-slate-500">No items yet.</p>
+        <div className="flex items-center gap-3 rounded-lg bg-zinc-50 p-4 text-sm text-zinc-500">
+          <BowlFoodIcon size={20} aria-hidden />
+          No items in this category yet. Add the first one below.
+        </div>
       ) : (
-        <ul className="divide-y divide-slate-200">
+        <ul className="space-y-1">
           {items.map((item, index) => (
             <ItemRow
               key={item.id}
@@ -128,21 +160,28 @@ export function CategorySection({ category, categories, isFirst, isLast, actions
               categories={categories}
               isFirst={index === 0}
               isLast={index === items.length - 1}
-              actions={actions.itemActions(item.id, index)}
+              actions={actions.itemActions(item.id)}
             />
           ))}
         </ul>
       )}
 
-      <div className="border-t border-slate-200 p-4">
+      <div className="p-2">
         {mode.kind === 'add-item' ? (
-          <ItemForm submitLabel="Add item" onSubmit={(values) => run(() => actions.addItem(values))} onCancel={() => setMode({ kind: 'view' })} />
+          <ItemForm
+            submitLabel="Add item"
+            onSubmit={addItem}
+            onCancel={() => {
+              itemDrafts.reset()
+              setMode({ kind: 'view' })
+            }}
+          />
         ) : (
-          <button type="button" disabled={busy} onClick={() => setMode({ kind: 'add-item' })} className={BUTTON}>
+          <Button variant="ghost" icon={<PlusIcon size={16} aria-hidden />} disabled={busy} onClick={() => setMode({ kind: 'add-item' })}>
             Add item
-          </button>
+          </Button>
         )}
       </div>
-    </section>
+    </Card>
   )
 }

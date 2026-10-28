@@ -1,5 +1,11 @@
+import { BowlFoodIcon, PlusIcon } from '@phosphor-icons/react'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { Button } from '../../shared/ui/Button.tsx'
+import { TextInput } from '../../shared/ui/Field.tsx'
+import { EmptyState, ErrorText, ListSkeleton, LoadError } from '../../shared/ui/Feedback.tsx'
+import { Card, SectionHeader } from '../../shared/ui/Section.tsx'
 import {
+  attachItemImage,
   CatalogError,
   createCategory,
   createItem,
@@ -11,12 +17,14 @@ import {
   reorderItems,
   updateCategory,
   updateItem,
-  uploadItemImage,
+  uploadImageFile,
   type CategoryWithItems,
 } from './api.ts'
 import { CategorySection, type CategoryActions } from './CategorySection.tsx'
 import type { ItemActions } from './ItemRow.tsx'
-import { INPUT, moved, PRIMARY_BUTTON } from './styles.ts'
+import { movedById } from './order.ts'
+import { createDraftIds } from '../../shared/api/idempotency.ts'
+import { createChangeRunner, createLatestOnly, createSerialQueue } from './sync.ts'
 
 type ListState =
   | { status: 'loading' }
@@ -33,143 +41,186 @@ export function CatalogPanel() {
   const [name, setName] = useState('')
   const [saving, setSaving] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
+  // Stable for the panel's life (lazy initial state, not recreated on render).
+  const [enqueue] = useState(createSerialQueue)
+  const [latest] = useState(createLatestOnly)
+  // The catalog as last loaded; queued changes read it when they run, not when they were clicked.
+  // A stable mutable box (not a ref): it never drives rendering, only the queued changes read it.
+  const [catalog] = useState(() => ({ current: [] as CategoryWithItems[] }))
 
-  const load = useCallback(async () => {
-    try {
-      setList({ status: 'loaded', categories: await listCatalog() })
-    } catch (error) {
-      setList({ status: 'error', message: messageOf(error) })
-    }
-  }, [])
+  /** Loads the catalog; only the newest load is applied. Returns the error message, if any. */
+  const reload = useCallback(
+    async (showErrors: boolean): Promise<string | null> => {
+      let failure: string | null = null
+      await latest.run(
+        listCatalog,
+        (categories) => {
+          catalog.current = categories
+          setList({ status: 'loaded', categories })
+        },
+        (error) => {
+          failure = messageOf(error)
+          if (showErrors) setList({ status: 'error', message: failure })
+        },
+      )
+      return failure
+    },
+    [latest, catalog],
+  )
 
   useEffect(() => {
-    let active = true
-    listCatalog()
-      .then((categories) => {
-        if (active) setList({ status: 'loaded', categories })
-      })
-      .catch((error: unknown) => {
-        if (active) setList({ status: 'error', message: messageOf(error) })
-      })
-    return () => {
-      active = false
-    }
-  }, [])
+    void reload(true)
+    return () => latest.cancel()
+  }, [reload, latest])
 
-  /** Runs a change and reloads the catalog, so positions always match the server. */
-  async function change(action: () => Promise<unknown>): Promise<string | null> {
-    try {
-      await action()
-      await load()
-      return null
-    } catch (error) {
-      // Another tab may have changed the catalog: show the fresh state with the error.
-      await load()
-      return messageOf(error)
-    }
-  }
+  // Set when a change was saved but the screen could not refresh afterwards.
+  const [stale, setStale] = useState<string | null>(null)
+  // Client ids for new categories: a retry of the same name reuses its id, another name gets a new one.
+  const [drafts] = useState(() => createDraftIds())
+
+  // Runs changes one at a time, then reloads, so positions always match the server. A saved change
+  // is a success even when the reload fails (see createChangeRunner); the panel then says it is stale.
+  const change = createChangeRunner<CategoryWithItems[]>({
+    enqueue,
+    current: () => catalog.current,
+    reload: async () => {
+      const failure = await reload(false)
+      if (failure === null) setStale(null)
+      return failure
+    },
+    messageOf,
+    onStale: setStale,
+  })
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setSaving(true)
-    const failure = await change(() => createCategory(name))
+    const failure = await change(() => createCategory(name, drafts.idFor(name.trim())))
     setSaving(false)
     setCreateError(failure)
-    if (failure === null) setName('')
+    if (failure === null) {
+      setName('')
+      drafts.reset()
+    }
   }
 
-  if (list.status === 'loading') return <p className="text-sm text-slate-500">Loading the menu…</p>
-  if (list.status === 'error') {
+  const header = (
+    <SectionHeader
+      title="Menu"
+      description="Tables show categories and items in this order. Hidden ones stay here for you, but guests do not see them."
+    />
+  )
+
+  const addCategory = (
+    <Card className="p-4">
+      <form onSubmit={handleCreate} className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <TextInput
+            aria-label="New category name"
+            required
+            maxLength={60}
+            placeholder="New category, like Tacos or Drinks"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            className="min-w-0 flex-1"
+          />
+          <Button type="submit" variant="primary" icon={<PlusIcon size={16} aria-hidden />} disabled={saving}>
+            {saving ? 'Adding…' : 'Add category'}
+          </Button>
+        </div>
+        {createError && <ErrorText>{createError}</ErrorText>}
+      </form>
+    </Card>
+  )
+
+  if (list.status !== 'loaded') {
     return (
-      <p role="alert" className="text-sm text-red-600">
-        {list.message}{' '}
-        <button
-          type="button"
-          onClick={() => {
-            setList({ status: 'loading' })
-            void load()
-          }}
-          className="underline"
-        >
-          Retry
-        </button>
-      </p>
+      <div className="space-y-8">
+        {header}
+        {list.status === 'loading' ? (
+          <ListSkeleton label="Loading the menu" rows={4} />
+        ) : (
+          <LoadError
+            message={list.message}
+            onRetry={() => {
+              setList({ status: 'loading' })
+              void reload(true)
+            }}
+          />
+        )}
+      </div>
     )
   }
 
   const { categories } = list
-  const categoryIds = categories.map((category) => category.id)
 
-  function itemActions(category: CategoryWithItems): (itemId: string, index: number) => ItemActions {
-    const itemIds = category.items.map((item) => item.id)
-    return (itemId, index) => ({
+  // Moves are computed by id from the catalog current when they run, never from this render.
+  function itemActions(categoryId: string): (itemId: string) => ItemActions {
+    return (itemId) => ({
       update: (changes) => change(() => updateItem(itemId, changes)),
-      move: (delta) => change(() => reorderItems(category.id, moved(itemIds, index, delta))),
-      uploadImage: (file) => change(() => uploadItemImage(itemId, file)),
+      move: (delta) =>
+        change((current) => {
+          const items = current.find((category) => category.id === categoryId)?.items ?? []
+          return reorderItems(categoryId, movedById(items.map((item) => item.id), itemId, delta))
+        }),
+      // The upload to the storage runs outside the queue (it can take seconds and touches no
+      // catalog data); only attaching it is queued like every other change.
+      uploadImage: async (file) => {
+        let publicId: string
+        try {
+          publicId = await uploadImageFile(file)
+        } catch (error) {
+          return messageOf(error)
+        }
+        return change(() => attachItemImage(itemId, publicId))
+      },
       removeImage: () => change(() => removeItemImage(itemId)),
       remove: () => change(() => deleteItem(itemId)),
     })
   }
 
-  function categoryActions(category: CategoryWithItems, index: number): CategoryActions {
+  function categoryActions(category: CategoryWithItems): CategoryActions {
     return {
       update: (changes) => change(() => updateCategory(category.id, changes)),
-      move: (delta) => change(() => reorderCategories(moved(categoryIds, index, delta))),
+      move: (delta) =>
+        change((current) => reorderCategories(movedById(current.map((entry) => entry.id), category.id, delta))),
       remove: () => change(() => deleteCategory(category.id)),
-      addItem: (values) => change(() => createItem({ ...values, category_id: category.id })),
-      itemActions: itemActions(category),
+      addItem: (values, id) => change(() => createItem({ ...values, id, category_id: category.id })),
+      itemActions: itemActions(category.id),
     }
   }
 
   return (
-    <section className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-900">Menu</h2>
-        <p className="text-sm text-slate-600">
-          Categories and items appear on the tables in this order. Hidden categories and items stay here but are not
-          shown on the tables.
-        </p>
-      </div>
-
-      <form onSubmit={handleCreate} className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
-        <h3 className="font-medium text-slate-900">Add a category</h3>
-        <div className="flex flex-wrap items-end gap-3">
-          <label className="flex-1 space-y-1">
-            <span className="text-sm text-slate-700">Name</span>
-            <input
-              required
-              maxLength={60}
-              placeholder="Tacos"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              className={INPUT}
-            />
-          </label>
-          <button type="submit" disabled={saving} className={PRIMARY_BUTTON}>
-            {saving ? 'Adding…' : 'Add'}
-          </button>
+    <div className="space-y-8">
+      {header}
+      {addCategory}
+      {stale && (
+        <div role="status" className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-amber-50 p-4">
+          <p className="text-sm text-amber-900">Your change was saved, but the menu could not refresh. {stale}</p>
+          <Button variant="secondary" onClick={() => void reload(false).then((failure) => setStale(failure))}>
+            Refresh the menu
+          </Button>
         </div>
-        {createError && (
-          <p role="alert" className="text-sm text-red-600">
-            {createError}
-          </p>
-        )}
-      </form>
-
-      {categories.length === 0 ? (
-        <p className="text-sm text-slate-500">No categories yet.</p>
-      ) : (
-        categories.map((category, index) => (
-          <CategorySection
-            key={category.id}
-            category={category}
-            categories={categories}
-            isFirst={index === 0}
-            isLast={index === categories.length - 1}
-            actions={categoryActions(category, index)}
-          />
-        ))
       )}
-    </section>
+      {categories.length === 0 ? (
+        <EmptyState icon={<BowlFoodIcon size={24} aria-hidden />} title="Start your menu with a category">
+          Group your dishes the way guests look for them, like Tacos, Drinks or Desserts. Then add items with a price
+          and a photo.
+        </EmptyState>
+      ) : (
+        <div className="space-y-4">
+          {categories.map((category, index) => (
+            <CategorySection
+              key={category.id}
+              category={category}
+              categories={categories}
+              isFirst={index === 0}
+              isLast={index === categories.length - 1}
+              actions={categoryActions(category)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

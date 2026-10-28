@@ -1,8 +1,23 @@
+import {
+  CaretDownIcon,
+  CaretUpIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  ImageSquareIcon,
+  PencilSimpleIcon,
+  TrashIcon,
+  UploadSimpleIcon,
+  XIcon,
+} from '@phosphor-icons/react'
 import { useState, type ChangeEvent } from 'react'
+import { Button, IconButton } from '../../shared/ui/Button.tsx'
+import { MOTION } from '../../shared/ui/classes.ts'
+import { Field, Select } from '../../shared/ui/Field.tsx'
+import { Badge, ErrorText } from '../../shared/ui/Feedback.tsx'
 import type { CatalogItem, Category, ItemChanges } from './api.ts'
 import { ItemForm } from './ItemForm.tsx'
-import { formatPrice } from './price.ts'
-import { BUTTON, DANGER_BUTTON, INPUT } from './styles.ts'
+import { formatMoney } from './price.ts'
+import { useRowAction } from '../../shared/ui/useRowAction.ts'
 
 type Mode = 'view' | 'edit' | 'confirm-delete'
 
@@ -25,16 +40,11 @@ interface ItemRowProps {
 
 export function ItemRow({ item, categories, isFirst, isLast, actions }: ItemRowProps) {
   const [mode, setMode] = useState<Mode>('view')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { busy, error, run: runAction } = useRowAction()
 
-  async function run(action: () => Promise<string | null>): Promise<string | null> {
-    setBusy(true)
-    const failure = await action()
-    setBusy(false)
-    setError(failure)
-    if (failure === null) setMode('view')
-    return failure
+  /** `close` returns to the plain view on success; quick actions keep an open form as it is. */
+  function run(action: () => Promise<string | null>, close = false): Promise<string | null> {
+    return runAction(action, close ? () => setMode('view') : undefined)
   }
 
   function handleFile(event: ChangeEvent<HTMLInputElement>) {
@@ -46,99 +56,105 @@ export function ItemRow({ item, categories, isFirst, isLast, actions }: ItemRowP
   const thumbnail = item.image?.thumbnail_url
 
   return (
-    <li className="space-y-3 p-4">
-      <div className="flex flex-wrap items-start gap-4">
-        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+    <li className={`rounded-lg p-3 hover:bg-zinc-50 ${MOTION} ${busy ? 'opacity-70' : ''}`} aria-busy={busy}>
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-zinc-100">
           {thumbnail ? (
             <img src={thumbnail} alt={item.name} className="h-full w-full object-cover" />
           ) : (
-            <span className="flex h-full items-center justify-center text-xs text-slate-400">
-              {item.image ? 'Image' : 'No image'}
+            <span className="flex h-full items-center justify-center text-zinc-400">
+              <ImageSquareIcon size={24} aria-label={item.image ? 'Image saved' : 'No image'} />
             </span>
           )}
         </div>
-        <div className="min-w-0 flex-1">
-          <p className={item.is_available ? 'font-medium text-slate-900' : 'font-medium text-slate-400'}>
-            {item.name} <span className="text-slate-600">· ${formatPrice(item.price_cents)}</span>
-            {!item.is_available && <span className="ml-2 text-xs uppercase text-amber-700">Hidden</span>}
-          </p>
-          {item.description && <p className="text-sm text-slate-500">{item.description}</p>}
+
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className={`font-medium ${item.is_available ? 'text-zinc-950' : 'text-zinc-400'}`}>{item.name}</p>
+            {!item.is_available && <Badge tone="warning">Hidden</Badge>}
+          </div>
+          {item.description && <p className="line-clamp-1 text-sm text-zinc-500">{item.description}</p>}
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button type="button" aria-label="Move up" disabled={busy || isFirst} onClick={() => void run(() => actions.move(-1))} className={BUTTON}>
-            ↑
-          </button>
-          <button type="button" aria-label="Move down" disabled={busy || isLast} onClick={() => void run(() => actions.move(1))} className={BUTTON}>
-            ↓
-          </button>
-          <button type="button" disabled={busy} onClick={() => setMode('edit')} className={BUTTON}>
-            Edit
-          </button>
-          <button
-            type="button"
+
+        <p className="font-mono text-sm font-medium text-zinc-950">{formatMoney(item.price_cents)}</p>
+
+        <div className="flex flex-wrap items-center gap-1">
+          <IconButton label="Move up" icon={<CaretUpIcon size={16} />} disabled={busy || isFirst} onClick={() => void run(() => actions.move(-1))} />
+          <IconButton label="Move down" icon={<CaretDownIcon size={16} />} disabled={busy || isLast} onClick={() => void run(() => actions.move(1))} />
+          <IconButton label="Edit" icon={<PencilSimpleIcon size={16} />} disabled={busy} onClick={() => setMode(mode === 'edit' ? 'view' : 'edit')} />
+          <IconButton
+            label={item.is_available ? 'Hide from the tables' : 'Show on the tables'}
+            icon={item.is_available ? <EyeIcon size={16} /> : <EyeSlashIcon size={16} />}
             disabled={busy}
             onClick={() => void run(() => actions.update({ is_available: !item.is_available }))}
-            className={BUTTON}
+          />
+          <label
+            title={item.image ? 'Change image' : 'Add image'}
+            className={`inline-flex cursor-pointer items-center justify-center rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-zinc-950 ${MOTION} ${
+              busy ? 'pointer-events-none opacity-40' : ''
+            }`}
           >
-            {item.is_available ? 'Hide' : 'Show'}
-          </button>
-          <label className={`${BUTTON} cursor-pointer ${busy ? 'pointer-events-none opacity-50' : ''}`}>
-            {busy ? 'Working…' : item.image ? 'Change image' : 'Add image'}
-            <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFile} className="sr-only" />
+            <UploadSimpleIcon size={16} aria-hidden />
+            <span className="sr-only">{item.image ? 'Change image' : 'Add image'}</span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              disabled={busy}
+              onChange={handleFile}
+              className="sr-only"
+            />
           </label>
           {item.image && (
-            <button type="button" disabled={busy} onClick={() => void run(actions.removeImage)} className={BUTTON}>
-              Remove image
-            </button>
+            <IconButton label="Remove image" icon={<XIcon size={16} />} disabled={busy} onClick={() => void run(actions.removeImage)} />
           )}
-          <button type="button" disabled={busy} onClick={() => setMode('confirm-delete')} className={DANGER_BUTTON}>
-            Delete
-          </button>
+          <IconButton label="Delete item" tone="danger" icon={<TrashIcon size={16} />} disabled={busy} onClick={() => setMode('confirm-delete')} />
         </div>
       </div>
 
       {mode === 'edit' && (
-        <div className="space-y-2">
-          <label className="block max-w-xs space-y-1">
-            <span className="text-sm text-slate-700">Category</span>
-            <select
+        <div className="mt-4 space-y-4">
+          <Field label="Category" className="max-w-xs">
+            <Select
               value={item.category_id}
               disabled={busy}
-              onChange={(e) => void run(() => actions.update({ category_id: e.target.value }))}
-              className={INPUT}
+              onChange={(e) => void run(() => actions.update({ category_id: e.target.value }), true)}
             >
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
               ))}
-            </select>
-          </label>
+            </Select>
+          </Field>
           <ItemForm
             initial={item}
-            submitLabel="Save"
-            onSubmit={(values) => run(() => actions.update(values))}
+            submitLabel="Save changes"
+            onSubmit={(values) => run(() => actions.update(values), true)}
             onCancel={() => setMode('view')}
           />
         </div>
       )}
 
       {mode === 'confirm-delete' && (
-        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
-          <span>Delete “{item.name}” and its image?</span>
-          <button type="button" disabled={busy} onClick={() => void run(actions.remove)} className={DANGER_BUTTON}>
-            Delete item
-          </button>
-          <button type="button" disabled={busy} onClick={() => setMode('view')} className={BUTTON}>
-            Cancel
-          </button>
+        <div className="mt-4 flex flex-wrap items-center gap-4 rounded-xl bg-red-50 p-4">
+          <p className="flex-1 text-sm text-red-800">
+            Delete {item.name}? Its image is deleted too. This cannot be undone.
+          </p>
+          <div className="flex gap-2">
+            <Button variant="danger" disabled={busy} onClick={() => void run(actions.remove, true)}>
+              Delete item
+            </Button>
+            <Button variant="ghost" disabled={busy} onClick={() => setMode('view')}>
+              Keep it
+            </Button>
+          </div>
         </div>
       )}
 
       {error && (
-        <p role="alert" className="text-sm text-red-600">
-          {error}
-        </p>
+        <div className="mt-2">
+          <ErrorText>{error}</ErrorText>
+        </div>
       )}
     </li>
   )

@@ -16,20 +16,35 @@ export interface TableWithPin extends Table {
 export type TableChanges = Partial<Pick<Table, 'name' | 'is_active'>>
 
 /** Error with a message ready to show to the admin. */
-export class TableError extends Error {}
+export class TableError extends Error {
+  /** HTTP status of the failed request (0 when the server never answered). */
+  readonly status: number
+
+  constructor(message: string, status = 0) {
+    super(message)
+    this.status = status
+  }
+
+  /** A repeated create of a table that exists: its PIN cannot be shown again, but nothing was duplicated. */
+  get alreadyCreated(): boolean {
+    return this.status === 409 && this.message.startsWith(ALREADY_CREATED)
+  }
+}
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
+const OFFLINE = 'Could not reach the server. Check your connection and try again.'
+const SERVER_FAILED = 'The server could not complete that. Please try again in a moment.'
+const ALREADY_CREATED = 'This table was already created'
 
 async function errorFrom(response: Response): Promise<TableError> {
-  if (response.status === 409) return new TableError('Another table already has that name.')
-  if (response.status === 404) return new TableError('This table no longer exists.')
-  if (response.status === 422) {
-    const body = (await response.json().catch(() => null)) as { detail?: unknown } | null
-    // Domain errors carry a readable message; schema errors carry a list of field problems.
-    if (typeof body?.detail === 'string') return new TableError(`${body.detail}.`)
-    return new TableError('Please check the fields and try again.')
+  const body = (await response.json().catch(() => null)) as { detail?: unknown } | null
+  // The server's own message tells conflicts apart (name in use, table already created, id taken).
+  if (typeof body?.detail === 'string') {
+    return new TableError(body.detail.endsWith('.') ? body.detail : `${body.detail}.`, response.status)
   }
-  return new TableError('Could not reach the server. Please try again.')
+  if (response.status === 422) return new TableError('Please check the fields and try again.', 422)
+  if (response.status === 401) return new TableError('Your session ended. Sign in again to keep editing.', 401)
+  return new TableError(SERVER_FAILED, response.status)
 }
 
 async function send(path: string, init: RequestInit): Promise<Response> {
@@ -37,19 +52,19 @@ async function send(path: string, init: RequestInit): Promise<Response> {
   try {
     response = await apiFetch(path, init)
   } catch {
-    throw new TableError('Could not reach the server. Please try again.')
+    throw new TableError(OFFLINE)
   }
   if (!response.ok) throw await errorFrom(response)
   return response
 }
-
 export async function listTables(): Promise<Table[]> {
   const response = await send('/tables', {})
   return (await response.json()) as Table[]
 }
 
-export async function createTable(name: string): Promise<TableWithPin> {
-  const response = await send('/tables', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ name }) })
+/** `id` is chosen by the client and kept until the create succeeds: a repeat never makes a second table. */
+export async function createTable(name: string, id?: string): Promise<TableWithPin> {
+  const response = await send('/tables', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ id, name }) })
   return (await response.json()) as TableWithPin
 }
 

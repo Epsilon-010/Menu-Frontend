@@ -1,4 +1,7 @@
+import { UsersThreeIcon } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
+import { EmptyState, ListSkeleton, LoadError } from '../../shared/ui/Feedback.tsx'
+import { Card, SectionHeader } from '../../shared/ui/Section.tsx'
 import {
   createStaffMember,
   listStaff,
@@ -59,7 +62,10 @@ export function StaffPanel() {
     try {
       const created = await createStaffMember(member)
       setList((current) =>
-        current.status === 'loaded' ? { status: 'loaded', staff: [...current.staff, created].sort(byName) } : current,
+        current.status === 'loaded'
+          ? // By id: a repeated create returns the same member, which must not appear twice.
+            { status: 'loaded', staff: [...current.staff.filter((m) => m.id !== created.id), created].sort(byName) }
+          : current,
       )
       return null
     } catch (error) {
@@ -86,41 +92,35 @@ export function StaffPanel() {
   }
 
   return (
-    <section className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-900">Staff</h2>
-        <p className="text-sm text-slate-600">
-          Waiters and cooks sign in with the username and password you give them. Deactivating someone, changing their
-          role or resetting their password signs them out of every device right away.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <SectionHeader
+        title="Staff"
+        description="Waiters and cooks sign in with the username and password you give them. Deactivating someone, changing their role or setting a new password signs them out of every device right away."
+      />
 
       <NewStaffMemberForm onCreate={handleCreate} />
 
-      {list.status === 'loading' && <p className="text-sm text-slate-500">Loading staff…</p>}
-      {list.status === 'error' && (
-        <p role="alert" className="text-sm text-red-600">
-          {list.message}{' '}
-          <button type="button" onClick={retry} className="underline">
-            Retry
-          </button>
-        </p>
-      )}
+      {list.status === 'loading' && <ListSkeleton label="Loading staff" />}
+      {list.status === 'error' && <LoadError message={list.message} onRetry={retry} />}
       {list.status === 'loaded' &&
         (list.staff.length === 0 ? (
-          <p className="text-sm text-slate-500">No waiters or cooks yet.</p>
+          <EmptyState icon={<UsersThreeIcon size={24} aria-hidden />} title="No waiters or cooks yet">
+            Add the people on your shift with the form above. Each one gets a username to sign in on their own device.
+          </EmptyState>
         ) : (
-          <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
-            {list.staff.map((member) => (
-              <StaffMemberRow
-                key={member.id}
-                member={member}
-                onUpdate={(changes) => handleUpdate(member.id, changes)}
-                onResetPassword={(password) => handleResetPassword(member.id, password)}
-              />
-            ))}
-          </ul>
+          <Card className="p-2">
+            <ul className="space-y-1">
+              {list.staff.map((member) => (
+                <StaffMemberRow
+                  key={member.id}
+                  member={member}
+                  onUpdate={(changes) => handleUpdate(member.id, changes)}
+                  onResetPassword={(password) => handleResetPassword(member.id, password)}
+                />
+              ))}
+            </ul>
+          </Card>
         ))}
-    </section>
+    </div>
   )
 }

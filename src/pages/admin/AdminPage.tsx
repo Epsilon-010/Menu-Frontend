@@ -1,10 +1,16 @@
+import { BowlFoodIcon, ChairIcon, UsersThreeIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { Outlet, useNavigate } from 'react-router'
 import { useAuth } from '../../features/auth/useAuth.ts'
-import { CatalogPanel } from '../../features/catalog/CatalogPanel.tsx'
-import { StaffPanel } from '../../features/staff/StaffPanel.tsx'
-import { TablesPanel } from '../../features/tables/TablesPanel.tsx'
+import { AppShell, type NavItem } from '../../shared/ui/AppShell.tsx'
 
+const ADMIN_NAV: NavItem[] = [
+  { to: '/admin', label: 'Menu', icon: <BowlFoodIcon size={16} aria-hidden />, end: true },
+  { to: '/admin/tables', label: 'Tables', icon: <ChairIcon size={16} aria-hidden /> },
+  { to: '/admin/staff', label: 'Staff', icon: <UsersThreeIcon size={16} aria-hidden /> },
+]
+
+/** Admin layout: the floating navigation and the selected section. */
 export function AdminPage() {
   const { state, signOut } = useAuth()
   const navigate = useNavigate()
@@ -20,29 +26,14 @@ export function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-slate-500">Admin panel</p>
-          <h1 className="text-xl font-semibold text-slate-900">{tenant.name}</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-slate-600">{user.full_name}</span>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            disabled={signingOut}
-            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-50"
-          >
-            Sign out
-          </button>
-        </div>
-      </header>
-      <main className="mx-auto max-w-4xl space-y-12 p-6">
-        <CatalogPanel />
-        <TablesPanel />
-        <StaffPanel />
-      </main>
-    </div>
+    <AppShell
+      business={tenant.name}
+      identity={user.full_name}
+      nav={ADMIN_NAV}
+      onSignOut={() => void handleSignOut()}
+      signingOut={signingOut}
+    >
+      <Outlet />
+    </AppShell>
   )
 }

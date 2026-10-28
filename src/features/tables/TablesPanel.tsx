@@ -1,4 +1,9 @@
+import { ChairIcon, KeyIcon, PlusIcon } from '@phosphor-icons/react'
 import { useEffect, useState, type FormEvent } from 'react'
+import { Button } from '../../shared/ui/Button.tsx'
+import { TextInput } from '../../shared/ui/Field.tsx'
+import { EmptyState, ErrorText, ListSkeleton, LoadError } from '../../shared/ui/Feedback.tsx'
+import { Card, SectionHeader } from '../../shared/ui/Section.tsx'
 import {
   createTable,
   listTables,
@@ -10,6 +15,7 @@ import {
   type TableWithPin,
 } from './api.ts'
 import { TableRow } from './TableRow.tsx'
+import { createDraftIds } from '../../shared/api/idempotency.ts'
 
 type ListState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded'; tables: Table[] }
 
@@ -34,6 +40,8 @@ export function TablesPanel() {
   const [createError, setCreateError] = useState<string | null>(null)
   // The PIN only exists in the create/regenerate response: shown once, never stored.
   const [credentials, setCredentials] = useState<TableWithPin | null>(null)
+  // Client ids for new tables: a retry of the same name reuses its id, another name gets a new one.
+  const [drafts] = useState(() => createDraftIds())
 
   useEffect(() => {
     let active = true
@@ -66,13 +74,20 @@ export function TablesPanel() {
     event.preventDefault()
     setSaving(true)
     try {
-      const created = await createTable(name)
+      const created = await createTable(name, drafts.idFor(name.trim()))
       upsert(withoutPin(created))
       setCredentials(created)
       setName('')
+      drafts.reset()
       setCreateError(null)
     } catch (error) {
       setCreateError(messageOf(error))
+      if (error instanceof TableError && error.alreadyCreated) {
+        // The first attempt did create it (its answer was lost): show it and start a fresh draft.
+        setName('')
+        drafts.reset()
+        retry()
+      }
     } finally {
       setSaving(false)
     }
@@ -100,88 +115,80 @@ export function TablesPanel() {
   }
 
   return (
-    <section className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-900">Tables</h2>
-        <p className="text-sm text-slate-600">
-          Each tablet signs in with its table code and PIN. The PIN is shown only once; generating a new one or
-          deactivating the table signs its tablet out right away.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <SectionHeader
+        title="Tables"
+        description="Each tablet signs in with its table code and a PIN. The PIN is shown only once; a new PIN or deactivating the table signs its tablet out right away."
+      />
 
-      <form onSubmit={handleCreate} className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
-        <h3 className="font-medium text-slate-900">Add a table</h3>
-        <div className="flex flex-wrap items-end gap-3">
-          <label className="flex-1 space-y-1">
-            <span className="text-sm text-slate-700">Name or number</span>
-            <input
+      <Card className="p-4">
+        <form onSubmit={handleCreate} className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <TextInput
+              aria-label="New table name"
               required
               maxLength={60}
-              placeholder="Table 4"
+              placeholder="New table, like Table 4 or Terrace 2"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="min-w-0 flex-1"
             />
-          </label>
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
-          >
-            {saving ? 'Adding…' : 'Add'}
-          </button>
-        </div>
-        {createError && (
-          <p role="alert" className="text-sm text-red-600">
-            {createError}
-          </p>
-        )}
-      </form>
+            <Button type="submit" variant="primary" icon={<PlusIcon size={16} aria-hidden />} disabled={saving}>
+              {saving ? 'Adding…' : 'Add table'}
+            </Button>
+          </div>
+          {createError && <ErrorText>{createError}</ErrorText>}
+        </form>
+      </Card>
 
       {credentials && (
-        <div role="status" className="space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-4">
-          <p className="font-medium text-amber-900">Tablet credentials for {credentials.name}</p>
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-amber-900">
-            <dt className="text-sm">Table code</dt>
-            <dd className="font-mono text-lg tracking-widest">{credentials.code}</dd>
-            <dt className="text-sm">PIN</dt>
-            <dd className="font-mono text-lg tracking-widest">{credentials.pin}</dd>
+        <div role="status" className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50 p-6">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-800">
+              <KeyIcon size={20} aria-hidden />
+            </span>
+            <div>
+              <p className="font-semibold text-amber-950">Tablet credentials for {credentials.name}</p>
+              <p className="text-sm text-amber-800">Write the PIN down now. It will not be shown again.</p>
+            </div>
+          </div>
+          <dl className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-xl bg-white p-4">
+              <dt className="text-xs font-medium text-zinc-500">Table code</dt>
+              <dd className="font-mono text-2xl tracking-widest text-zinc-950">{credentials.code}</dd>
+            </div>
+            <div className="rounded-xl bg-white p-4">
+              <dt className="text-xs font-medium text-zinc-500">PIN</dt>
+              <dd className="font-mono text-2xl tracking-widest text-zinc-950">{credentials.pin}</dd>
+            </div>
           </dl>
-          <p className="text-sm text-amber-800">Write the PIN down now: it will not be shown again.</p>
-          <button
-            type="button"
-            onClick={() => setCredentials(null)}
-            className="rounded-lg border border-amber-300 px-3 py-1.5 text-sm text-amber-900 hover:bg-amber-100"
-          >
-            Done
-          </button>
+          <Button variant="secondary" onClick={() => setCredentials(null)}>
+            I wrote it down
+          </Button>
         </div>
       )}
 
-      {list.status === 'loading' && <p className="text-sm text-slate-500">Loading tables…</p>}
-      {list.status === 'error' && (
-        <p role="alert" className="text-sm text-red-600">
-          {list.message}{' '}
-          <button type="button" onClick={retry} className="underline">
-            Retry
-          </button>
-        </p>
-      )}
+      {list.status === 'loading' && <ListSkeleton label="Loading tables" />}
+      {list.status === 'error' && <LoadError message={list.message} onRetry={retry} />}
       {list.status === 'loaded' &&
         (list.tables.length === 0 ? (
-          <p className="text-sm text-slate-500">No tables yet.</p>
+          <EmptyState icon={<ChairIcon size={24} aria-hidden />} title="No tables yet">
+            Add one table per tablet. You get a code and a PIN to sign that tablet in as its table.
+          </EmptyState>
         ) : (
-          <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
-            {list.tables.map((table) => (
-              <TableRow
-                key={table.id}
-                table={table}
-                onUpdate={(changes) => handleUpdate(table.id, changes)}
-                onRegeneratePin={() => handleRegeneratePin(table.id)}
-              />
-            ))}
-          </ul>
+          <Card className="p-2">
+            <ul className="space-y-1">
+              {list.tables.map((table) => (
+                <TableRow
+                  key={table.id}
+                  table={table}
+                  onUpdate={(changes) => handleUpdate(table.id, changes)}
+                  onRegeneratePin={() => handleRegeneratePin(table.id)}
+                />
+              ))}
+            </ul>
+          </Card>
         ))}
-    </section>
+    </div>
   )
 }

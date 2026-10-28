@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuth } from '../../features/auth/useAuth.ts'
 import { useSessionHeartbeat } from '../../features/auth/useSessionHeartbeat.ts'
+import { AppShell } from '../../shared/ui/AppShell.tsx'
 
 interface StaffShellProps {
   title: string
@@ -25,24 +26,13 @@ export function StaffShell({ title, children }: StaffShellProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-slate-500">
-            {title} · {tenant.name}
-          </p>
-          <h1 className="text-xl font-semibold text-slate-900">{user.full_name}</h1>
-        </div>
-        <button
-          type="button"
-          onClick={handleSignOut}
-          disabled={signingOut}
-          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-50"
-        >
-          Sign out
-        </button>
-      </header>
-      <main className="p-6">{children}</main>
-    </div>
+    <AppShell
+      business={tenant.name}
+      identity={`${title} · ${user.full_name}`}
+      onSignOut={() => void handleSignOut()}
+      signingOut={signingOut}
+    >
+      {children}
+    </AppShell>
   )
 }

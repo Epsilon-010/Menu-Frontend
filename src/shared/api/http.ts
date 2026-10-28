@@ -44,9 +44,28 @@ async function requestRefresh(): Promise<SessionInfo | null> {
   }
 }
 
+/** A request with no answer by then fails, so a hung connection never blocks the queue of changes. */
+export const REQUEST_TIMEOUT_MS = 15_000
+
+/** Aborts when either signal does (AbortSignal.any where the browser has it, older tablets otherwise). */
+function eitherSignal(first: AbortSignal, second: AbortSignal): AbortSignal {
+  if (typeof AbortSignal.any === 'function') return AbortSignal.any([first, second])
+  const controller = new AbortController()
+  for (const signal of [first, second]) {
+    if (signal.aborted) controller.abort(signal.reason)
+    else signal.addEventListener('abort', () => controller.abort(signal.reason), { once: true })
+  }
+  return controller.signal
+}
+
+function withDeadline(init: RequestInit): RequestInit {
+  const deadline = AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+  return { ...init, signal: init.signal ? eitherSignal(init.signal, deadline) : deadline }
+}
+
 /** Authenticated request: relies on the access cookie and transparently refreshes it once on 401. */
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
-  const response = await fetch(`${API_BASE}${path}`, init)
+  const response = await fetch(`${API_BASE}${path}`, withDeadline(init))
   if (response.status !== 401) return response
 
   const refreshed = await refreshSession()
@@ -54,7 +73,7 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
     sessionEndedListeners.forEach((listener) => listener())
     return response
   }
-  return fetch(`${API_BASE}${path}`, init)
+  return fetch(`${API_BASE}${path}`, withDeadline(init))
 }
 
 /** Request that must not trigger a refresh (login, logout). */

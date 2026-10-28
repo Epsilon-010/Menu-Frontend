@@ -6,6 +6,8 @@ export interface Table {
   /** Fixed device login code, unique across the platform. */
   code: string
   is_active: boolean
+  /** Token printed in the table's QR (the link `/q/<token>`); null if the table has none yet. */
+  qr_token: string | null
 }
 
 /** Returned only when a table is created or its PIN regenerated: the PIN is never shown again. */
@@ -75,6 +77,17 @@ export async function updateTable(id: string, changes: TableChanges): Promise<Ta
     headers: JSON_HEADERS,
     body: JSON.stringify(changes),
   })
+  return (await response.json()) as Table
+}
+
+/** The link printed as the table's QR code. */
+export function qrLink(token: string, origin: string = window.location.origin): string {
+  return `${origin}/q/${token}`
+}
+
+/** Issues a new QR token: the old QR stops working and guests who joined with it are signed out. */
+export async function regenerateTableQr(id: string): Promise<Table> {
+  const response = await send(`/tables/${id}/qr`, { method: 'POST' })
   return (await response.json()) as Table
 }
 

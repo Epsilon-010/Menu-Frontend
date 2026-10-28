@@ -2,10 +2,15 @@ import { createContext } from 'react'
 import type { Role } from '../../shared/api/http.ts'
 import type { Account } from './api.ts'
 
+/** Why a guest's visit is over: the table was paid or got a new QR, or the guest left. */
+export type VisitEndReason = 'ended' | 'left'
+
 export type AuthState =
   | { status: 'loading' }
   | { status: 'anonymous' }
   | { status: 'authenticated'; account: Account }
+  /** A guest's session ended: they see a closing screen, never the staff sign in form. */
+  | { status: 'visit-ended'; reason: VisitEndReason }
 
 export interface AuthContextValue {
   state: AuthState
@@ -13,6 +18,8 @@ export interface AuthContextValue {
   signIn: (username: string, password: string) => Promise<Role>
   /** Signs a tablet in as its table. Throws LoginError. */
   signInTable: (code: string, pin: string) => Promise<Role>
+  /** Joins a table's open visit with its QR token. Throws QrJoinError (or LoginError when the account cannot load). */
+  joinTable: (token: string, name: string) => Promise<Role>
   signOut: () => Promise<void>
 }
 

@@ -4,6 +4,7 @@ import type { Role } from '../../shared/api/http.ts'
 import { Skeleton } from '../../shared/ui/Feedback.tsx'
 import { accountRole, homePathFor } from './api.ts'
 import { useAuth } from './useAuth.ts'
+import { VisitEndedScreen } from './VisitEndedScreen.tsx'
 
 interface RequireRoleProps {
   roles: Role[]
@@ -24,13 +25,14 @@ function SessionSkeleton() {
   )
 }
 
-/** Renders its children only for the given roles; anonymous visitors go to /login. */
+/** Renders its children only for the given roles; anonymous visitors go to /login, ended guests see why. */
 export function RequireRole({ roles, children }: RequireRoleProps) {
   const { state } = useAuth()
   const location = useLocation()
 
   if (state.status === 'loading') return <SessionSkeleton />
-  if (state.status === 'anonymous') {
+  if (state.status === 'visit-ended' && roles.includes('guest')) return <VisitEndedScreen reason={state.reason} />
+  if (state.status === 'anonymous' || state.status === 'visit-ended') {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
   }
   const role = accountRole(state.account)

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createTable, TableError } from './api.ts'
+import { createTable, qrLink, regenerateTableQr, TableError } from './api.ts'
 
 function problem(status: number, detail?: string): Response {
   return new Response(JSON.stringify({ type: 'about:blank', title: 'Problem', status, ...(detail ? { detail } : {}) }), {
@@ -62,5 +62,19 @@ describe('tables API', () => {
     expect((await failureOf(createTable('Mesa 4', 't1'))).message).toBe(
       'The server could not complete that. Please try again in a moment.',
     )
+  })
+
+  it('issues a new QR token with POST and returns the table', async () => {
+    const calls = stubFetch(new Response(JSON.stringify({ id: 't1', qr_token: 'new-token' }), { status: 200 }))
+
+    const table = await regenerateTableQr('t1')
+
+    expect(calls[0].url).toBe('/api/v1/tables/t1/qr')
+    expect(calls[0].init?.method).toBe('POST')
+    expect(table.qr_token).toBe('new-token')
+  })
+
+  it('builds the QR link on the same origin as the app', () => {
+    expect(qrLink('abc123', 'https://menu.example')).toBe('https://menu.example/q/abc123')
   })
 })

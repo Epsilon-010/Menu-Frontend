@@ -15,13 +15,13 @@ import {
 describe('groupByPerson', () => {
   it('groups lines by who added them, in order of first appearance, with their own subtotal', () => {
     const groups = groupByPerson([
-      { id: 'a', added_by: 'Ana', subtotal_cents: 500, available: true },
+      { id: 'a', added_by: 'Guest 1', subtotal_cents: 500, available: true },
       { id: 'b', added_by: 'Tablet', subtotal_cents: 300, available: true },
-      { id: 'c', added_by: 'Ana', subtotal_cents: 200, available: true },
+      { id: 'c', added_by: 'Guest 1', subtotal_cents: 200, available: true },
     ])
 
     expect(groups.map((group) => [group.person, group.lines.map((line) => line.id), group.subtotal_cents])).toEqual([
-      ['Ana', ['a', 'c'], 700],
+      ['Guest 1', ['a', 'c'], 700],
       ['Tablet', ['b'], 300],
     ])
   })

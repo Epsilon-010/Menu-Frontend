@@ -58,7 +58,7 @@ export function JoinTablePage() {
               type="text"
               autoComplete="given-name"
               maxLength={GUEST_NAME_MAX_LENGTH}
-              placeholder="Ana"
+              placeholder="Guest 1"
               value={name}
               onChange={(event) => setName(event.target.value)}
               disabled={joining}

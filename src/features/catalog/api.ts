@@ -31,6 +31,8 @@ export interface CategoryWithItems extends Category {
 }
 
 export interface ItemDraft {
+  /** Chosen by the client and kept until the create succeeds: a repeat returns the same item. */
+  id?: string
   category_id: string
   name: string
   description: string
@@ -53,7 +55,15 @@ interface UploadSignature {
 }
 
 /** Error with a message ready to show to the admin. */
-export class CatalogError extends Error {}
+export class CatalogError extends Error {
+  /** HTTP status of the failed request (0 when the server never answered). */
+  readonly status: number
+
+  constructor(message: string, status = 0) {
+    super(message)
+    this.status = status
+  }
+}
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
 const OFFLINE = 'Could not reach the server. Check your connection and try again.'
@@ -63,11 +73,20 @@ async function errorFrom(response: Response): Promise<CatalogError> {
   const body = (await response.json().catch(() => null)) as { detail?: unknown } | null
   // Domain errors carry a readable message; schema errors carry a list of field problems.
   if (typeof body?.detail === 'string') {
-    return new CatalogError(body.detail.endsWith('.') ? body.detail : `${body.detail}.`)
+    return new CatalogError(body.detail.endsWith('.') ? body.detail : `${body.detail}.`, response.status)
   }
-  if (response.status === 422) return new CatalogError('Please check the fields and try again.')
-  if (response.status === 401) return new CatalogError('Your session ended. Sign in again to keep editing.')
-  return new CatalogError(SERVER_FAILED)
+  if (response.status === 422) return new CatalogError('Please check the fields and try again.', 422)
+  if (response.status === 401) return new CatalogError('Your session ended. Sign in again to keep editing.', 401)
+  return new CatalogError(SERVER_FAILED, response.status)
+}
+
+/** A delete is idempotent: if the row is already gone (another tab, a retried request), it is done. */
+async function alreadyGoneIsDone(request: Promise<Response>): Promise<void> {
+  try {
+    await request
+  } catch (error) {
+    if (!(error instanceof CatalogError && error.status === 404)) throw error
+  }
 }
 
 async function send(path: string, init: RequestInit = {}): Promise<Response> {
@@ -90,8 +109,9 @@ export async function listCatalog(): Promise<CategoryWithItems[]> {
   return (await (await send('/catalog/categories')).json()) as CategoryWithItems[]
 }
 
-export async function createCategory(name: string): Promise<Category> {
-  return (await (await send('/catalog/categories', json('POST', { name }))).json()) as Category
+/** `id` is chosen by the client and kept until the create succeeds: a repeat returns the same category. */
+export async function createCategory(name: string, id?: string): Promise<Category> {
+  return (await (await send('/catalog/categories', json('POST', { id, name }))).json()) as Category
 }
 
 export async function updateCategory(id: string, changes: CategoryChanges): Promise<Category> {
@@ -100,7 +120,7 @@ export async function updateCategory(id: string, changes: CategoryChanges): Prom
 
 /** Only empty categories can be deleted. */
 export async function deleteCategory(id: string): Promise<void> {
-  await send(`/catalog/categories/${id}`, { method: 'DELETE' })
+  await alreadyGoneIsDone(send(`/catalog/categories/${id}`, { method: 'DELETE' }))
 }
 
 /** `ids` must list every category exactly once. */
@@ -117,7 +137,7 @@ export async function updateItem(id: string, changes: ItemChanges): Promise<Cata
 }
 
 export async function deleteItem(id: string): Promise<void> {
-  await send(`/catalog/items/${id}`, { method: 'DELETE' })
+  await alreadyGoneIsDone(send(`/catalog/items/${id}`, { method: 'DELETE' }))
 }
 
 /** `ids` must list every item of the category exactly once. */

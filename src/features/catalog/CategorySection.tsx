@@ -16,6 +16,7 @@ import { Card } from '../../shared/ui/Section.tsx'
 import type { Category, CategoryChanges, CategoryWithItems } from './api.ts'
 import { ItemForm, type ItemFormValues } from './ItemForm.tsx'
 import { ItemRow, type ItemActions } from './ItemRow.tsx'
+import { useRowAction } from '../../shared/ui/useRowAction.ts'
 
 type Mode = { kind: 'view' } | { kind: 'rename'; name: string } | { kind: 'add-item' } | { kind: 'confirm-delete' }
 
@@ -24,7 +25,8 @@ export interface CategoryActions {
   update: (changes: CategoryChanges) => Promise<string | null>
   move: (delta: -1 | 1) => Promise<string | null>
   remove: () => Promise<string | null>
-  addItem: (values: ItemFormValues) => Promise<string | null>
+  /** `id` identifies the new item: the same id on a retry returns the item instead of a duplicate. */
+  addItem: (values: ItemFormValues, id: string) => Promise<string | null>
   itemActions: (itemId: string) => ItemActions
 }
 
@@ -38,17 +40,23 @@ interface CategorySectionProps {
 
 export function CategorySection({ category, categories, isFirst, isLast, actions }: CategorySectionProps) {
   const [mode, setMode] = useState<Mode>({ kind: 'view' })
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { busy, error, run: runAction } = useRowAction()
+  // One id per new item, kept until its create succeeds: a retry never makes a duplicate.
+  const [itemDraftId, setItemDraftId] = useState(() => crypto.randomUUID())
 
   /** `close` returns to the plain view on success; quick actions keep an open form as it is. */
-  async function run(action: () => Promise<string | null>, close = false): Promise<string | null> {
-    setBusy(true)
-    const failure = await action()
-    setBusy(false)
-    setError(failure)
-    if (failure === null && close) setMode({ kind: 'view' })
-    return failure
+  function run(action: () => Promise<string | null>, close = false): Promise<string | null> {
+    return runAction(action, close ? () => setMode({ kind: 'view' }) : undefined)
+  }
+
+  function addItem(values: ItemFormValues): Promise<string | null> {
+    return runAction(
+      () => actions.addItem(values, itemDraftId),
+      () => {
+        setItemDraftId(crypto.randomUUID())
+        setMode({ kind: 'view' })
+      },
+    )
   }
 
   function handleRename(event: FormEvent<HTMLFormElement>) {
@@ -161,7 +169,7 @@ export function CategorySection({ category, categories, isFirst, isLast, actions
         {mode.kind === 'add-item' ? (
           <ItemForm
             submitLabel="Add item"
-            onSubmit={(values) => run(() => actions.addItem(values), true)}
+            onSubmit={addItem}
             onCancel={() => setMode({ kind: 'view' })}
           />
         ) : (

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createLatestOnly, createSerialQueue } from './sync.ts'
+import { createChangeRunner, createLatestOnly, createSerialQueue } from './sync.ts'
 
 /** A promise the test resolves or rejects by hand, to control completion order. */
 function deferred<T>() {
@@ -92,5 +92,65 @@ describe('createLatestOnly', () => {
     await run
 
     expect(applied).toEqual([])
+  })
+})
+
+describe('createChangeRunner', () => {
+  type Snapshot = string[]
+
+  function setup(reloadResults: (string | null)[]) {
+    let catalog: Snapshot = ['v0']
+    const stale: string[] = []
+    const runner = createChangeRunner<Snapshot>({
+      enqueue: createSerialQueue(),
+      current: () => catalog,
+      reload: async () => {
+        const failure = reloadResults.shift() ?? null
+        if (failure === null) catalog = [`v${Number(catalog[0].slice(1)) + 1}`]
+        return failure
+      },
+      messageOf: (error) => (error instanceof Error ? error.message : 'unknown'),
+      onStale: (message) => stale.push(message),
+    })
+    return { runner, stale, seen: () => catalog }
+  }
+
+  it('reports success and reloads after a change', async () => {
+    const { runner, stale, seen } = setup([null])
+
+    expect(await runner(async () => {})).toBeNull()
+    expect(seen()).toEqual(['v1'])
+    expect(stale).toEqual([])
+  })
+
+  it('treats a saved change whose reload failed as a success and flags the panel as stale', async () => {
+    const { runner, stale } = setup(['offline'])
+
+    // Not an error: the form must close, or pressing it again would create a duplicate.
+    expect(await runner(async () => {})).toBeNull()
+    expect(stale).toEqual(['offline'])
+  })
+
+  it('reports a failed change and still reloads the catalog', async () => {
+    const { runner, seen } = setup([null])
+
+    expect(
+      await runner(async () => {
+        throw new Error('Category name already in use.')
+      }),
+    ).toBe('Category name already in use.')
+    expect(seen()).toEqual(['v1'])
+  })
+
+  it('gives each queued change the catalog loaded after the previous one', async () => {
+    const { runner } = setup([null, null])
+    const seenByChanges: Snapshot[] = []
+
+    await Promise.all([
+      runner(async (current) => void seenByChanges.push(current)),
+      runner(async (current) => void seenByChanges.push(current)),
+    ])
+
+    expect(seenByChanges).toEqual([['v0'], ['v1']])
   })
 })

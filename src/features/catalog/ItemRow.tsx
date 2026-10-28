@@ -16,7 +16,8 @@ import { Field, Select } from '../../shared/ui/Field.tsx'
 import { Badge, ErrorText } from '../../shared/ui/Feedback.tsx'
 import type { CatalogItem, Category, ItemChanges } from './api.ts'
 import { ItemForm } from './ItemForm.tsx'
-import { formatPrice } from './price.ts'
+import { formatMoney } from './price.ts'
+import { useRowAction } from '../../shared/ui/useRowAction.ts'
 
 type Mode = 'view' | 'edit' | 'confirm-delete'
 
@@ -39,17 +40,11 @@ interface ItemRowProps {
 
 export function ItemRow({ item, categories, isFirst, isLast, actions }: ItemRowProps) {
   const [mode, setMode] = useState<Mode>('view')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { busy, error, run: runAction } = useRowAction()
 
   /** `close` returns to the plain view on success; quick actions keep an open form as it is. */
-  async function run(action: () => Promise<string | null>, close = false): Promise<string | null> {
-    setBusy(true)
-    const failure = await action()
-    setBusy(false)
-    setError(failure)
-    if (failure === null && close) setMode('view')
-    return failure
+  function run(action: () => Promise<string | null>, close = false): Promise<string | null> {
+    return runAction(action, close ? () => setMode('view') : undefined)
   }
 
   function handleFile(event: ChangeEvent<HTMLInputElement>) {
@@ -81,7 +76,7 @@ export function ItemRow({ item, categories, isFirst, isLast, actions }: ItemRowP
           {item.description && <p className="line-clamp-1 text-sm text-zinc-500">{item.description}</p>}
         </div>
 
-        <p className="font-mono text-sm font-medium text-zinc-950">${formatPrice(item.price_cents)}</p>
+        <p className="font-mono text-sm font-medium text-zinc-950">{formatMoney(item.price_cents)}</p>
 
         <div className="flex flex-wrap items-center gap-1">
           <IconButton label="Move up" icon={<CaretUpIcon size={16} />} disabled={busy || isFirst} onClick={() => void run(() => actions.move(-1))} />

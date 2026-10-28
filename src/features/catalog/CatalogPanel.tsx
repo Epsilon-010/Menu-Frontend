@@ -1,5 +1,5 @@
 import { BowlFoodIcon, PlusIcon } from '@phosphor-icons/react'
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Button } from '../../shared/ui/Button.tsx'
 import { TextInput } from '../../shared/ui/Field.tsx'
 import { EmptyState, ErrorText, ListSkeleton, LoadError } from '../../shared/ui/Feedback.tsx'
@@ -23,7 +23,7 @@ import {
 import { CategorySection, type CategoryActions } from './CategorySection.tsx'
 import type { ItemActions } from './ItemRow.tsx'
 import { movedById } from './order.ts'
-import { createLatestOnly, createSerialQueue } from './sync.ts'
+import { createChangeRunner, createLatestOnly, createSerialQueue } from './sync.ts'
 
 type ListState =
   | { status: 'loading' }
@@ -44,7 +44,8 @@ export function CatalogPanel() {
   const [enqueue] = useState(createSerialQueue)
   const [latest] = useState(createLatestOnly)
   // The catalog as last loaded; queued changes read it when they run, not when they were clicked.
-  const catalog = useRef<CategoryWithItems[]>([])
+  // A stable mutable box (not a ref): it never drives rendering, only the queued changes read it.
+  const [catalog] = useState(() => ({ current: [] as CategoryWithItems[] }))
 
   /** Loads the catalog; only the newest load is applied. Returns the error message, if any. */
   const reload = useCallback(
@@ -63,7 +64,7 @@ export function CatalogPanel() {
       )
       return failure
     },
-    [latest],
+    [latest, catalog],
   )
 
   useEffect(() => {
@@ -71,32 +72,35 @@ export function CatalogPanel() {
     return () => latest.cancel()
   }, [reload, latest])
 
-  /**
-   * Runs a change after any earlier one finished, then reloads, so positions always match the server.
-   * A failed reload keeps what is on screen (and any open form) instead of replacing the panel.
-   */
-  function change(action: (current: CategoryWithItems[]) => Promise<unknown>): Promise<string | null> {
-    return enqueue(async () => {
-      let failure: string | null = null
-      try {
-        await action(catalog.current)
-      } catch (error) {
-        failure = messageOf(error)
-      }
-      // Reload even after a failure: another tab may have changed the catalog.
-      const reloadFailure = await reload(false)
-      if (failure !== null) return failure
-      return reloadFailure === null ? null : `Saved, but the menu could not refresh. ${reloadFailure}`
-    })
-  }
+  // Set when a change was saved but the screen could not refresh afterwards.
+  const [stale, setStale] = useState<string | null>(null)
+  // One id per new category, kept until its create succeeds: a retry never makes a duplicate.
+  const [draftId, setDraftId] = useState(() => crypto.randomUUID())
+
+  // Runs changes one at a time, then reloads, so positions always match the server. A saved change
+  // is a success even when the reload fails (see createChangeRunner); the panel then says it is stale.
+  const change = createChangeRunner<CategoryWithItems[]>({
+    enqueue,
+    current: () => catalog.current,
+    reload: async () => {
+      const failure = await reload(false)
+      if (failure === null) setStale(null)
+      return failure
+    },
+    messageOf,
+    onStale: setStale,
+  })
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setSaving(true)
-    const failure = await change(() => createCategory(name))
+    const failure = await change(() => createCategory(name, draftId))
     setSaving(false)
     setCreateError(failure)
-    if (failure === null) setName('')
+    if (failure === null) {
+      setName('')
+      setDraftId(crypto.randomUUID())
+    }
   }
 
   const header = (
@@ -180,7 +184,7 @@ export function CatalogPanel() {
       move: (delta) =>
         change((current) => reorderCategories(movedById(current.map((entry) => entry.id), category.id, delta))),
       remove: () => change(() => deleteCategory(category.id)),
-      addItem: (values) => change(() => createItem({ ...values, category_id: category.id })),
+      addItem: (values, id) => change(() => createItem({ ...values, id, category_id: category.id })),
       itemActions: itemActions(category.id),
     }
   }
@@ -189,6 +193,14 @@ export function CatalogPanel() {
     <div className="space-y-8">
       {header}
       {addCategory}
+      {stale && (
+        <div role="status" className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-amber-50 p-4">
+          <p className="text-sm text-amber-900">Your change was saved, but the menu could not refresh. {stale}</p>
+          <Button variant="secondary" onClick={() => void reload(false).then((failure) => setStale(failure))}>
+            Refresh the menu
+          </Button>
+        </div>
+      )}
       {categories.length === 0 ? (
         <EmptyState icon={<BowlFoodIcon size={24} aria-hidden />} title="Start your menu with a category">
           Group your dishes the way guests look for them, like Tacos, Drinks or Desserts. Then add items with a price

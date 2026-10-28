@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatPrice, MAX_PRICE_CENTS, parsePrice } from './price.ts'
+import { CURRENCY_SYMBOL, formatMoney, formatPrice, MAX_PRICE_CENTS, parsePrice } from './price.ts'
 
 describe('parsePrice', () => {
   it.each([
@@ -43,5 +43,11 @@ describe('formatPrice', () => {
     for (const cents of [0, 1, 99, 100, 1234, MAX_PRICE_CENTS]) {
       expect(parsePrice(formatPrice(cents))).toBe(cents)
     }
+  })
+})
+
+describe('formatMoney', () => {
+  it('adds the currency symbol in one place', () => {
+    expect(formatMoney(2550)).toBe(`${CURRENCY_SYMBOL}25.50`)
   })
 })

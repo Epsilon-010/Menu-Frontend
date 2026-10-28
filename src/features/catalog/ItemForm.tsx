@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Button } from '../../shared/ui/Button.tsx'
 import { Field, TextArea, TextInput } from '../../shared/ui/Field.tsx'
 import { ErrorText } from '../../shared/ui/Feedback.tsx'
-import { formatPrice, MAX_PRICE_CENTS, parsePrice } from './price.ts'
+import { CURRENCY_SYMBOL, formatPrice, MAX_PRICE_CENTS, parsePrice } from './price.ts'
 
 export interface ItemFormValues {
   name: string
@@ -47,7 +47,7 @@ export function ItemForm({ initial, submitLabel, onSubmit, onCancel }: ItemFormP
         <Field label="Price">
           <div className="relative">
             <span aria-hidden className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-zinc-400">
-              $
+              {CURRENCY_SYMBOL}
             </span>
             <TextInput
               required

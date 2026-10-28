@@ -1,5 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { attachItemImage, CatalogError, listCatalog, uploadImageFile } from './api.ts'
+import {
+  attachItemImage,
+  CatalogError,
+  createCategory,
+  createItem,
+  deleteCategory,
+  deleteItem,
+  listCatalog,
+  uploadImageFile,
+} from './api.ts'
 
 function jsonResponse(status: number, body: unknown, contentType = 'application/json'): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': contentType } })
@@ -121,5 +130,24 @@ describe('image upload', () => {
     expect((await failureOf(uploadImageFile(big))).message).toBe('The image must be at most 5 MB.')
 
     expect(calls.map((call) => call.url)).toEqual(['/api/v1/catalog/images/signature', '/api/v1/catalog/images/signature'])
+  })
+})
+
+describe('idempotent writes', () => {
+  it('sends the client id with every create, so a repeat returns the same resource', async () => {
+    const calls = stubFetch(jsonResponse(201, { id: 'c1' }), jsonResponse(201, { id: 'i1' }))
+
+    await createCategory('Tacos', 'c1')
+    await createItem({ id: 'i1', category_id: 'c1', name: 'Pastor', description: '', price_cents: 2500 })
+
+    expect(JSON.parse(String(calls[0].init?.body))).toEqual({ id: 'c1', name: 'Tacos' })
+    expect(JSON.parse(String(calls[1].init?.body))).toMatchObject({ id: 'i1', category_id: 'c1' })
+  })
+
+  it('treats deleting something already gone as done', async () => {
+    stubFetch(problem(404, 'Item not found'), problem(404, 'Category not found'))
+
+    await expect(deleteItem('i1')).resolves.toBeUndefined()
+    await expect(deleteCategory('c1')).resolves.toBeUndefined()
   })
 })

@@ -16,6 +16,38 @@ export function createSerialQueue(): <T>(task: () => Promise<T>) => Promise<T> {
   }
 }
 
+interface ChangeRunnerDeps<Catalog> {
+  enqueue: <T>(task: () => Promise<T>) => Promise<T>
+  /** The catalog as last loaded, read when a queued change actually runs. */
+  current: () => Catalog
+  /** Reloads the catalog; resolves to an error message, or null when it loaded. */
+  reload: () => Promise<string | null>
+  messageOf: (error: unknown) => string
+  /** The change was saved but the screen could not refresh: show it, without calling it a failure. */
+  onStale: (message: string) => void
+}
+
+/**
+ * Runs each change after the previous one, then reloads. A change that the server saved is always
+ * reported as a success, even if the reload fails: treating it as a failure would keep the form
+ * open and invite pressing it again (a duplicate create).
+ */
+export function createChangeRunner<Catalog>(deps: ChangeRunnerDeps<Catalog>) {
+  return (action: (current: Catalog) => Promise<unknown>): Promise<string | null> =>
+    deps.enqueue(async () => {
+      try {
+        await action(deps.current())
+      } catch (error) {
+        // Reload even after a failure: another tab may have changed the catalog.
+        await deps.reload()
+        return deps.messageOf(error)
+      }
+      const reloadFailure = await deps.reload()
+      if (reloadFailure !== null) deps.onStale(reloadFailure)
+      return null
+    })
+}
+
 export interface LatestOnly {
   /** Starts a request; `apply` and `fail` run only if no newer request started meanwhile. */
   run<T>(request: () => Promise<T>, apply: (value: T) => void, fail?: (error: unknown) => void): Promise<void>

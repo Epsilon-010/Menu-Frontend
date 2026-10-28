@@ -7,7 +7,9 @@ import { useRowAction } from '../../shared/ui/useRowAction.ts'
 import { formatMoney } from '../catalog/price.ts'
 import { OrderCard } from '../ordering/OrderCard.tsx'
 import { clockTime } from '../ordering/logic.ts'
-import { PAYMENT_METHODS, type PaymentMethod, type TableOverview } from './api.ts'
+import { PAYMENT_METHODS, type NewOrderDish, type PaymentMethod, type TableOverview } from './api.ts'
+import { AddDishControl, CancelDishControl } from './DishCorrections.tsx'
+import { acceptsNewDishes, canCancelDish } from './logic.ts'
 
 type Mode = { kind: 'view' } | { kind: 'pay'; method: PaymentMethod } | { kind: 'confirm-close' }
 
@@ -17,10 +19,13 @@ interface TableBillCardProps {
   onOpen: () => Promise<string | null>
   onPay: (method: PaymentMethod) => Promise<string | null>
   onClose: () => Promise<string | null>
+  /** Corrections while the bill is open: each resolves to an error message, or null when done. */
+  onCancelDish: (orderId: string, itemId: string, reason: string) => Promise<string | null>
+  onAddDish: (orderId: string, dish: NewOrderDish) => Promise<string | null>
 }
 
 /** One table for the waiter: open it, follow its orders and register the payment. */
-export function TableBillCard({ table, onOpen, onPay, onClose }: TableBillCardProps) {
+export function TableBillCard({ table, onOpen, onPay, onClose, onCancelDish, onAddDish }: TableBillCardProps) {
   const [mode, setMode] = useState<Mode>({ kind: 'view' })
   const { busy, error, run: runAction } = useRowAction()
   const { bill } = table
@@ -63,7 +68,16 @@ export function TableBillCard({ table, onOpen, onPay, onClose }: TableBillCardPr
       {bill && bill.orders.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2">
           {bill.orders.map((order) => (
-            <OrderCard key={order.id} order={order} />
+            <OrderCard
+              key={order.id}
+              order={order}
+              itemActions={(item) =>
+                canCancelDish(bill, item) && (
+                  <CancelDishControl onCancel={(reason) => onCancelDish(order.id, item.id, reason)} />
+                )
+              }
+              footer={acceptsNewDishes(bill) && <AddDishControl onAdd={(dish) => onAddDish(order.id, dish)} />}
+            />
           ))}
         </div>
       )}

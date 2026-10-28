@@ -24,11 +24,16 @@ export function splitDelivery(order: StaffOrder): DeliveryGroups {
   }
 }
 
-/** Like "Table 1 · Order #12 · 2 of 5 delivered"; rejected dishes are not owed, so they are left out. */
-export function deliveryCounter(order: StaffOrder): string {
+/** Like "2 of 5 delivered"; rejected dishes are not owed, so they are left out. */
+export function deliveryProgress(order: StaffOrder): string {
   const owed = order.items.filter((item) => item.status !== 'cancelled')
   const delivered = owed.filter((item) => item.status === 'delivered').length
-  return `${order.table_name} · Order #${order.number} · ${delivered} of ${owed.length} delivered`
+  return `${delivered} of ${owed.length} delivered`
+}
+
+/** Like "Table 1 · Order #12 · 2 of 5 delivered". */
+export function deliveryCounter(order: StaffOrder): string {
+  return `${order.table_name} · Order #${order.number} · ${deliveryProgress(order)}`
 }
 
 export function hasReady(order: StaffOrder): boolean {

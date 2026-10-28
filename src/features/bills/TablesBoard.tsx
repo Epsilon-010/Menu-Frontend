@@ -2,12 +2,15 @@ import { ChairIcon } from '@phosphor-icons/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { EmptyState, ListSkeleton, LoadError } from '../../shared/ui/Feedback.tsx'
 import { SectionHeader } from '../../shared/ui/Section.tsx'
+import { OrdersError, updateItemStatus } from '../kitchen/api.ts'
 import {
+  addOrderDish,
   BillError,
   closeTable,
   listTableBills,
   openTable,
   registerPayment,
+  type NewOrderDish,
   type PaymentMethod,
   type TableOverview,
 } from './api.ts'
@@ -19,7 +22,9 @@ const STALE = 'Saved, but the list could not refresh. It updates again in a few 
 type ListState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded'; tables: TableOverview[] }
 
 function messageOf(error: unknown): string {
-  return error instanceof BillError ? error.message : 'Something went wrong. Please try again.'
+  return error instanceof BillError || error instanceof OrdersError
+    ? error.message
+    : 'Something went wrong. Please try again.'
 }
 
 interface TablesBoardProps {
@@ -101,6 +106,9 @@ export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = 
       onPay: (method: PaymentMethod) =>
         bill ? act(() => registerPayment(bill.id, method)) : Promise.resolve('This table is not open.'),
       onClose: () => (bill ? act(() => closeTable(bill.id)) : Promise.resolve(null)),
+      onCancelDish: (orderId: string, itemId: string, reason: string) =>
+        act(() => updateItemStatus(orderId, [itemId], 'cancelled', reason)),
+      onAddDish: (orderId: string, dish: NewOrderDish) => act(() => addOrderDish(orderId, dish)),
     }
   }
 

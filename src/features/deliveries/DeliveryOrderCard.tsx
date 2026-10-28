@@ -7,7 +7,7 @@ import type { StaffOrder, StaffOrderItem } from '../kitchen/api.ts'
 import { staffItemLabel, staffItemTone } from '../kitchen/logic.ts'
 import { OrderTicketHeader } from '../kitchen/OrderTicketHeader.tsx'
 import { rejectionNote } from '../ordering/logic.ts'
-import { deliveryCounter, splitDelivery, visibleSections, type DeliverySection, type DeliveryView } from './logic.ts'
+import { deliveryCounter, deliveryProgress, splitDelivery, visibleSections, type DeliverySection, type DeliveryView } from './logic.ts'
 
 interface DeliveryOrderCardProps {
   order: StaffOrder
@@ -57,7 +57,20 @@ export function DeliveryOrderCard({ order, now, late, view, onDeliver }: Deliver
       aria-label={deliveryCounter(order)}
       className={`flex flex-col gap-4 rounded-2xl border bg-white p-4 ${late ? 'border-red-300 ring-2 ring-red-200' : 'border-zinc-200'}`}
     >
-      <OrderTicketHeader order={order} now={now} late={late} title={deliveryCounter(order)} />
+      <OrderTicketHeader
+        order={order}
+        now={now}
+        late={late}
+        title={
+          // Each half stays on one line; the counter only drops below the table when both cannot fit.
+          <>
+            <span className="whitespace-nowrap">
+              {order.table_name} · Order #{order.number}
+            </span>{' '}
+            <span className="whitespace-nowrap font-normal text-zinc-500">· {deliveryProgress(order)}</span>
+          </>
+        }
+      />
 
       {visibleSections(view).map((section) => {
         const items = groups[section]

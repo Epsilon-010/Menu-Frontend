@@ -87,3 +87,20 @@ export async function registerPayment(billId: string, method: PaymentMethod): Pr
 export async function closeTable(billId: string): Promise<void> {
   await send(`/bills/${billId}/close`, { method: 'POST' })
 }
+
+export interface NewOrderDish {
+  /** Chosen by the client and kept until the add succeeds: a retry never adds the dish twice. */
+  id: string
+  item_id: string
+  quantity: number
+  note: string
+}
+
+/**
+ * Adds a dish to an order of an open bill (a waiter swapping a rejected dish, for example).
+ * The server prices it from the menu; a paid bill answers 409.
+ */
+export async function addOrderDish(orderId: string, dish: NewOrderDish): Promise<Order> {
+  const body = { id: dish.id, item_id: dish.item_id, quantity: dish.quantity, note: dish.note.trim() }
+  return (await (await send(`/orders/${orderId}/items`, json(body))).json()) as Order
+}

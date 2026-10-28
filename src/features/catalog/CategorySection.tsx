@@ -16,6 +16,7 @@ import { Card } from '../../shared/ui/Section.tsx'
 import type { Category, CategoryChanges, CategoryWithItems } from './api.ts'
 import { ItemForm, type ItemFormValues } from './ItemForm.tsx'
 import { ItemRow, type ItemActions } from './ItemRow.tsx'
+import { createDraftIds } from '../../shared/api/idempotency.ts'
 import { useRowAction } from '../../shared/ui/useRowAction.ts'
 
 type Mode = { kind: 'view' } | { kind: 'rename'; name: string } | { kind: 'add-item' } | { kind: 'confirm-delete' }
@@ -41,8 +42,8 @@ interface CategorySectionProps {
 export function CategorySection({ category, categories, isFirst, isLast, actions }: CategorySectionProps) {
   const [mode, setMode] = useState<Mode>({ kind: 'view' })
   const { busy, error, run: runAction } = useRowAction()
-  // One id per new item, kept until its create succeeds: a retry never makes a duplicate.
-  const [itemDraftId, setItemDraftId] = useState(() => crypto.randomUUID())
+  // Client ids for new items: a retry of the same values reuses its id, edited values get a new one.
+  const [itemDrafts] = useState(() => createDraftIds())
 
   /** `close` returns to the plain view on success; quick actions keep an open form as it is. */
   function run(action: () => Promise<string | null>, close = false): Promise<string | null> {
@@ -51,9 +52,9 @@ export function CategorySection({ category, categories, isFirst, isLast, actions
 
   function addItem(values: ItemFormValues): Promise<string | null> {
     return runAction(
-      () => actions.addItem(values, itemDraftId),
+      () => actions.addItem(values, itemDrafts.idFor(JSON.stringify(values))),
       () => {
-        setItemDraftId(crypto.randomUUID())
+        itemDrafts.reset()
         setMode({ kind: 'view' })
       },
     )
@@ -170,7 +171,10 @@ export function CategorySection({ category, categories, isFirst, isLast, actions
           <ItemForm
             submitLabel="Add item"
             onSubmit={addItem}
-            onCancel={() => setMode({ kind: 'view' })}
+            onCancel={() => {
+              itemDrafts.reset()
+              setMode({ kind: 'view' })
+            }}
           />
         ) : (
           <Button variant="ghost" icon={<PlusIcon size={16} aria-hidden />} disabled={busy} onClick={() => setMode({ kind: 'add-item' })}>

@@ -6,6 +6,7 @@ import { ErrorText } from '../../shared/ui/Feedback.tsx'
 import { Card } from '../../shared/ui/Section.tsx'
 import type { NewStaffMember, StaffRole } from './api.ts'
 import { ROLE_LABELS } from './labels.ts'
+import { createDraftIds } from '../../shared/api/idempotency.ts'
 
 const EMPTY: NewStaffMember = { username: '', full_name: '', role: 'waiter', password: '' }
 
@@ -18,18 +19,18 @@ export function NewStaffMemberForm({ onCreate }: NewStaffMemberFormProps) {
   const [draft, setDraft] = useState<NewStaffMember>(EMPTY)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-  // One id per new member, kept until the create succeeds: a retry returns the same member.
-  const [draftId, setDraftId] = useState(() => crypto.randomUUID())
+  // Client ids for new members: a retry of the same data reuses its id, edited data gets a new one.
+  const [drafts] = useState(() => createDraftIds())
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setSaving(true)
-    const failure = await onCreate({ ...draft, id: draftId })
+    const failure = await onCreate({ ...draft, id: drafts.idFor(JSON.stringify(draft)) })
     setSaving(false)
     setError(failure)
     if (failure === null) {
       setDraft(EMPTY)
-      setDraftId(crypto.randomUUID())
+      drafts.reset()
     }
   }
 

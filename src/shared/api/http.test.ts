@@ -1,4 +1,4 @@
-﻿import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { apiFetch, REQUEST_TIMEOUT_MS } from './http.ts'
 
 afterEach(() => {
@@ -46,5 +46,26 @@ describe('apiFetch', () => {
     await expect(pending).rejects.toThrow('Timed out')
     expect(deadlines[0].ms).toBe(REQUEST_TIMEOUT_MS)
     timeout.mockRestore()
+  })
+})
+
+describe('apiFetch without AbortSignal.any (older tablet browsers)', () => {
+  it('still applies the deadline when the caller passes its own signal', async () => {
+    const original = AbortSignal.any
+    // @ts-expect-error simulating a browser that lacks the API
+    delete AbortSignal.any
+    const seen: AbortSignal[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init?: RequestInit) => {
+        if (init?.signal) seen.push(init.signal)
+        return new Response('{}', { status: 200 })
+      }),
+    )
+
+    await apiFetch('/catalog/categories', { signal: new AbortController().signal })
+
+    expect(seen).toHaveLength(1)
+    AbortSignal.any = original
   })
 })

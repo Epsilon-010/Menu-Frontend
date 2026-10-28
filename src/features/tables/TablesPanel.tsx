@@ -15,6 +15,7 @@ import {
   type TableWithPin,
 } from './api.ts'
 import { TableRow } from './TableRow.tsx'
+import { createDraftIds } from '../../shared/api/idempotency.ts'
 
 type ListState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded'; tables: Table[] }
 
@@ -39,8 +40,8 @@ export function TablesPanel() {
   const [createError, setCreateError] = useState<string | null>(null)
   // The PIN only exists in the create/regenerate response: shown once, never stored.
   const [credentials, setCredentials] = useState<TableWithPin | null>(null)
-  // One id per new table, kept until its create succeeds: a retry never makes a duplicate.
-  const [draftId, setDraftId] = useState(() => crypto.randomUUID())
+  // Client ids for new tables: a retry of the same name reuses its id, another name gets a new one.
+  const [drafts] = useState(() => createDraftIds())
 
   useEffect(() => {
     let active = true
@@ -73,18 +74,18 @@ export function TablesPanel() {
     event.preventDefault()
     setSaving(true)
     try {
-      const created = await createTable(name, draftId)
+      const created = await createTable(name, drafts.idFor(name.trim()))
       upsert(withoutPin(created))
       setCredentials(created)
       setName('')
-      setDraftId(crypto.randomUUID())
+      drafts.reset()
       setCreateError(null)
     } catch (error) {
       setCreateError(messageOf(error))
       if (error instanceof TableError && error.alreadyCreated) {
         // The first attempt did create it (its answer was lost): show it and start a fresh draft.
         setName('')
-        setDraftId(crypto.randomUUID())
+        drafts.reset()
         retry()
       }
     } finally {

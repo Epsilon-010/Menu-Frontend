@@ -23,6 +23,7 @@ import {
 import { CategorySection, type CategoryActions } from './CategorySection.tsx'
 import type { ItemActions } from './ItemRow.tsx'
 import { movedById } from './order.ts'
+import { createDraftIds } from '../../shared/api/idempotency.ts'
 import { createChangeRunner, createLatestOnly, createSerialQueue } from './sync.ts'
 
 type ListState =
@@ -74,8 +75,8 @@ export function CatalogPanel() {
 
   // Set when a change was saved but the screen could not refresh afterwards.
   const [stale, setStale] = useState<string | null>(null)
-  // One id per new category, kept until its create succeeds: a retry never makes a duplicate.
-  const [draftId, setDraftId] = useState(() => crypto.randomUUID())
+  // Client ids for new categories: a retry of the same name reuses its id, another name gets a new one.
+  const [drafts] = useState(() => createDraftIds())
 
   // Runs changes one at a time, then reloads, so positions always match the server. A saved change
   // is a success even when the reload fails (see createChangeRunner); the panel then says it is stale.
@@ -94,12 +95,12 @@ export function CatalogPanel() {
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setSaving(true)
-    const failure = await change(() => createCategory(name, draftId))
+    const failure = await change(() => createCategory(name, drafts.idFor(name.trim())))
     setSaving(false)
     setCreateError(failure)
     if (failure === null) {
       setName('')
-      setDraftId(crypto.randomUUID())
+      drafts.reset()
     }
   }
 

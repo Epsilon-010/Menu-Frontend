@@ -94,9 +94,9 @@ export function businessNameError(name: string): string | null {
 }
 
 /**
- * The server replays a sign-up with the same id, email and password, so the client id follows
- * those two: a retry after a lost answer reuses it even if the business name was edited.
+ * The server replays a sign-up only with the same id, email, password and business name, so the
+ * client id follows those three: editing any of them is a new sign-up with a new id.
  */
-export function signUpDraftKey(email: string, password: string): string {
-  return JSON.stringify([email.trim().toLowerCase(), password])
+export function signUpDraftKey(email: string, password: string, businessName: string): string {
+  return JSON.stringify([email.trim().toLowerCase(), password, businessName.trim()])
 }

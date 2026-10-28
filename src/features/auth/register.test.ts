@@ -118,8 +118,15 @@ describe('sign-up steps', () => {
     )
   })
 
-  it('keeps the same draft key for the same email and password, whatever the business name', () => {
-    expect(signUpDraftKey(' Owner@Example.com ', 'long-enough')).toBe(signUpDraftKey('owner@example.com', 'long-enough'))
-    expect(signUpDraftKey('owner@example.com', 'long-enough')).not.toBe(signUpDraftKey('owner@example.com', 'other-pass'))
+  it('keeps the same draft key only for the same email, password and business name', () => {
+    expect(signUpDraftKey(' Owner@Example.com ', 'long-enough', ' Tacos ')).toBe(
+      signUpDraftKey('owner@example.com', 'long-enough', 'Tacos'),
+    )
+    expect(signUpDraftKey('owner@example.com', 'long-enough', 'Tacos')).not.toBe(
+      signUpDraftKey('owner@example.com', 'other-pass', 'Tacos'),
+    )
+    expect(signUpDraftKey('owner@example.com', 'long-enough', 'Tacos')).not.toBe(
+      signUpDraftKey('owner@example.com', 'long-enough', 'Tacos Two'),
+    )
   })
 })

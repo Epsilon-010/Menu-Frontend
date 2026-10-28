@@ -68,7 +68,7 @@ export function RegisterPage() {
     const trimmedEmail = email.trim()
     try {
       const role = await register({
-        id: drafts.idFor(signUpDraftKey(trimmedEmail, password)),
+        id: drafts.idFor(signUpDraftKey(trimmedEmail, password, businessName)),
         email: trimmedEmail,
         password,
         business_name: businessName.trim(),

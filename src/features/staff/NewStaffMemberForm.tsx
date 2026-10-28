@@ -18,14 +18,19 @@ export function NewStaffMemberForm({ onCreate }: NewStaffMemberFormProps) {
   const [draft, setDraft] = useState<NewStaffMember>(EMPTY)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  // One id per new member, kept until the create succeeds: a retry returns the same member.
+  const [draftId, setDraftId] = useState(() => crypto.randomUUID())
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setSaving(true)
-    const failure = await onCreate(draft)
+    const failure = await onCreate({ ...draft, id: draftId })
     setSaving(false)
     setError(failure)
-    if (failure === null) setDraft(EMPTY)
+    if (failure === null) {
+      setDraft(EMPTY)
+      setDraftId(crypto.randomUUID())
+    }
   }
 
   return (

@@ -3,6 +3,7 @@ import { useState, type FormEvent, type ReactNode } from 'react'
 import { Navigate, useNavigate } from 'react-router'
 import { accountRole, homePathFor, LoginError, type LoginFailure } from '../features/auth/api.ts'
 import { useAuth } from '../features/auth/useAuth.ts'
+import { PIN_LENGTH, TABLE_CODE_LENGTH } from '../features/tables/credentials.ts'
 import type { Role } from '../shared/api/http.ts'
 import { buttonClass, MOTION } from '../shared/ui/classes.ts'
 import { Field, TextInput } from '../shared/ui/Field.tsx'
@@ -156,15 +157,18 @@ export function LoginPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              <Field label="Table code" hint="Six letters and digits, shown in the manager's table list.">
+              <Field
+                label="Table code"
+                hint={`${TABLE_CODE_LENGTH} letters and digits, shown in the manager's table list.`}
+              >
                 <TextInput
                   type="text"
                   autoComplete="off"
                   autoCapitalize="characters"
                   spellCheck={false}
                   required
-                  minLength={6}
-                  maxLength={6}
+                  minLength={TABLE_CODE_LENGTH}
+                  maxLength={TABLE_CODE_LENGTH}
                   value={account}
                   onChange={(event) => setAccount(event.target.value.toUpperCase())}
                   className="font-mono tracking-widest"
@@ -176,9 +180,9 @@ export function LoginPage() {
                   inputMode="numeric"
                   autoComplete="off"
                   required
-                  pattern="\d{6}"
-                  title="Six digits"
-                  maxLength={6}
+                  pattern={`\\d{${PIN_LENGTH}}`}
+                  title={`${PIN_LENGTH} digits`}
+                  maxLength={PIN_LENGTH}
                   value={secret}
                   onChange={(event) => setSecret(event.target.value)}
                   className="font-mono tracking-widest"

@@ -39,6 +39,8 @@ export function TablesPanel() {
   const [createError, setCreateError] = useState<string | null>(null)
   // The PIN only exists in the create/regenerate response: shown once, never stored.
   const [credentials, setCredentials] = useState<TableWithPin | null>(null)
+  // One id per new table, kept until its create succeeds: a retry never makes a duplicate.
+  const [draftId, setDraftId] = useState(() => crypto.randomUUID())
 
   useEffect(() => {
     let active = true
@@ -71,13 +73,20 @@ export function TablesPanel() {
     event.preventDefault()
     setSaving(true)
     try {
-      const created = await createTable(name)
+      const created = await createTable(name, draftId)
       upsert(withoutPin(created))
       setCredentials(created)
       setName('')
+      setDraftId(crypto.randomUUID())
       setCreateError(null)
     } catch (error) {
       setCreateError(messageOf(error))
+      if (error instanceof TableError && error.alreadyCreated) {
+        // The first attempt did create it (its answer was lost): show it and start a fresh draft.
+        setName('')
+        setDraftId(crypto.randomUUID())
+        retry()
+      }
     } finally {
       setSaving(false)
     }

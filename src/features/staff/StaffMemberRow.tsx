@@ -4,6 +4,7 @@ import { Button, IconButton } from '../../shared/ui/Button.tsx'
 import { MOTION } from '../../shared/ui/classes.ts'
 import { Select, TextInput } from '../../shared/ui/Field.tsx'
 import { Badge, ErrorText, SuccessText } from '../../shared/ui/Feedback.tsx'
+import { useRowAction } from '../../shared/ui/useRowAction.ts'
 import type { StaffMember, StaffMemberChanges, StaffRole } from './api.ts'
 import { ROLE_LABELS } from './labels.ts'
 
@@ -18,20 +19,15 @@ interface StaffMemberRowProps {
 
 export function StaffMemberRow({ member, onUpdate, onResetPassword }: StaffMemberRowProps) {
   const [mode, setMode] = useState<Mode>({ kind: 'view' })
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { busy, error, run: runAction } = useRowAction()
   const [notice, setNotice] = useState<string | null>(null)
 
-  async function run(action: () => Promise<string | null>, done: string | null = null) {
-    setBusy(true)
+  function run(action: () => Promise<string | null>, done: string | null = null) {
     setNotice(null)
-    const failure = await action()
-    setBusy(false)
-    setError(failure)
-    if (failure === null) {
+    return runAction(action, () => {
       setMode({ kind: 'view' })
       setNotice(done)
-    }
+    })
   }
 
   function handleSaveEdit(event: FormEvent<HTMLFormElement>) {

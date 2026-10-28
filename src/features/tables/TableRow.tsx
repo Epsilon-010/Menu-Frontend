@@ -4,6 +4,7 @@ import { Button, IconButton } from '../../shared/ui/Button.tsx'
 import { MOTION } from '../../shared/ui/classes.ts'
 import { TextInput } from '../../shared/ui/Field.tsx'
 import { Badge, ErrorText } from '../../shared/ui/Feedback.tsx'
+import { useRowAction } from '../../shared/ui/useRowAction.ts'
 import type { Table, TableChanges } from './api.ts'
 
 type Mode = { kind: 'view' } | { kind: 'rename'; name: string } | { kind: 'confirm-pin' }
@@ -17,15 +18,10 @@ interface TableRowProps {
 
 export function TableRow({ table, onUpdate, onRegeneratePin }: TableRowProps) {
   const [mode, setMode] = useState<Mode>({ kind: 'view' })
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { busy, error, run: runAction } = useRowAction()
 
-  async function run(action: () => Promise<string | null>) {
-    setBusy(true)
-    const failure = await action()
-    setBusy(false)
-    setError(failure)
-    if (failure === null) setMode({ kind: 'view' })
+  function run(action: () => Promise<string | null>) {
+    return runAction(action, () => setMode({ kind: 'view' }))
   }
 
   function handleRename(event: FormEvent<HTMLFormElement>) {

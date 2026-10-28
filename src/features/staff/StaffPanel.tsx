@@ -62,7 +62,10 @@ export function StaffPanel() {
     try {
       const created = await createStaffMember(member)
       setList((current) =>
-        current.status === 'loaded' ? { status: 'loaded', staff: [...current.staff, created].sort(byName) } : current,
+        current.status === 'loaded'
+          ? // By id: a repeated create returns the same member, which must not appear twice.
+            { status: 'loaded', staff: [...current.staff.filter((m) => m.id !== created.id), created].sort(byName) }
+          : current,
       )
       return null
     } catch (error) {

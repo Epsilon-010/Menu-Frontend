@@ -89,15 +89,13 @@ export function AppShell({ business, identity, nav = [], onSignOut, signingOut =
           )}
 
           {onSignOut && (
-            <button
-              type="button"
-              onClick={onSignOut}
-              disabled={signingOut}
-              className={`hidden sm:inline-flex ${buttonClass('ghost')}`}
-            >
-              <SignOutIcon size={16} aria-hidden />
-              {signingOut ? 'Signing out…' : 'Sign out'}
-            </button>
+            // The wrapper owns the visibility: the button's own classes already set its display.
+            <div className="hidden sm:block">
+              <button type="button" onClick={onSignOut} disabled={signingOut} className={buttonClass('ghost')}>
+                <SignOutIcon size={16} aria-hidden />
+                {signingOut ? 'Signing out…' : 'Sign out'}
+              </button>
+            </div>
           )}
 
           {hasMenu && (

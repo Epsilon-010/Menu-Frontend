@@ -22,11 +22,22 @@ function messageOf(error: unknown): string {
   return error instanceof BillError ? error.message : 'Something went wrong. Please try again.'
 }
 
+interface TablesBoardProps {
+  /** Grows when a live event says the tables changed: the board reloads. */
+  refreshSignal?: number
+  /** Receives every list that loads (for example to spot newly rejected dishes). */
+  onLoaded?: (tables: TableOverview[]) => void
+}
+
 /** Waiter view of every table: open it for its guests, follow its orders and take the payment. */
-export function TablesBoard() {
+export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = {}) {
   const [list, setList] = useState<ListState>({ status: 'loading' })
   const [stale, setStale] = useState(false)
   const requests = useRef(0)
+  const loaded = useRef(onLoaded)
+  useEffect(() => {
+    loaded.current = onLoaded
+  })
 
   /** Resolves to true when the list loaded; only the newest request is shown. */
   const reload = useCallback(async (): Promise<boolean> => {
@@ -37,6 +48,7 @@ export function TablesBoard() {
       if (id === requests.current) {
         setList({ status: 'loaded', tables })
         setStale(false)
+        loaded.current?.(tables)
       }
       return true
     } catch (error) {
@@ -58,6 +70,12 @@ export function TablesBoard() {
       window.clearInterval(timer)
     }
   }, [reload])
+
+  useEffect(() => {
+    if (refreshSignal === 0) return
+    const timer = window.setTimeout(() => void reload(), 0)
+    return () => window.clearTimeout(timer)
+  }, [refreshSignal, reload])
 
   function retry() {
     setList({ status: 'loading' })

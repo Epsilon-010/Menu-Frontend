@@ -50,7 +50,7 @@ export const router = createBrowserRouter([
   {
     path: '/kitchen',
     element: (
-      <RequireRole roles={['kitchen']}>
+      <RequireRole roles={['kitchen', 'admin']}>
         <KitchenPage />
       </RequireRole>
     ),

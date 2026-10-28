@@ -1,7 +1,7 @@
 import { Badge } from '../../shared/ui/Feedback.tsx'
 import { formatMoney } from '../catalog/price.ts'
 import type { Order } from './api.ts'
-import { clockTime, itemStatusLabel, itemStatusTone, orderStatusLabel } from './logic.ts'
+import { clockTime, itemStatusLabel, itemStatusTone, orderStatusLabel, rejectionNote } from './logic.ts'
 
 interface OrderCardProps {
   order: Order
@@ -32,7 +32,11 @@ export function OrderCard({ order, showPrices = true }: OrderCardProps) {
                 <span className="text-zinc-500"> · {item.added_by}</span>
               </p>
               {item.note && <p className="text-zinc-500">{item.note}</p>}
-              <Badge tone={itemStatusTone(item.status)}>{itemStatusLabel(item.status)}</Badge>
+              {item.status === 'cancelled' ? (
+                <p className="text-sm font-medium text-red-700">{rejectionNote(item)}</p>
+              ) : (
+                <Badge tone={itemStatusTone(item.status)}>{itemStatusLabel(item.status)}</Badge>
+              )}
             </div>
             {showPrices && (
               <span className="shrink-0 text-zinc-700 tabular-nums">{formatMoney(item.subtotal_cents)}</span>

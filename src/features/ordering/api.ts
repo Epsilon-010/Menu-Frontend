@@ -49,6 +49,8 @@ export interface OrderItem {
   note: string
   added_by: string
   status: OrderItemStatus
+  /** Why the kitchen or a waiter rejected the dish; null unless it is cancelled. */
+  cancel_reason: string | null
   unit_price_cents: number
   subtotal_cents: number
 }

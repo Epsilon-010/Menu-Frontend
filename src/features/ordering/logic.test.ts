@@ -9,6 +9,7 @@ import {
   needsCartReload,
   orderStatusLabel,
   reconnectDelay,
+  rejectionNote,
   unavailableNames,
 } from './logic.ts'
 
@@ -105,5 +106,17 @@ describe('createOrderSender', () => {
       ['d1', 5],
     ])
     expect(sender.draftId).toBe('d2')
+  })
+})
+
+describe('rejectionNote', () => {
+  it('shows why the kitchen rejected a dish', () => {
+    expect(rejectionNote({ status: 'cancelled', cancel_reason: 'Out of avocado' })).toBe('Rejected: Out of avocado')
+  })
+
+  it('says nothing for dishes that were not rejected or carry no reason', () => {
+    expect(rejectionNote({ status: 'ready', cancel_reason: null })).toBeNull()
+    expect(rejectionNote({ status: 'cancelled', cancel_reason: null })).toBe('Rejected')
+    expect(rejectionNote({ status: 'cancelled', cancel_reason: '  ' })).toBe('Rejected')
   })
 })

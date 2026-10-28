@@ -80,6 +80,13 @@ export function orderStatusLabel(status: OrderStatus): string {
   return ORDER_STATUS_LABELS[status]
 }
 
+/** What the table and the waiters read under a rejected dish: "Rejected: <reason>". */
+export function rejectionNote(item: { status: OrderItemStatus; cancel_reason: string | null }): string | null {
+  if (item.status !== 'cancelled') return null
+  const reason = item.cancel_reason?.trim()
+  return reason ? `Rejected: ${reason}` : 'Rejected'
+}
+
 export type StatusTone = 'neutral' | 'warning' | 'success'
 
 export function itemStatusTone(status: OrderItemStatus): StatusTone {

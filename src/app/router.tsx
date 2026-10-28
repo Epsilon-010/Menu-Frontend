@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router'
 import { RequireRole } from '../features/auth/RequireRole.tsx'
 import { CatalogPanel } from '../features/catalog/CatalogPanel.tsx'
+import { OrderSettingsPanel } from '../features/settings/OrderSettingsPanel.tsx'
 import { StaffPanel } from '../features/staff/StaffPanel.tsx'
 import { TablesPanel } from '../features/tables/TablesPanel.tsx'
 import { AdminPage } from '../pages/admin/AdminPage.tsx'
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
       { index: true, element: <CatalogPanel /> },
       { path: 'tables', element: <TablesPanel /> },
       { path: 'staff', element: <StaffPanel /> },
+      { path: 'settings', element: <OrderSettingsPanel /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
@@ -50,7 +52,7 @@ export const router = createBrowserRouter([
   {
     path: '/kitchen',
     element: (
-      <RequireRole roles={['kitchen']}>
+      <RequireRole roles={['kitchen', 'admin']}>
         <KitchenPage />
       </RequireRole>
     ),

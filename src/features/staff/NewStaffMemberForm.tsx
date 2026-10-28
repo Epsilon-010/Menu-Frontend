@@ -43,7 +43,7 @@ export function NewStaffMemberForm({ onCreate }: NewStaffMemberFormProps) {
             <TextInput
               required
               maxLength={120}
-              placeholder="Lucía Ramírez"
+              placeholder="Full name"
               value={draft.full_name}
               onChange={(event) => setDraft({ ...draft, full_name: event.target.value })}
             />
@@ -58,7 +58,7 @@ export function NewStaffMemberForm({ onCreate }: NewStaffMemberFormProps) {
               autoCapitalize="none"
               spellCheck={false}
               autoComplete="off"
-              placeholder="lucia.ramirez"
+              placeholder="cook.night"
               value={draft.username}
               onChange={(event) => setDraft({ ...draft, username: event.target.value })}
             />

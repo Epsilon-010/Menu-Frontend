@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { BillError, closeTable, listTableBills, openTable, registerPayment } from './api.ts'
+import { addOrderDish, BillError, closeTable, listTableBills, openTable, registerPayment } from './api.ts'
 
 function ok(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
@@ -62,6 +62,33 @@ describe('bills API', () => {
 
     expect(error).toBeInstanceOf(BillError)
     expect((error as BillError).message).toBe('A bill with orders is closed by registering its payment.')
+    expect((error as BillError).status).toBe(409)
+  })
+})
+
+describe('adding a dish to an open order', () => {
+  it('posts the dish with its client id and answers with the order', async () => {
+    const calls = stubFetch(ok({ id: 'o1', number: 4 }, 201))
+
+    expect(await addOrderDish('o1', { id: 'd1', item_id: 'm1', quantity: 2, note: ' No onion ' })).toEqual({
+      id: 'o1',
+      number: 4,
+    })
+    expect(calls.map((call) => [call.init?.method, call.url, call.init?.body])).toEqual([
+      ['POST', '/api/v1/orders/o1/items', JSON.stringify({ id: 'd1', item_id: 'm1', quantity: 2, note: 'No onion' })],
+    ])
+  })
+
+  it('shows the server message when the bill was already paid', async () => {
+    stubFetch(problem(409, 'This bill is already paid; its dishes can no longer change'))
+
+    const error = await addOrderDish('o1', { id: 'd1', item_id: 'm1', quantity: 1, note: '' }).then(
+      () => null,
+      (caught: unknown) => caught,
+    )
+
+    expect(error).toBeInstanceOf(BillError)
+    expect((error as BillError).message).toBe('This bill is already paid; its dishes can no longer change.')
     expect((error as BillError).status).toBe(409)
   })
 })

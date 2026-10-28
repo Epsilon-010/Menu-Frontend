@@ -42,12 +42,12 @@ describe('qrLogin', () => {
       new Response(JSON.stringify({ expires_in: 900, role: 'guest' }), { status: 200 }),
     )
 
-    expect(await qrLogin('tok', '  Ana ')).toEqual({ expires_in: 900, role: 'guest' })
+    expect(await qrLogin('tok', '  Guest 1 ')).toEqual({ expires_in: 900, role: 'guest' })
     await qrLogin('tok', '   ')
 
     expect(calls[0].url).toBe('/api/v1/auth/qr')
     expect(calls[0].init?.method).toBe('POST')
-    expect(JSON.parse(String(calls[0].init?.body))).toEqual({ token: 'tok', name: 'Ana' })
+    expect(JSON.parse(String(calls[0].init?.body))).toEqual({ token: 'tok', name: 'Guest 1' })
     expect(JSON.parse(String(calls[1].init?.body))).toEqual({ token: 'tok' })
   })
 
@@ -73,7 +73,7 @@ describe('accountRole', () => {
   const table = { id: 't1', name: 'Mesa 4' }
 
   it('tells a guest from the table tablet and sends both to the menu', () => {
-    const guest: Account = { user: null, table, guest: { id: 'g1', name: 'Ana' }, tenant }
+    const guest: Account = { user: null, table, guest: { id: 'g1', name: 'Guest 1' }, tenant }
     const tablet: Account = { user: null, table, guest: null, tenant }
 
     expect(accountRole(guest)).toBe('guest')

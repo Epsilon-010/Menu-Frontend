@@ -2,12 +2,15 @@ import { ChairIcon } from '@phosphor-icons/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { EmptyState, ListSkeleton, LoadError } from '../../shared/ui/Feedback.tsx'
 import { SectionHeader } from '../../shared/ui/Section.tsx'
+import { OrdersError, updateItemStatus } from '../kitchen/api.ts'
 import {
+  addOrderDish,
   BillError,
   closeTable,
   listTableBills,
   openTable,
   registerPayment,
+  type NewOrderDish,
   type PaymentMethod,
   type TableOverview,
 } from './api.ts'
@@ -19,14 +22,27 @@ const STALE = 'Saved, but the list could not refresh. It updates again in a few 
 type ListState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded'; tables: TableOverview[] }
 
 function messageOf(error: unknown): string {
-  return error instanceof BillError ? error.message : 'Something went wrong. Please try again.'
+  return error instanceof BillError || error instanceof OrdersError
+    ? error.message
+    : 'Something went wrong. Please try again.'
+}
+
+interface TablesBoardProps {
+  /** Grows when a live event says the tables changed: the board reloads. */
+  refreshSignal?: number
+  /** Receives every list that loads (for example to spot newly rejected dishes). */
+  onLoaded?: (tables: TableOverview[]) => void
 }
 
 /** Waiter view of every table: open it for its guests, follow its orders and take the payment. */
-export function TablesBoard() {
+export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = {}) {
   const [list, setList] = useState<ListState>({ status: 'loading' })
   const [stale, setStale] = useState(false)
   const requests = useRef(0)
+  const loaded = useRef(onLoaded)
+  useEffect(() => {
+    loaded.current = onLoaded
+  })
 
   /** Resolves to true when the list loaded; only the newest request is shown. */
   const reload = useCallback(async (): Promise<boolean> => {
@@ -37,6 +53,7 @@ export function TablesBoard() {
       if (id === requests.current) {
         setList({ status: 'loaded', tables })
         setStale(false)
+        loaded.current?.(tables)
       }
       return true
     } catch (error) {
@@ -58,6 +75,12 @@ export function TablesBoard() {
       window.clearInterval(timer)
     }
   }, [reload])
+
+  useEffect(() => {
+    if (refreshSignal === 0) return
+    const timer = window.setTimeout(() => void reload(), 0)
+    return () => window.clearTimeout(timer)
+  }, [refreshSignal, reload])
 
   function retry() {
     setList({ status: 'loading' })
@@ -83,6 +106,9 @@ export function TablesBoard() {
       onPay: (method: PaymentMethod) =>
         bill ? act(() => registerPayment(bill.id, method)) : Promise.resolve('This table is not open.'),
       onClose: () => (bill ? act(() => closeTable(bill.id)) : Promise.resolve(null)),
+      onCancelDish: (orderId: string, itemId: string, reason: string) =>
+        act(() => updateItemStatus(orderId, [itemId], 'cancelled', reason)),
+      onAddDish: (orderId: string, dish: NewOrderDish) => act(() => addOrderDish(orderId, dish)),
     }
   }
 

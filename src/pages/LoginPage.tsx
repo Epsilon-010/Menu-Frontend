@@ -1,8 +1,9 @@
-import { DeviceTabletIcon, UserCircleIcon } from '@phosphor-icons/react'
+import { CrownSimpleIcon, DeviceTabletIcon, UserCircleIcon } from '@phosphor-icons/react'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router'
 import { accountRole, homePathFor, LoginError, type LoginFailure } from '../features/auth/api.ts'
 import { useAuth } from '../features/auth/useAuth.ts'
+import { normalizeStaffCode, STAFF_CODE_LENGTH, STAFF_PIN_LENGTH } from '../features/staff/credentials.ts'
 import { PIN_LENGTH, TABLE_CODE_LENGTH } from '../features/tables/credentials.ts'
 import type { Role } from '../shared/api/http.ts'
 import { AuthLayout, AuthLogo } from '../shared/ui/AuthLayout.tsx'
@@ -10,19 +11,33 @@ import { buttonClass, MOTION } from '../shared/ui/classes.ts'
 import { Field, TextInput } from '../shared/ui/Field.tsx'
 import { ErrorText } from '../shared/ui/Feedback.tsx'
 
-type Mode = 'staff' | 'table'
+type Mode = 'admin' | 'staff' | 'table'
+
+const TOO_MANY = 'Too many attempts. Wait a few minutes and try again.'
+const OFFLINE = 'Could not reach the server. Check your connection and try again.'
 
 const ERROR_MESSAGES: Record<Mode, Record<LoginFailure, string>> = {
+  admin: {
+    'invalid-credentials': 'That email and password do not match. Check them and try again.',
+    'too-many-attempts': TOO_MANY,
+    unavailable: OFFLINE,
+  },
   staff: {
-    'invalid-credentials': 'That username and password do not match. Check them and try again.',
-    'too-many-attempts': 'Too many attempts. Wait a few minutes and try again.',
-    unavailable: 'Could not reach the server. Check your connection and try again.',
+    'invalid-credentials': 'That code and PIN do not match. Ask your manager for a new PIN.',
+    'too-many-attempts': TOO_MANY,
+    unavailable: OFFLINE,
   },
   table: {
     'invalid-credentials': 'That table code and PIN do not match. Ask the manager for the current PIN.',
-    'too-many-attempts': 'Too many attempts. Wait a few minutes and try again.',
-    unavailable: 'Could not reach the server. Check your connection and try again.',
+    'too-many-attempts': TOO_MANY,
+    unavailable: OFFLINE,
   },
+}
+
+const INTROS: Record<Mode, string> = {
+  admin: 'Managers sign in with the email and password of their business.',
+  staff: 'Use the code and PIN your manager gave you.',
+  table: 'Use the table code and PIN the manager created for this tablet.',
 }
 
 interface ModeTabProps {
@@ -51,8 +66,8 @@ function ModeTab({ selected, onSelect, icon, children }: ModeTabProps) {
 export function LoginPage() {
   const { state, signIn, signInTable } = useAuth()
   const navigate = useNavigate()
-  const [mode, setMode] = useState<Mode>('staff')
-  // Staff: username (or the admin's email) and password. Table: table code and PIN.
+  const [mode, setMode] = useState<Mode>('admin')
+  // Admin: email and password. Staff: staff code and PIN. Table: table code and PIN.
   const [account, setAccount] = useState('')
   const [secret, setSecret] = useState('')
   const [error, setError] = useState<LoginFailure | null>(null)
@@ -74,7 +89,8 @@ export function LoginPage() {
     setSubmitting(true)
     setError(null)
     try {
-      const role: Role = mode === 'staff' ? await signIn(account, secret) : await signInTable(account, secret)
+      // Admins and staff share the sign in: the staff code goes where the admin's email goes.
+      const role: Role = mode === 'table' ? await signInTable(account, secret) : await signIn(account.trim(), secret)
       navigate(homePathFor(role), { replace: true })
     } catch (caught) {
       setError(caught instanceof LoginError ? caught.reason : 'unavailable')
@@ -88,14 +104,17 @@ export function LoginPage() {
         <div className="space-y-2">
           <AuthLogo />
           <h2 className="text-2xl font-semibold tracking-tight text-zinc-950">Sign in</h2>
-          <p className="text-sm text-zinc-500">
-            {mode === 'staff'
-              ? 'Managers use their email; waiters and cooks use the username the manager gave them.'
-              : 'Use the table code and PIN the manager created for this tablet.'}
-          </p>
+          <p className="text-sm text-zinc-500">{INTROS[mode]}</p>
         </div>
 
         <div role="tablist" aria-label="Sign in as" className="flex gap-1 rounded-xl bg-zinc-100 p-1">
+          <ModeTab
+            selected={mode === 'admin'}
+            onSelect={() => switchMode('admin')}
+            icon={<CrownSimpleIcon size={16} aria-hidden />}
+          >
+            Admin
+          </ModeTab>
           <ModeTab
             selected={mode === 'staff'}
             onSelect={() => switchMode('staff')}
@@ -112,11 +131,11 @@ export function LoginPage() {
           </ModeTab>
         </div>
 
-        {mode === 'staff' ? (
+        {mode === 'admin' && (
           <div className="space-y-4">
-            <Field label="Username or email">
+            <Field label="Email">
               <TextInput
-                type="text"
+                type="email"
                 autoComplete="username"
                 autoCapitalize="none"
                 spellCheck={false}
@@ -135,7 +154,40 @@ export function LoginPage() {
               />
             </Field>
           </div>
-        ) : (
+        )}
+
+        {mode === 'staff' && (
+          <div className="space-y-4">
+            {/* No length rules: accounts made before codes keep their old username and password until a new PIN. */}
+            <Field label="Code" hint={`${STAFF_CODE_LENGTH} letters and digits.`}>
+              <TextInput
+                type="text"
+                autoComplete="username"
+                autoCapitalize="characters"
+                spellCheck={false}
+                required
+                maxLength={40}
+                value={account}
+                onChange={(event) => setAccount(normalizeStaffCode(event.target.value))}
+                className="font-mono tracking-widest"
+              />
+            </Field>
+            <Field label="PIN" hint={`${STAFF_PIN_LENGTH} digits.`}>
+              <TextInput
+                type="password"
+                inputMode="numeric"
+                autoComplete="current-password"
+                required
+                maxLength={128}
+                value={secret}
+                onChange={(event) => setSecret(event.target.value)}
+                className="font-mono tracking-widest"
+              />
+            </Field>
+          </div>
+        )}
+
+        {mode === 'table' && (
           <div className="space-y-4">
             <Field
               label="Table code"
@@ -180,6 +232,7 @@ export function LoginPage() {
         >
           {submitting ? 'Signing in…' : 'Sign in'}
         </button>
+
         <p className="text-center text-sm text-zinc-500">
           New here?{' '}
           <Link to="/register" className="font-medium text-zinc-950 underline underline-offset-4 hover:text-zinc-600">

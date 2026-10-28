@@ -4,7 +4,8 @@ export type StaffRole = 'waiter' | 'kitchen'
 
 export interface StaffMember {
   id: string
-  username: string
+  /** What the member signs in with, together with the PIN. */
+  code: string
   full_name: string
   role: StaffRole
   is_active: boolean
@@ -13,10 +14,13 @@ export interface StaffMember {
 export interface NewStaffMember {
   /** Chosen by the client and kept until the create succeeds: a repeat returns the same member. */
   id?: string
-  username: string
   full_name: string
   role: StaffRole
-  password: string
+}
+
+/** Only the create and new-PIN answers carry the PIN: it is shown once, never stored. */
+export interface StaffMemberWithPin extends StaffMember {
+  pin: string
 }
 
 export type StaffMemberChanges = Partial<Pick<StaffMember, 'full_name' | 'role' | 'is_active'>>
@@ -30,15 +34,21 @@ export class StaffError extends Error {
     super(message)
     this.status = status
   }
+
+  /** A repeated create of a member that exists: the PIN cannot be shown again, but nobody was duplicated. */
+  get alreadyCreated(): boolean {
+    return this.status === 409 && this.message.startsWith(ALREADY_CREATED)
+  }
 }
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
 const OFFLINE = 'Could not reach the server. Check your connection and try again.'
 const SERVER_FAILED = 'The server could not complete that. Please try again in a moment.'
+const ALREADY_CREATED = 'This staff member was already created'
 
 async function errorFrom(response: Response): Promise<StaffError> {
   const body = (await response.json().catch(() => null)) as { detail?: unknown } | null
-  // The server's own message tells conflicts apart (username taken, id already used).
+  // The server's own message tells conflicts apart (member already created, id already used).
   if (typeof body?.detail === 'string') {
     return new StaffError(body.detail.endsWith('.') ? body.detail : `${body.detail}.`, response.status)
   }
@@ -57,14 +67,16 @@ async function send(path: string, init: RequestInit): Promise<Response> {
   if (!response.ok) throw await errorFrom(response)
   return response
 }
+
 export async function listStaff(): Promise<StaffMember[]> {
   const response = await send('/staff', {})
   return (await response.json()) as StaffMember[]
 }
 
-export async function createStaffMember(member: NewStaffMember): Promise<StaffMember> {
+/** The server generates the member's code and PIN. */
+export async function createStaffMember(member: NewStaffMember): Promise<StaffMemberWithPin> {
   const response = await send('/staff', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(member) })
-  return (await response.json()) as StaffMember
+  return (await response.json()) as StaffMemberWithPin
 }
 
 /** Deactivating or changing the role signs the member out of every device right away. */
@@ -77,7 +89,8 @@ export async function updateStaffMember(id: string, changes: StaffMemberChanges)
   return (await response.json()) as StaffMember
 }
 
-/** Sets the password the admin chose and signs the member out of every device. */
-export async function resetStaffPassword(id: string, password: string): Promise<void> {
-  await send(`/staff/${id}/password`, { method: 'PUT', headers: JSON_HEADERS, body: JSON.stringify({ password }) })
+/** Generates a new PIN (the code stays) and signs the member out of every device. */
+export async function regenerateStaffPin(id: string): Promise<StaffMemberWithPin> {
+  const response = await send(`/staff/${id}/pin`, { method: 'POST' })
+  return (await response.json()) as StaffMemberWithPin
 }

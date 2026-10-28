@@ -1,6 +1,7 @@
 import { createContext } from 'react'
 import type { Role } from '../../shared/api/http.ts'
 import type { Account } from './api.ts'
+import type { SignUp } from './register.ts'
 
 /** Why a guest's visit is over: the table was paid or got a new QR, or the guest left. */
 export type VisitEndReason = 'ended' | 'left'
@@ -20,6 +21,11 @@ export interface AuthContextValue {
   signInTable: (code: string, pin: string) => Promise<Role>
   /** Joins a table's open visit with its QR token. Throws QrJoinError (or LoginError when the account cannot load). */
   joinTable: (token: string, name: string) => Promise<Role>
+  /**
+   * Creates the business and its admin, then loads the new session. Throws RegisterError, or
+   * LoginError('unavailable') when the account was created but could not be loaded.
+   */
+  register: (signUp: SignUp) => Promise<Role>
   signOut: () => Promise<void>
 }
 

@@ -23,12 +23,13 @@ export const DEFAULT_LAYOUT: ThemeLayout = {
 }
 
 // Full class names (Tailwind only generates classes it sees written out). Measured on the menu's own width (beside
-// the cart panel it is narrower than the page): phones always get one column, tablets up to three.
+// the cart panel it is narrower than the page): phones always get one column, tablets up to three. Two columns start
+// at a 39rem (624px) menu, which is where they started before the layout existed (a 672px page minus its padding).
 const GRID_COLUMNS: Record<number, string> = {
   1: '',
-  2: '@xl:grid-cols-2',
-  3: '@xl:grid-cols-2 @3xl:grid-cols-3',
-  4: '@xl:grid-cols-2 @3xl:grid-cols-3 @4xl:grid-cols-4',
+  2: '@[39rem]:grid-cols-2',
+  3: '@[39rem]:grid-cols-2 @3xl:grid-cols-3',
+  4: '@[39rem]:grid-cols-2 @3xl:grid-cols-3 @4xl:grid-cols-4',
 }
 
 export function gridColumnsClass(columns: number): string {

@@ -34,7 +34,8 @@ describe('the layout options', () => {
       show_welcome: true,
       cart: 'bar',
     })
-    expect(gridColumnsClass(2)).toBe('@xl:grid-cols-2')
+    // Two columns from a 624px menu: a 672px page minus its 48px padding, as before the layout existed.
+    expect(gridColumnsClass(2)).toBe('@[39rem]:grid-cols-2')
     expect(densitySpacing('comfortable')).toEqual({ sections: 'space-y-8', items: 'gap-4' })
   })
 })

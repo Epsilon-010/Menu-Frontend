@@ -4,6 +4,7 @@ import { useAuth } from '../../features/auth/useAuth.ts'
 import { useSessionHeartbeat } from '../../features/auth/useSessionHeartbeat.ts'
 import { formatMoney } from '../../features/catalog/price.ts'
 import type { Cart, Order } from '../../features/ordering/api.ts'
+import { BillRequestControl } from '../../features/ordering/BillRequestControl.tsx'
 import { CartContents } from '../../features/ordering/CartContents.tsx'
 import { dishCount } from '../../features/ordering/logic.ts'
 import { MenuBrowser } from '../../features/ordering/MenuBrowser.tsx'
@@ -131,6 +132,9 @@ export function MenuPage() {
               Orders from this table
             </h2>
             <OrdersArea orders={orders} />
+            {orders.status === 'loaded' && orders.data.length > 0 && (
+              <BillRequestControl requestedAt={ordering.billRequestedAt} onChange={ordering.setBillRequest} />
+            )}
           </section>
         </div>
 

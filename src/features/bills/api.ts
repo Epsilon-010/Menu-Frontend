@@ -17,6 +17,8 @@ export interface Bill {
   opened_at: string
   closed_at: string | null
   payment_method: PaymentMethod | null
+  /** When the table asked for the bill and nobody attended it yet. */
+  bill_requested_at: string | null
   orders: Order[]
   /** Integer cents, computed by the server. */
   total_cents: number
@@ -86,6 +88,15 @@ export async function registerPayment(billId: string, method: PaymentMethod): Pr
 /** Closes a table that has no orders (a bill with orders is closed by its payment). */
 export async function closeTable(billId: string): Promise<void> {
   await send(`/bills/${billId}/close`, { method: 'POST' })
+}
+
+/** The waiter attends the table that asked for the bill. A bill already paid (404) counts as done. */
+export async function dismissBillRequest(billId: string): Promise<void> {
+  try {
+    await send(`/bills/${billId}/request`, { method: 'DELETE' })
+  } catch (error) {
+    if (!(error instanceof BillError && error.status === 404)) throw error
+  }
 }
 
 export interface NewOrderDish {

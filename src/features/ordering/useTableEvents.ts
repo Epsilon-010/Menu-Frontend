@@ -8,6 +8,8 @@ export interface TableEventHandlers {
   onCartVersion: (version: number) => void
   /** `order.created` or `order.updated`: an order was sent, or the kitchen or a waiter changed its dishes. */
   onOrders: () => void
+  /** `bill.requested` or `bill.request_cleared`: someone at the table asked for the bill, cancelled, or a waiter attended it. */
+  onBillRequest: () => void
   /** Reload everything: the stream (re)connected, the tab came back, a bill opened or closed, or a poll. */
   onRefresh: () => void
 }
@@ -26,6 +28,8 @@ export function useTableEvents(handlers: TableEventHandlers): void {
       'order.updated': () => handlers.onOrders(),
       'bill.opened': () => handlers.onRefresh(),
       'bill.closed': () => handlers.onRefresh(),
+      'bill.requested': () => handlers.onBillRequest(),
+      'bill.request_cleared': () => handlers.onBillRequest(),
     },
     onRefresh: handlers.onRefresh,
   })

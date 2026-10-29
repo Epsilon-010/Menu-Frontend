@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { addOrderDish, BillError, closeTable, listTableBills, openTable, registerPayment } from './api.ts'
+import {
+  addOrderDish,
+  BillError,
+  closeTable,
+  dismissBillRequest,
+  listTableBills,
+  openTable,
+  registerPayment,
+} from './api.ts'
 
 function ok(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
@@ -31,6 +39,18 @@ afterEach(() => {
 })
 
 describe('bills API', () => {
+  it('attends a bill request with DELETE and counts one already gone as done', async () => {
+    const calls = stubFetch(new Response(null, { status: 204 }), problem(404, 'Bill not found'))
+
+    await dismissBillRequest('b1')
+    await dismissBillRequest('b1')
+
+    expect(calls.map((call) => [call.init?.method, call.url])).toEqual([
+      ['DELETE', '/api/v1/bills/b1/request'],
+      ['DELETE', '/api/v1/bills/b1/request'],
+    ])
+  })
+
   it('lists the tables with their bills', async () => {
     const calls = stubFetch(ok([{ table_id: 't1', table_name: 'Mesa 4', bill: null }]))
 

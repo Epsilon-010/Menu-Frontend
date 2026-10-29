@@ -2,11 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { createDraftIds, type DraftIds } from '../../shared/api/idempotency.ts'
 import {
   addCartLine,
+  cancelBillRequest,
+  fetchBillRequest,
   fetchCart,
   fetchMenu,
   fetchOrders,
   OrderingError,
   removeCartLine,
+  requestBill,
   submitOrder,
   updateCartLine,
   type Cart,
@@ -38,11 +41,14 @@ export function useTableOrdering() {
   const [menuKey, setMenuKey] = useState(0)
   const [cart, setCart] = useState<Loadable<Cart>>({ status: 'loading' })
   const [orders, setOrders] = useState<Loadable<Order[]>>({ status: 'loading' })
+  // When the table asked for the bill (null: not asked), shared by every device at the table.
+  const [billRequestedAt, setBillRequestedAt] = useState<Loadable<string | null>>({ status: 'loading' })
 
   // Several requests can return the cart at once (writes, reloads): only newer answers replace older ones.
   const cartRequests = useRef(0)
   const cartApplied = useRef(0)
   const ordersRequests = useRef(0)
+  const billRequests = useRef(0)
   const shownVersion = useRef<number | null>(null)
   // One draft id per menu item being added, kept until that add succeeds.
   const lineDrafts = useRef(new Map<string, DraftIds>())
@@ -90,10 +96,26 @@ export function useTableOrdering() {
     }
   }, [])
 
+  const reloadBillRequest = useCallback(async () => {
+    billRequests.current += 1
+    const id = billRequests.current
+    try {
+      const next = await fetchBillRequest()
+      if (id === billRequests.current) setBillRequestedAt({ status: 'loaded', data: next })
+    } catch (error) {
+      if (id === billRequests.current) {
+        setBillRequestedAt((current) =>
+          current.status === 'loaded' ? current : { status: 'error', message: messageOf(error) },
+        )
+      }
+    }
+  }, [])
+
   const refresh = useCallback(() => {
     void reloadCart()
     void reloadOrders()
-  }, [reloadCart, reloadOrders])
+    void reloadBillRequest()
+  }, [reloadCart, reloadOrders, reloadBillRequest])
 
   useEffect(() => {
     let active = true
@@ -115,6 +137,7 @@ export function useTableOrdering() {
       if (needsCartReload(version, shownVersion.current)) void reloadCart()
     },
     onOrders: () => void reloadOrders(),
+    onBillRequest: () => void reloadBillRequest(),
     onRefresh: refresh,
   })
 
@@ -195,7 +218,21 @@ export function useTableOrdering() {
     }
   }
 
-  return { menu, cart, orders, retryMenu, retryCart, reloadCart, addLine, changeLine, removeLine, send }
+  /** Asks for the bill (or cancels the request); resolves to an error message, or null when done. */
+  async function setBillRequest(wanted: boolean): Promise<string | null> {
+    billRequests.current += 1
+    const id = billRequests.current
+    try {
+      const next = wanted ? await requestBill() : (await cancelBillRequest(), null)
+      if (id === billRequests.current) setBillRequestedAt({ status: 'loaded', data: next })
+      return null
+    } catch (error) {
+      void reloadBillRequest()
+      return messageOf(error)
+    }
+  }
+
+  return { menu, cart, orders, billRequestedAt, setBillRequest, retryMenu, retryCart, reloadCart, addLine, changeLine, removeLine, send }
 }
 
 export type TableOrdering = ReturnType<typeof useTableOrdering>

@@ -181,3 +181,19 @@ export async function submitOrder(id: string, cartVersion: number): Promise<Orde
 export async function fetchOrders(): Promise<Order[]> {
   return (await (await send('/table/orders')).json()) as Order[]
 }
+
+/** When the table asked for the bill on this visit, or null. */
+export async function fetchBillRequest(): Promise<string | null> {
+  return ((await (await send('/table/bill-request')).json()) as { requested_at: string | null }).requested_at
+}
+
+/** Alerts the waiter that the table wants to pay. Asking again keeps the first request. */
+export async function requestBill(): Promise<string> {
+  return ((await (await send('/table/bill-request', { method: 'POST' })).json()) as { requested_at: string })
+    .requested_at
+}
+
+/** The table no longer wants the bill; cancelling nothing is fine. */
+export async function cancelBillRequest(): Promise<void> {
+  await send('/table/bill-request', { method: 'DELETE' })
+}

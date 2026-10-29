@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import type { Theme, ThemeColors } from './api.ts'
-import { parseHexInput, withBrand, withColor, withMode, withRoleFont, withScale, withTextStyle } from './editor.ts'
+import type { Theme, ThemeColors, ThemePreset } from './api.ts'
+import {
+  keepNewerEdits,
+  matchingPreset,
+  parseHexInput,
+  withBrand,
+  withColor,
+  withMode,
+  withPreset,
+  withRoleFont,
+  withScale,
+  withTextStyle,
+} from './editor.ts'
 import { DEFAULT_TYPOGRAPHY } from './typography.ts'
 
 const LIGHT: ThemeColors = {
@@ -95,5 +106,45 @@ describe('typography edits', () => {
 
   it('sets the global scale', () => {
     expect(withScale(THEME, 120).typography.scale).toBe(120)
+  })
+})
+
+describe('presets', () => {
+  const STREET: ThemePreset = {
+    id: 'street',
+    name: 'Street',
+    description: 'Black and yellow.',
+    colors: { ...DARK, primary: '#facc15' },
+    typography: { ...DEFAULT_TYPOGRAPHY, fonts: { heading: 'oswald', body: 'inter', price: 'oswald', button: 'oswald' } },
+  }
+  const CLASSIC: ThemePreset = { id: 'classic', name: 'Classic', description: 'Default.', colors: LIGHT, typography: DEFAULT_TYPOGRAPHY }
+
+  it('applying a preset replaces colors and typography and keeps the brand', () => {
+    const mine = withBrand(THEME, { name: 'Tacos El Primo', logo: { ...THEME.brand.logo, image_id: 'tenants/t/logos/a' } })
+    const applied = withPreset(mine, STREET)
+    expect(applied).toEqual({ ...mine, colors: STREET.colors, typography: STREET.typography })
+    expect(applied.brand).toBe(mine.brand)
+  })
+
+  it('tells which preset the theme still matches, if any', () => {
+    expect(matchingPreset(THEME, [CLASSIC, STREET])).toBe('classic')
+    expect(matchingPreset(withPreset(THEME, STREET), [CLASSIC, STREET])).toBe('street')
+    expect(matchingPreset(withColor(THEME, 'price', '#000000'), [CLASSIC, STREET])).toBeNull()
+    expect(matchingPreset(withScale(THEME, 120), [CLASSIC, STREET])).toBeNull()
+  })
+})
+
+describe('after a save or publish answers', () => {
+  it('takes the server copy when nothing changed meanwhile', () => {
+    const sent = withColor(THEME, 'primary', '#123456')
+    // The server normalizes (here: trims the name), so its copy replaces what was sent.
+    const saved = withBrand(sent, { name: 'Tacos' })
+    expect(keepNewerEdits(sent, sent, saved)).toBe(saved)
+  })
+
+  it('keeps edits and uploads made while the request was in flight', () => {
+    const sent = withColor(THEME, 'primary', '#123456')
+    const editedMeanwhile = withBrand(sent, { tagline: 'Since 1990', logo: { ...sent.brand.logo, image_id: 'tenants/t/logos/a' } })
+    expect(keepNewerEdits(editedMeanwhile, sent, sent)).toBe(editedMeanwhile)
   })
 })

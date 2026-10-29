@@ -1,4 +1,4 @@
-import type { ColorField, FontId, FontRole, TextElement, TextStyle, Theme, ThemeBrand, ThemeColors, ThemeMode } from './api.ts'
+import type { ColorField, FontId, FontRole, TextElement, TextStyle, Theme, ThemeBrand, ThemeColors, ThemeMode, ThemePreset } from './api.ts'
 import { fitToFont, TEXT_ELEMENTS } from './typography.ts'
 
 const HEX = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i
@@ -46,4 +46,23 @@ export function withTextStyle(theme: Theme, element: TextElement, changes: Parti
   const changed = { ...theme.typography.elements[element], ...changes }
   const fitted = fitToFont(changed, theme.typography.fonts[changed.font])
   return { ...theme, typography: { ...theme.typography, elements: { ...theme.typography.elements, [element]: fitted } } }
+}
+
+/** A preset replaces colors and typography; the brand (name, texts, images) stays the tenant's. */
+export function withPreset(theme: Theme, preset: ThemePreset): Theme {
+  return { ...theme, colors: preset.colors, typography: preset.typography }
+}
+
+/** The preset the theme still looks exactly like, or null once the admin adjusted anything. */
+export function matchingPreset(theme: Theme, presets: ThemePreset[]): string | null {
+  const look = JSON.stringify([theme.colors, theme.typography])
+  return presets.find((preset) => JSON.stringify([preset.colors, preset.typography]) === look)?.id ?? null
+}
+
+/**
+ * The draft once a save or publish answers: the server copy (it may normalize values) unless the admin changed
+ * the draft while the request was in flight. Those newer edits stay, still unsaved.
+ */
+export function keepNewerEdits(current: Theme, sent: Theme, saved: Theme): Theme {
+  return JSON.stringify(current) === JSON.stringify(sent) ? saved : current
 }

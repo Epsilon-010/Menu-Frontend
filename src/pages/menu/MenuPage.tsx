@@ -11,8 +11,7 @@ import { MenuBrowser } from '../../features/ordering/MenuBrowser.tsx'
 import { OrderCard } from '../../features/ordering/OrderCard.tsx'
 import { SendConfirmation } from '../../features/ordering/SendConfirmation.tsx'
 import { useTableOrdering, type Loadable, type TableOrdering } from '../../features/ordering/useTableOrdering.ts'
-import type { CartStyle } from '../../features/theming/api.ts'
-import { DEFAULT_LAYOUT } from '../../features/theming/layout.ts'
+import { cartPlacement, DEFAULT_LAYOUT, menuWidthClass } from '../../features/theming/layout.ts'
 import { MenuHero } from '../../features/theming/MenuHero.tsx'
 import { ThemeScope } from '../../features/theming/ThemeScope.tsx'
 import { usePublishedTheme } from '../../features/theming/usePublishedTheme.ts'
@@ -23,16 +22,6 @@ import { EmptyState, ListSkeleton, LoadError, Skeleton } from '../../shared/ui/F
 import { Card } from '../../shared/ui/Section.tsx'
 
 const NOTICE_MS = 6_000
-
-/**
- * Where the table order lives. The side panel shows from large screens (bar) or tablets (panel); below it a bottom
- * bar opens the full order. Floating: a button in the corner at every size, and the menu gets the whole width.
- */
-const CART_PLACEMENT: Record<CartStyle, { grid: string; main: string; aside: string; compact: string; notice: string }> = {
-  bar: { grid: 'lg:grid-cols-3 lg:pb-0', main: 'lg:col-span-2', aside: 'hidden lg:block', compact: 'lg:hidden', notice: 'lg:bottom-8' },
-  panel: { grid: 'md:grid-cols-3 md:pb-0', main: 'md:col-span-2', aside: 'hidden md:block', compact: 'md:hidden', notice: 'md:bottom-8' },
-  floating: { grid: '', main: '', aside: 'hidden', compact: '', notice: '' },
-}
 
 function MenuSkeleton() {
   return (
@@ -132,7 +121,7 @@ export function MenuPage() {
   const logoId = theme?.theme.brand.logo.image_id
   const logoUrl = theme && logoId ? theme.image_urls[logoId] : undefined
   const layout = theme?.theme.layout ?? DEFAULT_LAYOUT
-  const placement = CART_PLACEMENT[layout.cart]
+  const placement = cartPlacement(layout.cart)
 
   if (published.status === 'loading') {
     // A moment at most (the theme is cached): avoids showing the neutral look before the business's.
@@ -152,6 +141,7 @@ export function MenuPage() {
       signingOut={leaving}
       signOutLabel="Leave"
       fixedBar={layout.sticky_header}
+      width={menuWidthClass(layout)}
     >
       <div className={`grid gap-8 pb-24 ${placement.grid}`}>
         <div className={`min-w-0 space-y-12 ${placement.main}`}>

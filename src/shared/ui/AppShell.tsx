@@ -24,6 +24,8 @@ interface AppShellProps {
   signOutLabel?: string
   /** False: the bar scrolls away with the page instead of staying on top (a table menu's layout choice). */
   fixedBar?: boolean
+  /** Max width class of the content (a table menu with a four-column grid widens it). */
+  width?: string
   children: ReactNode
 }
 
@@ -59,6 +61,7 @@ export function AppShell({
   signingOut = false,
   signOutLabel = 'Sign out',
   fixedBar = true,
+  width = 'max-w-5xl',
   children,
 }: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -191,7 +194,7 @@ export function AppShell({
         </div>
       )}
 
-      <main id="main" className="mx-auto max-w-5xl px-4 pt-24 pb-16 sm:px-6">
+      <main id="main" className={`mx-auto ${width} px-4 pt-24 pb-16 sm:px-6`}>
         {children}
       </main>
     </div>

@@ -93,7 +93,7 @@ export function LayoutControls({ theme, onChange }: LayoutControlsProps) {
           labels={VIEW_LABELS}
           onChange={(product_view) => set({ product_view })}
         />
-        <Field label="Columns" hint="On wide screens; phones show one.">
+        <Field label="Columns" hint="On wide screens; tablets show up to three and phones one.">
           <Select
             value={layout.columns}
             disabled={layout.product_view !== 'grid'}

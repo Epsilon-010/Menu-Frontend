@@ -6,9 +6,12 @@ import {
   DENSITIES,
   NAVIGATIONS,
   PRODUCT_VIEWS,
+  cartPlacement,
   currentCategoryId,
   densitySpacing,
   gridColumnsClass,
+  menuWidthClass,
+  normalizeLayout,
   showsOneCategory,
 } from './layout.ts'
 
@@ -49,6 +52,62 @@ describe('grid columns', () => {
       expect(classes.every((name) => name.startsWith('@'))).toBe(true)
       if (columns > 1) expect(classes.at(-1)).toMatch(new RegExp(`grid-cols-${columns}$`))
     }
+  })
+})
+
+describe('wide grids beside the cart panel', () => {
+  it('reach three columns in the ~630px menu column large screens leave beside the cart bar', () => {
+    expect(gridColumnsClass(3)).toBe('@[37rem]:grid-cols-3')
+  })
+
+  it('reach four columns once the menu page widens for them', () => {
+    expect(gridColumnsClass(4)).toBe('@[37rem]:grid-cols-3 @[50rem]:grid-cols-4')
+    expect(menuWidthClass({ ...DEFAULT_LAYOUT, columns: 4 })).toBe('max-w-7xl')
+    expect(menuWidthClass({ ...DEFAULT_LAYOUT, columns: 4, product_view: 'list' })).toBe('max-w-5xl')
+    expect(menuWidthClass({ ...DEFAULT_LAYOUT, columns: 3 })).toBe('max-w-5xl')
+    expect(menuWidthClass(DEFAULT_LAYOUT)).toBe('max-w-5xl')
+  })
+})
+
+describe('the cart', () => {
+  it('is always reachable: the compact button shows exactly where the side panel does not', () => {
+    for (const style of CART_STYLES) {
+      const { aside, compact } = cartPlacement(style)
+      if (style === 'floating') {
+        expect(aside).toBe('hidden')
+        expect(compact).toBe('')
+      } else {
+        const breakpoint = aside.replace('hidden ', '').replace(':block', '')
+        expect(compact).toBe(`${breakpoint}:hidden`)
+      }
+    }
+    expect(cartPlacement('bar').aside).toBe('hidden lg:block')
+    expect(cartPlacement('panel').aside).toBe('hidden md:block')
+  })
+})
+
+describe('a layout from the server', () => {
+  it('is kept as it is when valid', () => {
+    const layout = { ...DEFAULT_LAYOUT, navigation: 'tabs', columns: 4, cart: 'floating', show_banner: false } as const
+    expect(normalizeLayout(layout)).toEqual(layout)
+  })
+
+  it('falls back to the default for a missing layout or any unknown value, so the menu never breaks', () => {
+    expect(normalizeLayout(undefined)).toEqual(DEFAULT_LAYOUT)
+    expect(normalizeLayout(null)).toEqual(DEFAULT_LAYOUT)
+    expect(
+      normalizeLayout({
+        navigation: 'dropdown',
+        product_view: 'masonry',
+        columns: 9,
+        density: 'tight',
+        sticky_header: 'yes',
+        category_header: 'image',
+        show_banner: 1,
+        cart: 'drawer',
+      }),
+    ).toEqual(DEFAULT_LAYOUT)
+    expect(normalizeLayout({ navigation: 'sidebar' })).toEqual({ ...DEFAULT_LAYOUT, navigation: 'sidebar' })
   })
 })
 

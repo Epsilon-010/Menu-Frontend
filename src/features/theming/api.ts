@@ -1,4 +1,5 @@
 import { apiFetch } from '../../shared/api/http.ts'
+import { normalizeLayout, withDrawableLayout } from './layout.ts'
 
 export type ThemeMode = 'light' | 'dark'
 export type LogoSize = 'sm' | 'md' | 'lg'
@@ -200,21 +201,32 @@ async function send(path: string, init: RequestInit = {}): Promise<Response> {
 
 /** What the tables see: the published theme, or the defaults until the admin publishes one. */
 export async function fetchPublishedTheme(): Promise<PublishedTheme> {
-  return (await (await send('/theme')).json()) as PublishedTheme
+  const published = (await (await send('/theme')).json()) as PublishedTheme
+  return { ...published, theme: withDrawableLayout(published.theme) }
+}
+
+/** Every theme in a draft state with a layout the menu and the preview can always draw. */
+function drawable(state: ThemeDraftState): ThemeDraftState {
+  return {
+    ...state,
+    draft: withDrawableLayout(state.draft),
+    published: state.published && withDrawableLayout(state.published),
+    presets: state.presets.map((preset) => ({ ...preset, layout: normalizeLayout(preset.layout) })),
+  }
 }
 
 export async function fetchThemeDraft(): Promise<ThemeDraftState> {
-  return (await (await send('/theme/draft')).json()) as ThemeDraftState
+  return drawable((await (await send('/theme/draft')).json()) as ThemeDraftState)
 }
 
 /** Saves the whole draft; the tables keep the published theme until `publishTheme`. */
 export async function saveThemeDraft(theme: Theme): Promise<ThemeDraftState> {
   const init = { method: 'PUT', headers: JSON_HEADERS, body: JSON.stringify(theme) }
-  return (await (await send('/theme/draft', init)).json()) as ThemeDraftState
+  return drawable((await (await send('/theme/draft', init)).json()) as ThemeDraftState)
 }
 
 export async function publishTheme(): Promise<ThemeDraftState> {
-  return (await (await send('/theme/publish', { method: 'POST' })).json()) as ThemeDraftState
+  return drawable((await (await send('/theme/publish', { method: 'POST' })).json()) as ThemeDraftState)
 }
 
 const FORMAT_BY_TYPE: Record<string, string> = {

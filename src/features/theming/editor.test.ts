@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import type { Theme, ThemeColors } from './api.ts'
-import { parseHexInput, withBrand, withColor, withMode, withRoleFont, withScale, withTextStyle } from './editor.ts'
+import type { Theme, ThemeColors, ThemePreset } from './api.ts'
+import {
+  matchingPreset,
+  parseHexInput,
+  withBrand,
+  withColor,
+  withMode,
+  withPreset,
+  withRoleFont,
+  withScale,
+  withTextStyle,
+} from './editor.ts'
 import { DEFAULT_TYPOGRAPHY } from './typography.ts'
 
 const LIGHT: ThemeColors = {
@@ -95,5 +105,30 @@ describe('typography edits', () => {
 
   it('sets the global scale', () => {
     expect(withScale(THEME, 120).typography.scale).toBe(120)
+  })
+})
+
+describe('presets', () => {
+  const STREET: ThemePreset = {
+    id: 'street',
+    name: 'Street',
+    description: 'Black and yellow.',
+    colors: { ...DARK, primary: '#facc15' },
+    typography: { ...DEFAULT_TYPOGRAPHY, fonts: { heading: 'oswald', body: 'inter', price: 'oswald', button: 'oswald' } },
+  }
+  const CLASSIC: ThemePreset = { id: 'classic', name: 'Classic', description: 'Default.', colors: LIGHT, typography: DEFAULT_TYPOGRAPHY }
+
+  it('applying a preset replaces colors and typography and keeps the brand', () => {
+    const mine = withBrand(THEME, { name: 'Tacos El Primo', logo: { ...THEME.brand.logo, image_id: 'tenants/t/logos/a' } })
+    const applied = withPreset(mine, STREET)
+    expect(applied).toEqual({ ...mine, colors: STREET.colors, typography: STREET.typography })
+    expect(applied.brand).toBe(mine.brand)
+  })
+
+  it('tells which preset the theme still matches, if any', () => {
+    expect(matchingPreset(THEME, [CLASSIC, STREET])).toBe('classic')
+    expect(matchingPreset(withPreset(THEME, STREET), [CLASSIC, STREET])).toBe('street')
+    expect(matchingPreset(withColor(THEME, 'price', '#000000'), [CLASSIC, STREET])).toBeNull()
+    expect(matchingPreset(withScale(THEME, 120), [CLASSIC, STREET])).toBeNull()
   })
 })

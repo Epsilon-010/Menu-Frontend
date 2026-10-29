@@ -13,10 +13,12 @@ import {
   type ImageUrls,
   type Theme,
   type ThemeDraftState,
+  type ThemePreset,
 } from './api.ts'
 import { BrandControls } from './BrandControls.tsx'
 import { ColorControls } from './ColorControls.tsx'
-import { withBrand } from './editor.ts'
+import { matchingPreset, withBrand, withPreset } from './editor.ts'
+import { PresetGallery } from './PresetGallery.tsx'
 import { ThemePreview } from './ThemePreview.tsx'
 import { TypographyControls } from './TypographyControls.tsx'
 
@@ -101,6 +103,11 @@ export function ThemeEditorPanel() {
     setNotice(null)
   }
 
+  function applyPreset(preset: ThemePreset) {
+    setDraft(withPreset(theme, preset))
+    setNotice(`${preset.name} applied to the draft. Adjust anything below, then save or publish.`)
+  }
+
   async function upload(slot: ImageSlot, file: File): Promise<string | null> {
     try {
       const publicId = await uploadThemeImage(slot, file)
@@ -152,7 +159,7 @@ export function ThemeEditorPanel() {
     <div className="space-y-8">
       <SectionHeader
         title="Design"
-        description="Choose the colors, logo and banner of your table menu. Changes stay in a draft with a live preview until you publish them."
+        description="Start from a template or choose the colors, logo and banner of your table menu. Changes stay in a draft with a live preview until you publish them."
         action={
           <div className="flex flex-wrap gap-2">
             <Button disabled={busy !== null || !dirty} onClick={() => void handleSave()}>
@@ -176,6 +183,16 @@ export function ThemeEditorPanel() {
         {error && <ErrorText>{error}</ErrorText>}
         {notice && <SuccessText>{notice}</SuccessText>}
       </div>
+
+      <Card className="space-y-4 p-4">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold tracking-tight text-ink">Templates</h2>
+          <p className="text-sm text-muted">
+            Want something quick? Pick a template: it sets the colors and fonts, and keeps your name, logo and images.
+          </p>
+        </div>
+        <PresetGallery presets={saved.presets} selected={matchingPreset(theme, saved.presets)} onApply={applyPreset} />
+      </Card>
 
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="min-w-0 space-y-8">

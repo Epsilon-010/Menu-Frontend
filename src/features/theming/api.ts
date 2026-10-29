@@ -110,6 +110,15 @@ export interface ContrastWarning {
   ratio: number
 }
 
+/** A complete design (colors and typography) the admin starts from; applying one keeps the brand. */
+export interface ThemePreset {
+  id: string
+  name: string
+  description: string
+  colors: ThemeColors
+  typography: Typography
+}
+
 export interface ThemeDraftState {
   draft: Theme
   published: Theme | null
@@ -117,6 +126,7 @@ export interface ThemeDraftState {
   has_unpublished_changes: boolean
   contrast_warnings: ContrastWarning[]
   defaults: { light: ThemeColors; dark: ThemeColors }
+  presets: ThemePreset[]
   image_urls: ImageUrls
 }
 

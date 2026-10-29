@@ -24,7 +24,7 @@ interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export function IconButton({ label, icon, tone = 'default', className = '', type = 'button', ...props }: IconButtonProps) {
-  const colors = tone === 'danger' ? 'text-zinc-500 hover:bg-red-50 hover:text-red-700' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950'
+  const colors = tone === 'danger' ? 'text-muted hover:bg-red-50 hover:text-red-700' : 'text-muted hover:bg-subtle hover:text-ink'
   return (
     <button
       type={type}

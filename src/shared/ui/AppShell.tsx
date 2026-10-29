@@ -13,6 +13,8 @@ export interface NavItem {
 
 interface AppShellProps {
   business: string
+  /** The business's logo (table menu); without it, a generic mark. */
+  logoUrl?: string
   /** Who or what is signed in on this device. */
   identity: string
   nav?: NavItem[]
@@ -24,7 +26,7 @@ interface AppShellProps {
 }
 
 function navLinkClass({ isActive }: { isActive: boolean }): string {
-  const state = isActive ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'
+  const state = isActive ? 'bg-action text-action-ink' : 'text-ink-soft hover:bg-subtle hover:text-ink'
   return `inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold active:scale-[0.98] ${MOTION} ${state}`
 }
 
@@ -42,6 +44,7 @@ function MenuToggleIcon({ open }: { open: boolean }) {
 /** Layout of every signed-in screen: a floating bar with the business, navigation and sign out. */
 export function AppShell({
   business,
+  logoUrl,
   identity,
   nav = [],
   onSignOut,
@@ -65,7 +68,7 @@ export function AppShell({
     <div className="min-h-screen">
       <a
         href="#main"
-        className="sr-only rounded-lg bg-zinc-950 px-3 py-2 text-sm font-semibold text-white focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50"
+        className="sr-only rounded-lg bg-action px-3 py-2 text-sm font-semibold text-action-ink focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50"
       >
         Skip to content
       </a>
@@ -73,15 +76,19 @@ export function AppShell({
       <header className="fixed inset-x-0 top-4 z-40 flex justify-center px-4">
         <nav
           aria-label="Main"
-          className="flex max-w-full items-center gap-2 rounded-2xl border border-zinc-200 bg-white/80 p-2 shadow-sm backdrop-blur-md"
+          className="flex max-w-full items-center gap-2 rounded-2xl border border-line bg-surface/80 p-2 shadow-sm backdrop-blur-md"
         >
           <div className="flex min-w-0 items-center gap-3 pr-2">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-950 text-white">
-              <ForkKnifeIcon size={16} weight="bold" aria-hidden />
-            </span>
+            {logoUrl ? (
+              <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-lg object-contain" />
+            ) : (
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand text-brand-ink">
+                <ForkKnifeIcon size={16} weight="bold" aria-hidden />
+              </span>
+            )}
             <div className="min-w-0 leading-tight">
-              <p className="truncate text-sm font-semibold text-zinc-950">{business}</p>
-              <p className="truncate text-xs text-zinc-500">{identity}</p>
+              <p className="truncate text-sm font-semibold text-ink">{business}</p>
+              <p className="truncate text-xs text-muted">{identity}</p>
             </div>
           </div>
 
@@ -115,7 +122,7 @@ export function AppShell({
               aria-expanded={menuOpen}
               aria-controls="mobile-menu"
               onClick={() => setMenuOpen((open) => !open)}
-              className={`rounded-lg p-2 text-zinc-700 hover:bg-zinc-100 active:scale-[0.98] sm:hidden ${MOTION}`}
+              className={`rounded-lg p-2 text-ink-soft hover:bg-subtle active:scale-[0.98] sm:hidden ${MOTION}`}
             >
               <MenuToggleIcon open={menuOpen} />
             </button>
@@ -127,7 +134,7 @@ export function AppShell({
         <div
           id="mobile-menu"
           inert={!menuOpen}
-          className={`fixed inset-0 z-30 bg-zinc-50/95 px-6 pt-24 backdrop-blur-xl transition-opacity duration-500 ease-smooth sm:hidden ${
+          className={`fixed inset-0 z-30 bg-canvas/95 px-6 pt-24 backdrop-blur-xl transition-opacity duration-500 ease-smooth sm:hidden ${
             menuOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
           }`}
         >
@@ -144,7 +151,7 @@ export function AppShell({
                   onClick={() => setMenuOpen(false)}
                   className={({ isActive }) =>
                     `flex items-center gap-3 rounded-xl px-4 py-3 text-lg font-semibold ${MOTION} ${
-                      isActive ? 'bg-zinc-950 text-white' : 'text-zinc-700 hover:bg-zinc-100'
+                      isActive ? 'bg-action text-action-ink' : 'text-ink-soft hover:bg-subtle'
                     }`
                   }
                 >
@@ -162,7 +169,7 @@ export function AppShell({
                   type="button"
                   onClick={onSignOut}
                   disabled={signingOut}
-                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-lg font-semibold text-zinc-700 hover:bg-zinc-100 ${MOTION}`}
+                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-lg font-semibold text-ink-soft hover:bg-subtle ${MOTION}`}
                 >
                   <SignOutIcon size={20} aria-hidden />
                   {signingOut ? 'Signing out…' : signOutLabel}

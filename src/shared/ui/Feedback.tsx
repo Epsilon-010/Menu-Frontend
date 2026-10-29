@@ -23,7 +23,7 @@ export function SuccessText({ children }: { children: ReactNode }) {
 type BadgeTone = 'neutral' | 'warning' | 'success'
 
 const BADGE_TONES: Record<BadgeTone, string> = {
-  neutral: 'bg-zinc-100 text-zinc-600',
+  neutral: 'bg-subtle text-ink-soft',
   warning: 'bg-amber-100 text-amber-800',
   success: 'bg-emerald-100 text-emerald-800',
 }
@@ -38,13 +38,13 @@ export function Badge({ tone = 'neutral', children }: { tone?: BadgeTone; childr
 
 /** Placeholder block shaped like the content it stands for. */
 export function Skeleton({ className = '' }: { className?: string }) {
-  return <div aria-hidden className={`animate-pulse rounded-lg bg-zinc-200/70 ${className}`} />
+  return <div aria-hidden className={`animate-pulse rounded-lg bg-line/70 ${className}`} />
 }
 
 /** A list of row skeletons inside a card, for panels that load a list. */
 export function ListSkeleton({ rows = 3, label }: { rows?: number; label: string }) {
   return (
-    <div role="status" aria-label={label} className="space-y-2 rounded-2xl border border-zinc-200 bg-white p-2">
+    <div role="status" aria-label={label} className="space-y-2 rounded-2xl border border-line bg-surface p-2">
       {Array.from({ length: rows }, (_, index) => (
         <div key={index} className="flex items-center gap-4 p-3">
           <Skeleton className="h-10 w-10" />
@@ -69,11 +69,11 @@ interface EmptyStateProps {
 /** A composed starting point instead of a blank panel. */
 export function EmptyState({ icon, title, children, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 text-zinc-600">{icon}</div>
+    <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-line-strong bg-surface px-6 py-12 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-subtle text-ink-soft">{icon}</div>
       <div className="max-w-sm space-y-2">
-        <h3 className="font-semibold text-zinc-950">{title}</h3>
-        <p className="text-sm text-zinc-500">{children}</p>
+        <h3 className="font-semibold text-ink">{title}</h3>
+        <p className="text-sm text-muted">{children}</p>
       </div>
       {action}
     </div>

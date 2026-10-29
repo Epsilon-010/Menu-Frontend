@@ -11,6 +11,9 @@ import { MenuBrowser } from '../../features/ordering/MenuBrowser.tsx'
 import { OrderCard } from '../../features/ordering/OrderCard.tsx'
 import { SendConfirmation } from '../../features/ordering/SendConfirmation.tsx'
 import { useTableOrdering, type Loadable, type TableOrdering } from '../../features/ordering/useTableOrdering.ts'
+import { MenuHero } from '../../features/theming/MenuHero.tsx'
+import { ThemeScope } from '../../features/theming/ThemeScope.tsx'
+import { usePublishedTheme } from '../../features/theming/usePublishedTheme.ts'
 import { AppShell } from '../../shared/ui/AppShell.tsx'
 import { IconButton } from '../../shared/ui/Button.tsx'
 import { MOTION } from '../../shared/ui/classes.ts'
@@ -61,7 +64,7 @@ function OrdersArea({ orders }: { orders: Loadable<Order[]> }) {
     )
   }
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid gap-4 @2xl:grid-cols-2">
       {orders.data.map((order) => (
         <OrderCard key={order.id} order={order} />
       ))}
@@ -80,6 +83,7 @@ export function MenuPage() {
   // Notices right away when the admin deactivates the table or the visit ends.
   useSessionHeartbeat()
   const ordering = useTableOrdering()
+  const published = usePublishedTheme()
   const [confirming, setConfirming] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
@@ -112,10 +116,23 @@ export function MenuPage() {
 
   const loadedCart = cart.status === 'loaded' ? cart.data : null
   const count = loadedCart ? dishCount(loadedCart) : 0
+  const theme = published.status === 'loaded' ? published.data : null
+  const logoId = theme?.theme.brand.logo.image_id
+  const logoUrl = theme && logoId ? theme.image_urls[logoId] : undefined
 
-  return (
+  if (published.status === 'loading') {
+    // A moment at most (the theme is cached): avoids showing the neutral look before the business's.
+    return (
+      <div className="mx-auto max-w-5xl px-4 pt-24">
+        <MenuSkeleton />
+      </div>
+    )
+  }
+
+  const page = (
     <AppShell
-      business={tenant.name}
+      business={theme?.theme.brand.name || tenant.name}
+      logoUrl={logoUrl}
       identity={guest ? `${table.name} · ${guest.name}` : table.name}
       onSignOut={guest ? () => void handleLeave() : undefined}
       signingOut={leaving}
@@ -123,12 +140,13 @@ export function MenuPage() {
     >
       <div className="grid gap-8 pb-24 lg:grid-cols-3 lg:pb-0">
         <div className="min-w-0 space-y-12 lg:col-span-2">
+          {theme && <MenuHero theme={theme.theme} imageUrls={theme.image_urls} businessName={tenant.name} />}
           {menu.status === 'loading' && <MenuSkeleton />}
           {menu.status === 'error' && <LoadError message={menu.message} onRetry={ordering.retryMenu} />}
           {menu.status === 'loaded' && <MenuBrowser categories={menu.data} onAdd={ordering.addLine} />}
 
           <section aria-labelledby="orders-title" className="space-y-4">
-            <h2 id="orders-title" className="text-xl font-semibold tracking-tight text-zinc-950">
+            <h2 id="orders-title" className="text-xl font-semibold tracking-tight text-ink">
               Orders from this table
             </h2>
             <OrdersArea orders={orders} />
@@ -140,7 +158,7 @@ export function MenuPage() {
 
         <aside aria-label="Table order" className="hidden lg:block">
           <Card className="sticky top-24 max-h-[calc(100vh-8rem)] space-y-4 overflow-y-auto p-4">
-            <h2 className="text-lg font-semibold tracking-tight text-zinc-950">Table order</h2>
+            <h2 className="text-lg font-semibold tracking-tight text-ink">Table order</h2>
             <CartArea cart={cart} ordering={ordering} onSend={openConfirmation} />
           </Card>
         </aside>
@@ -153,12 +171,12 @@ export function MenuPage() {
           aria-expanded={sheetOpen}
           aria-controls="cart-sheet"
           onClick={() => setSheetOpen(true)}
-          className={`mx-auto flex w-full max-w-lg items-center justify-between gap-4 rounded-2xl bg-zinc-950 px-4 py-3 text-white shadow-lg hover:bg-zinc-800 active:scale-[0.98] ${MOTION}`}
+          className={`mx-auto flex w-full max-w-lg items-center justify-between gap-4 rounded-2xl bg-cart px-4 py-3 text-cart-ink shadow-lg hover:bg-cart/90 active:scale-[0.98] ${MOTION}`}
         >
           <span className="flex items-center gap-2 text-base font-semibold">
             <ShoppingBagIcon size={20} aria-hidden />
             Table order
-            {count > 0 && <span className="rounded-md bg-white/15 px-2 text-sm tabular-nums">{count}</span>}
+            {count > 0 && <span className="rounded-md bg-cart-ink/15 px-2 text-sm tabular-nums">{count}</span>}
           </span>
           <span className="text-base font-semibold tabular-nums">{formatMoney(loadedCart?.total_cents ?? 0)}</span>
         </button>
@@ -170,13 +188,13 @@ export function MenuPage() {
         aria-modal="true"
         aria-label="Table order"
         inert={!sheetOpen}
-        className={`fixed inset-0 z-30 overflow-y-auto bg-zinc-50/95 px-4 pt-24 pb-8 backdrop-blur-xl transition-opacity duration-500 ease-smooth lg:hidden ${
+        className={`fixed inset-0 z-30 overflow-y-auto bg-canvas/95 px-4 pt-24 pb-8 backdrop-blur-xl transition-opacity duration-500 ease-smooth lg:hidden ${
           sheetOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
       >
         <div className="mx-auto max-w-lg space-y-4">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-xl font-semibold tracking-tight text-zinc-950">Table order</h2>
+            <h2 className="text-xl font-semibold tracking-tight text-ink">Table order</h2>
             <IconButton label="Close the order" icon={<XIcon size={20} />} onClick={() => setSheetOpen(false)} />
           </div>
           <Card className="p-4">
@@ -206,5 +224,12 @@ export function MenuPage() {
         </div>
       )}
     </AppShell>
+  )
+
+  if (!theme) return page
+  return (
+    <ThemeScope theme={theme.theme} imageUrls={theme.image_urls} className="min-h-screen">
+      {page}
+    </ThemeScope>
   )
 }

@@ -11,8 +11,8 @@ export function SectionHeader({ title, description, action }: SectionHeaderProps
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div className="max-w-2xl space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">{title}</h1>
-        <p className="text-sm text-zinc-500">{description}</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">{title}</h1>
+        <p className="text-sm text-muted">{description}</p>
       </div>
       {action}
     </div>
@@ -20,5 +20,5 @@ export function SectionHeader({ title, description, action }: SectionHeaderProps
 }
 
 export function Card({ className = '', children }: { className?: string; children: ReactNode }) {
-  return <div className={`rounded-2xl border border-zinc-200 bg-white ${className}`}>{children}</div>
+  return <div className={`rounded-2xl border border-line bg-surface ${className}`}>{children}</div>
 }

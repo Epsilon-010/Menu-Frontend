@@ -45,8 +45,9 @@ export function MenuHero({ theme, imageUrls, businessName }: MenuHeroProps) {
         {logoUrl && (
           <img src={logoUrl} alt={`${brand.name || businessName} logo`} className={`w-auto object-contain ${LOGO_SIZES[brand.logo.size]}`} />
         )}
-        <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight text-ink">{brand.name || businessName}</h1>
+        {/* The tagline follows the name's alignment. */}
+        <div className="w-full space-y-1 [text-align:var(--type-business-name-align,center)]">
+          <h1 className="type-business-name text-ink">{brand.name || businessName}</h1>
           {brand.tagline && <p className="text-base text-muted">{brand.tagline}</p>}
         </div>
         {brand.welcome_message && (

@@ -83,7 +83,7 @@ export function SendConfirmation({ liveCart, onSend, onSent, onClose }: SendConf
                 <WarningIcon size={16} className="mt-0.5 shrink-0" aria-hidden />
                 Someone just changed the order.
               </p>
-              <Button variant="secondary" onClick={() => reviewLatest(liveCart)} disabled={busy}>
+              <Button variant="secondary" onClick={() => reviewLatest(liveCart)} disabled={busy} className="type-button">
                 Show the changes
               </Button>
             </div>
@@ -128,14 +128,14 @@ export function SendConfirmation({ liveCart, onSend, onSent, onClose }: SendConf
             <Button
               variant="primary"
               size="md"
-              className="flex-1"
+              className="type-button-face flex-1"
               icon={<PaperPlaneTiltIcon size={16} aria-hidden />}
               disabled={busy || !hasDishes}
               onClick={() => void handleConfirm()}
             >
               {busy ? 'Sending…' : 'Confirm and send'}
             </Button>
-            <Button variant="ghost" size="md" disabled={busy} onClick={onClose}>
+            <Button variant="ghost" size="md" disabled={busy} onClick={onClose} className="type-button-face">
               Keep editing
             </Button>
           </div>

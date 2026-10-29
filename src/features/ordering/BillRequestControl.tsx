@@ -29,6 +29,7 @@ export function BillRequestControl({ requestedAt, onChange }: BillRequestControl
             variant="ghost"
             icon={<XIcon size={16} aria-hidden />}
             disabled={busy}
+            className="type-button"
             onClick={() => void run(() => onChange(false))}
           >
             {busy ? 'Cancelling…' : 'Cancel request'}
@@ -39,6 +40,7 @@ export function BillRequestControl({ requestedAt, onChange }: BillRequestControl
           variant="secondary"
           icon={<ReceiptIcon size={16} aria-hidden />}
           disabled={busy}
+          className="type-button"
           onClick={() => void run(() => onChange(true))}
         >
           {busy ? 'Asking…' : 'Ask for the bill'}

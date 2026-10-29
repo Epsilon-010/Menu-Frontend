@@ -18,6 +18,7 @@ import { BrandControls } from './BrandControls.tsx'
 import { ColorControls } from './ColorControls.tsx'
 import { withBrand } from './editor.ts'
 import { ThemePreview } from './ThemePreview.tsx'
+import { TypographyControls } from './TypographyControls.tsx'
 
 type LoadState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded'; saved: ThemeDraftState }
 
@@ -191,6 +192,10 @@ export function ThemeEditorPanel() {
               onChange={edit}
               onUpload={upload}
             />
+          </Card>
+          <Card className="space-y-4 p-4">
+            <h2 className="text-lg font-semibold tracking-tight text-ink">Typography</h2>
+            <TypographyControls theme={theme} onChange={edit} />
           </Card>
         </div>
 

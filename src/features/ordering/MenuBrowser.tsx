@@ -76,10 +76,10 @@ function ItemCard({ item, onAdd }: ItemCardProps) {
       <div className="flex flex-1 flex-col gap-4 p-4">
         <div className="flex-1 space-y-1">
           <div className="flex items-start justify-between gap-4">
-            <h3 className="font-semibold text-pretty text-ink">{item.name}</h3>
-            <p className="shrink-0 font-semibold text-price tabular-nums">{formatMoney(item.price_cents)}</p>
+            <h3 className="type-product-name flex-1 text-pretty text-ink">{item.name}</h3>
+            <p className="type-price shrink-0 text-price tabular-nums">{formatMoney(item.price_cents)}</p>
           </div>
-          {item.description && <p className="line-clamp-3 text-sm text-pretty text-muted">{item.description}</p>}
+          {item.description && <p className="type-description line-clamp-3 text-pretty text-muted">{item.description}</p>}
         </div>
 
         {adding ? (
@@ -99,16 +99,21 @@ function ItemCard({ item, onAdd }: ItemCardProps) {
             </Field>
             {error && <ErrorText>{error}</ErrorText>}
             <div className="flex flex-wrap gap-2">
-              <Button type="submit" variant="primary" disabled={busy} className="flex-1">
+              <Button type="submit" variant="primary" disabled={busy} className="type-button flex-1">
                 {busy ? 'Adding…' : `Add ${quantity} · ${formatMoney(item.price_cents * quantity)}`}
               </Button>
-              <Button variant="ghost" disabled={busy} onClick={close}>
+              <Button variant="ghost" disabled={busy} onClick={close} className="type-button">
                 Cancel
               </Button>
             </div>
           </form>
         ) : (
-          <Button variant="secondary" icon={<PlusIcon size={16} aria-hidden />} onClick={() => setAdding(true)}>
+          <Button
+            variant="secondary"
+            icon={<PlusIcon size={16} aria-hidden />}
+            onClick={() => setAdding(true)}
+            className="type-button"
+          >
             Add
           </Button>
         )}
@@ -156,8 +161,8 @@ export function MenuBrowser({ categories, onAdd }: MenuBrowserProps) {
 
       {withItems.map((category) => (
         <section key={category.id} id={sectionId(category.id)} className="scroll-mt-32 space-y-4">
-          <h2 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-secondary">
-            <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-accent" />
+          <h2 className="type-category text-secondary">
+            <span aria-hidden className="mr-2 inline-block h-2 w-2 rounded-full bg-accent align-middle" />
             {category.name}
           </h2>
           <div className="grid gap-4 @2xl:grid-cols-2">

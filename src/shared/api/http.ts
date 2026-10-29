@@ -27,21 +27,44 @@ export function onSessionEnded(listener: () => void): () => void {
   return () => sessionEndedListeners.delete(listener)
 }
 
+/**
+ * Thrown when the session could not be refreshed for now (server down, network cut, timeout). The session is
+ * still valid: only this request fails, and the user can retry it.
+ */
+export class SessionUnavailableError extends Error {
+  constructor() {
+    super('Could not reach the server. Check the connection and try again.')
+    this.name = 'SessionUnavailableError'
+  }
+}
+
+/** The new session, or null when the server refused the refresh (expired, revoked, logged out elsewhere). */
 export function refreshSession(): Promise<SessionInfo | null> {
-  refreshInFlight ??= requestRefresh().finally(() => {
+  refreshInFlight ??= acrossTabs(requestRefresh).finally(() => {
     refreshInFlight = null
   })
   return refreshInFlight
 }
 
+/** Same lock name in every tab: refresh tokens rotate, so two tabs must never send the same one at once. */
+const REFRESH_LOCK = 'menu-session-refresh'
+
+function acrossTabs<T>(task: () => Promise<T>): Promise<T> {
+  // Older tablet browsers lack the Web Locks API; one tab per device is the usual case there.
+  const locks = typeof navigator === 'undefined' ? undefined : navigator.locks
+  return locks ? locks.request(REFRESH_LOCK, task) : task()
+}
+
 async function requestRefresh(): Promise<SessionInfo | null> {
+  let response: Response
   try {
-    const response = await fetch(`${API_BASE}/auth/refresh`, { method: 'POST' })
-    if (!response.ok) return null
-    return (await response.json()) as SessionInfo
+    response = await fetch(`${API_BASE}/auth/refresh`, withDeadline({ method: 'POST' }))
   } catch {
-    return null
+    throw new SessionUnavailableError()
   }
+  if (response.status === 401 || response.status === 403) return null
+  if (!response.ok) throw new SessionUnavailableError()
+  return (await response.json()) as SessionInfo
 }
 
 /** A request with no answer by then fails, so a hung connection never blocks the queue of changes. */

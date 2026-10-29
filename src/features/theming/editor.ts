@@ -58,3 +58,11 @@ export function matchingPreset(theme: Theme, presets: ThemePreset[]): string | n
   const look = JSON.stringify([theme.colors, theme.typography])
   return presets.find((preset) => JSON.stringify([preset.colors, preset.typography]) === look)?.id ?? null
 }
+
+/**
+ * The draft once a save or publish answers: the server copy (it may normalize values) unless the admin changed
+ * the draft while the request was in flight. Those newer edits stay, still unsaved.
+ */
+export function keepNewerEdits(current: Theme, sent: Theme, saved: Theme): Theme {
+  return JSON.stringify(current) === JSON.stringify(sent) ? saved : current
+}

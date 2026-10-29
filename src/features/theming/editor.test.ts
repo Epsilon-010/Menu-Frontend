@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Theme, ThemeColors, ThemePreset } from './api.ts'
 import {
+  keepNewerEdits,
   matchingPreset,
   parseHexInput,
   withBrand,
@@ -130,5 +131,20 @@ describe('presets', () => {
     expect(matchingPreset(withPreset(THEME, STREET), [CLASSIC, STREET])).toBe('street')
     expect(matchingPreset(withColor(THEME, 'price', '#000000'), [CLASSIC, STREET])).toBeNull()
     expect(matchingPreset(withScale(THEME, 120), [CLASSIC, STREET])).toBeNull()
+  })
+})
+
+describe('after a save or publish answers', () => {
+  it('takes the server copy when nothing changed meanwhile', () => {
+    const sent = withColor(THEME, 'primary', '#123456')
+    // The server normalizes (here: trims the name), so its copy replaces what was sent.
+    const saved = withBrand(sent, { name: 'Tacos' })
+    expect(keepNewerEdits(sent, sent, saved)).toBe(saved)
+  })
+
+  it('keeps edits and uploads made while the request was in flight', () => {
+    const sent = withColor(THEME, 'primary', '#123456')
+    const editedMeanwhile = withBrand(sent, { tagline: 'Since 1990', logo: { ...sent.brand.logo, image_id: 'tenants/t/logos/a' } })
+    expect(keepNewerEdits(editedMeanwhile, sent, sent)).toBe(editedMeanwhile)
   })
 })

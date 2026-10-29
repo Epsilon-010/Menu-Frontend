@@ -17,7 +17,7 @@ import {
 } from './api.ts'
 import { BrandControls } from './BrandControls.tsx'
 import { ColorControls } from './ColorControls.tsx'
-import { matchingPreset, withBrand, withPreset } from './editor.ts'
+import { keepNewerEdits, matchingPreset, withBrand, withPreset } from './editor.ts'
 import { PresetGallery } from './PresetGallery.tsx'
 import { ThemePreview } from './ThemePreview.tsx'
 import { TypographyControls } from './TypographyControls.tsx'
@@ -120,10 +120,11 @@ export function ThemeEditorPanel() {
     }
   }
 
+  // `theme` is the draft when the button was pressed; the controls stay usable while the request runs.
   async function save(): Promise<boolean> {
     try {
       const result = await saveThemeDraft(theme)
-      setDraft(result.draft)
+      setDraft((current) => (current ? keepNewerEdits(current, theme, result.draft) : result.draft))
       setLoad({ status: 'loaded', saved: result })
       setError(null)
       return true
@@ -144,7 +145,7 @@ export function ThemeEditorPanel() {
     if (!dirty || (await save())) {
       try {
         const result = await publishTheme()
-        setDraft(result.draft)
+        setDraft((current) => (current ? keepNewerEdits(current, theme, result.draft) : result.draft))
         setLoad({ status: 'loaded', saved: result })
         setError(null)
         setNotice('Published. The tables show the new design within a minute.')

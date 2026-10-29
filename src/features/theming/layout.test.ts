@@ -34,7 +34,7 @@ describe('the layout options', () => {
       show_welcome: true,
       cart: 'bar',
     })
-    expect(gridColumnsClass(2)).toBe('@2xl:grid-cols-2')
+    expect(gridColumnsClass(2)).toBe('@xl:grid-cols-2')
     expect(densitySpacing('comfortable')).toEqual({ sections: 'space-y-8', items: 'gap-4' })
   })
 })

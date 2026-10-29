@@ -287,14 +287,14 @@ function TabsNav({ categories, current, onPick, stickyTop }: CategoryNavProps) {
   )
 }
 
-/** A column of categories beside the products on tablets and up; a scrolling row on phones. */
+/** A column of categories beside the products when the menu is wide enough; a scrolling row otherwise. */
 function SidebarNav({ categories, current, onPick, stickyTop }: CategoryNavProps) {
   return (
     <nav
       aria-label="Menu categories"
-      className={`sticky ${stickyTop} z-20 -mx-4 overflow-x-auto bg-canvas/90 px-4 py-2 backdrop-blur-md @3xl:mx-0 @3xl:overflow-visible @3xl:bg-transparent @3xl:px-0 @3xl:backdrop-blur-none`}
+      className={`sticky ${stickyTop} z-20 -mx-4 overflow-x-auto bg-canvas/90 px-4 py-2 backdrop-blur-md @xl:mx-0 @xl:overflow-visible @xl:bg-transparent @xl:px-0 @xl:backdrop-blur-none`}
     >
-      <ul className="flex w-max gap-2 @3xl:w-auto @3xl:flex-col @3xl:gap-1">
+      <ul className="flex w-max gap-2 @xl:w-auto @xl:flex-col @xl:gap-1">
         {categories.map((category) => {
           const active = category.id === current
           return (
@@ -348,14 +348,16 @@ export function MenuBrowser({ categories, onAdd, layout = DEFAULT_LAYOUT, belowF
     const navProps = { categories: withItems, current, onPick: setChosen }
     if (layout.navigation === 'sidebar') {
       return (
-        <div className="space-y-6 @3xl:grid @3xl:grid-cols-[12rem_minmax(0,1fr)] @3xl:items-start @3xl:gap-8 @3xl:space-y-0">
-          <SidebarNav {...navProps} stickyTop={belowFixedBar ? 'top-20 @3xl:top-24' : 'top-0'} />
-          {section(shown)}
+        <div className="@container">
+          <div className="space-y-6 @xl:grid @xl:grid-cols-[11rem_minmax(0,1fr)] @xl:items-start @xl:gap-6 @xl:space-y-0">
+            <SidebarNav {...navProps} stickyTop={belowFixedBar ? 'top-20 @xl:top-24' : 'top-0'} />
+            {section(shown)}
+          </div>
         </div>
       )
     }
     return (
-      <div className={spacing.sections}>
+      <div className={`@container ${spacing.sections}`}>
         <TabsNav {...navProps} stickyTop={stickyTop} />
         {section(shown)}
       </div>
@@ -364,7 +366,8 @@ export function MenuBrowser({ categories, onAdd, layout = DEFAULT_LAYOUT, belowF
 
   const navProps = { categories: withItems, current: activeSection, stickyTop }
   return (
-    <div className={spacing.sections}>
+    // A size container: cards and columns follow the menu's own width, not the page's.
+    <div className={`@container ${spacing.sections}`}>
       {layout.navigation === 'sections' ? <SectionsNav {...navProps} /> : <ChipsNav {...navProps} />}
       {withItems.map(section)}
     </div>

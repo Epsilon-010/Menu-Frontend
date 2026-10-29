@@ -33,7 +33,7 @@ async function failureOf(promise: Promise<unknown>): Promise<ThemeError> {
   return error as ThemeError
 }
 
-const THEME = { schema_version: 1 } as Theme
+const THEME = { schema_version: 2 } as Theme
 const SIGNATURE = {
   upload_url: 'https://upload.test/image/upload',
   api_key: 'key',

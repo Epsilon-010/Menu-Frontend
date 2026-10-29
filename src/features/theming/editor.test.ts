@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Theme, ThemeColors } from './api.ts'
-import { parseHexInput, withBrand, withColor, withMode } from './editor.ts'
+import { parseHexInput, withBrand, withColor, withMode, withRoleFont, withScale, withTextStyle } from './editor.ts'
+import { DEFAULT_TYPOGRAPHY } from './typography.ts'
 
 const LIGHT: ThemeColors = {
   mode: 'light',
@@ -25,7 +26,7 @@ const LIGHT: ThemeColors = {
 const DARK: ThemeColors = { ...LIGHT, mode: 'dark', background: '#09090b', text: '#fafafa' }
 
 const THEME: Theme = {
-  schema_version: 1,
+  schema_version: 2,
   colors: LIGHT,
   brand: {
     name: '',
@@ -35,6 +36,7 @@ const THEME: Theme = {
     banner: { image_id: null, height: 'md', overlay_color: '#000000', overlay_opacity: 30 },
     background: { kind: 'none', image_id: null, pattern: 'dots', opacity: 10, blur: 0 },
   },
+  typography: DEFAULT_TYPOGRAPHY,
 }
 
 describe('parseHexInput', () => {
@@ -68,5 +70,30 @@ describe('theme edits', () => {
     expect(edited.brand.logo).toEqual({ image_id: 'tenants/t/logos/a', size: 'md', position: 'center' })
     expect(edited.brand.tagline).toBe('Since 1990')
     expect(edited.brand.banner).toBe(THEME.brand.banner)
+  })
+})
+
+describe('typography edits', () => {
+  it('changing a role font moves the elements that use it to weights and styles the font has', () => {
+    const italic = withTextStyle(withRoleFont(THEME, 'heading', 'lora'), 'business_name', { style: 'italic', weight: 700 })
+    const changed = withRoleFont(italic, 'heading', 'bebas_neue')
+    expect(changed.typography.fonts.heading).toBe('bebas_neue')
+    for (const element of ['business_name', 'category', 'product_name'] as const) {
+      expect(changed.typography.elements[element]).toMatchObject({ weight: 400, style: 'normal' })
+    }
+    // Elements on other roles keep their settings.
+    expect(changed.typography.elements.price).toEqual(THEME.typography.elements.price)
+    expect(THEME.typography.fonts.heading).toBe('geist')
+  })
+
+  it('moving an element to another role fits it to that role font', () => {
+    const theme = withRoleFont(THEME, 'price', 'pacifico')
+    const moved = withTextStyle(theme, 'product_name', { font: 'price' })
+    expect(moved.typography.elements.product_name).toMatchObject({ font: 'price', weight: 400 })
+    expect(withTextStyle(THEME, 'description', { size: 18 }).typography.elements.description.size).toBe(18)
+  })
+
+  it('sets the global scale', () => {
+    expect(withScale(THEME, 120).typography.scale).toBe(120)
   })
 })

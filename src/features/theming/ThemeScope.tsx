@@ -1,6 +1,8 @@
 import type { CSSProperties, ReactNode } from 'react'
 import type { ImageUrls, Theme } from './api.ts'
 import { backgroundPatternStyle, themeVariables } from './style.ts'
+import { googleFontsUrl, typographyVariables } from './typography.ts'
+import { useFontStylesheet } from './useFontStylesheet.ts'
 
 interface ThemeScopeProps {
   theme: Theme
@@ -43,13 +45,21 @@ function BackgroundLayer({ theme, imageUrls, contained }: Omit<ThemeScopeProps, 
 
 /**
  * Draws its children with a business's theme: sets the theme's CSS variables on its root (every menu
- * component colors itself with those tokens) and paints the background image or pattern behind them.
+ * component colors itself with those tokens and writes its texts with the `type-*` classes), loads the
+ * business's fonts, and paints the background image or pattern behind them. The rest of the menu's text uses
+ * the body font; the app's own font stays Geist outside the scope.
  * It is also a size container, so the menu lays out by its own width (a phone frame in the preview).
  */
 export function ThemeScope({ theme, imageUrls, contained = false, className = '', children }: ThemeScopeProps) {
+  useFontStylesheet(googleFontsUrl(theme.typography))
+  const style = {
+    ...themeVariables(theme.colors),
+    ...typographyVariables(theme.typography),
+    fontFamily: 'var(--type-body-family)',
+  }
   return (
     <div
-      style={themeVariables(theme.colors) as CSSProperties}
+      style={style as CSSProperties}
       className={`@container relative isolate bg-canvas text-ink ${className}`}
     >
       <BackgroundLayer theme={theme} imageUrls={imageUrls} contained={contained} />

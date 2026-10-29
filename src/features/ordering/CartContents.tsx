@@ -94,7 +94,7 @@ export function CartContents({ cart, onChange, onRemove, onSend }: CartContentsP
       <Button
         variant="primary"
         size="md"
-        className="w-full"
+        className="type-button-face w-full"
         icon={<PaperPlaneTiltIcon size={16} aria-hidden />}
         disabled={count === 0}
         onClick={onSend}

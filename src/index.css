@@ -65,3 +65,82 @@
     }
   }
 }
+
+/* The business's typography (Slice 11). Unlayered on purpose: these beat the Tailwind text utilities of the same
+   element. ThemeScope sets the variables (features/theming/typography.ts); the fallbacks are the menu's default
+   look, so an element outside a themed scope looks as before. */
+
+.type-business-name {
+  font-family: var(--type-business-name-family, inherit);
+  font-size: var(--type-business-name-size, 1.875rem);
+  font-weight: var(--type-business-name-weight, 600);
+  font-style: var(--type-business-name-style, normal);
+  line-height: var(--type-business-name-line-height, 1.2);
+  letter-spacing: var(--type-business-name-letter-spacing, -0.025em);
+  text-transform: var(--type-business-name-transform, none);
+  text-align: var(--type-business-name-align, center);
+}
+
+.type-category {
+  font-family: var(--type-category-family, inherit);
+  font-size: var(--type-category-size, 1.25rem);
+  font-weight: var(--type-category-weight, 600);
+  font-style: var(--type-category-style, normal);
+  line-height: var(--type-category-line-height, 1.4);
+  letter-spacing: var(--type-category-letter-spacing, -0.025em);
+  text-transform: var(--type-category-transform, none);
+  text-align: var(--type-category-align, left);
+}
+
+.type-product-name {
+  font-family: var(--type-product-name-family, inherit);
+  font-size: var(--type-product-name-size, 1rem);
+  font-weight: var(--type-product-name-weight, 600);
+  font-style: var(--type-product-name-style, normal);
+  line-height: var(--type-product-name-line-height, 1.5);
+  letter-spacing: var(--type-product-name-letter-spacing, 0em);
+  text-transform: var(--type-product-name-transform, none);
+  text-align: var(--type-product-name-align, left);
+}
+
+.type-description {
+  font-family: var(--type-description-family, inherit);
+  font-size: var(--type-description-size, 0.875rem);
+  font-weight: var(--type-description-weight, 400);
+  font-style: var(--type-description-style, normal);
+  line-height: var(--type-description-line-height, 1.43);
+  letter-spacing: var(--type-description-letter-spacing, 0em);
+  text-transform: var(--type-description-transform, none);
+  text-align: var(--type-description-align, left);
+}
+
+.type-price {
+  font-family: var(--type-price-family, inherit);
+  font-size: var(--type-price-size, 1rem);
+  font-weight: var(--type-price-weight, 600);
+  font-style: var(--type-price-style, normal);
+  line-height: var(--type-price-line-height, 1.5);
+  letter-spacing: var(--type-price-letter-spacing, 0em);
+  text-transform: var(--type-price-transform, none);
+  text-align: var(--type-price-align, left);
+}
+
+.type-button {
+  font-family: var(--type-button-family, inherit);
+  font-size: var(--type-button-size, 0.875rem);
+  font-weight: var(--type-button-weight, 600);
+  font-style: var(--type-button-style, normal);
+  line-height: var(--type-button-line-height, 1.43);
+  letter-spacing: var(--type-button-letter-spacing, 0em);
+  text-transform: var(--type-button-transform, none);
+  text-align: var(--type-button-align, left);
+}
+
+/* The larger (md) menu buttons take the button font, weight, style, spacing and case, but keep their size. */
+.type-button-face {
+  font-family: var(--type-button-family, inherit);
+  font-weight: var(--type-button-weight, 600);
+  font-style: var(--type-button-style, normal);
+  letter-spacing: var(--type-button-letter-spacing, 0em);
+  text-transform: var(--type-button-transform, none);
+}

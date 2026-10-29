@@ -47,10 +47,53 @@ export interface ThemeBrand {
   background: { kind: BackgroundKind; image_id: string | null; pattern: BackgroundPattern; opacity: number; blur: number }
 }
 
+export type FontId =
+  | 'geist'
+  | 'inter'
+  | 'poppins'
+  | 'montserrat'
+  | 'lato'
+  | 'nunito'
+  | 'playfair_display'
+  | 'lora'
+  | 'merriweather'
+  | 'oswald'
+  | 'bebas_neue'
+  | 'pacifico'
+  | 'caveat'
+export type FontRole = 'heading' | 'body' | 'price' | 'button'
+export type TextElement = 'business_name' | 'category' | 'product_name' | 'description' | 'price' | 'button'
+export type FontStyle = 'normal' | 'italic'
+export type TextTransform = 'none' | 'uppercase' | 'lowercase' | 'capitalize'
+export type TextAlign = 'left' | 'center' | 'right'
+
+export interface TextStyle {
+  /** One of the four role fonts. */
+  font: FontRole
+  /** px, before the global scale. */
+  size: number
+  weight: number
+  style: FontStyle
+  /** % of the size. */
+  line_height: number
+  /** Thousandths of an em. */
+  letter_spacing: number
+  transform: TextTransform
+  align: TextAlign
+}
+
+export interface Typography {
+  /** % applied to every size. */
+  scale: number
+  fonts: Record<FontRole, FontId>
+  elements: Record<TextElement, TextStyle>
+}
+
 export interface Theme {
-  schema_version: 1
+  schema_version: 2
   colors: ThemeColors
   brand: ThemeBrand
+  typography: Typography
 }
 
 /** Delivery URL of each image the theme uses, by public id (missing while the storage is not configured). */

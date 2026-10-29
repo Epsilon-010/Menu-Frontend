@@ -43,6 +43,21 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
   const frame = DEVICES[device]
   const { ref, scale } = useFitScale(frame.width)
   const logoUrl = theme.brand.logo.image_id ? imageUrls[theme.brand.logo.image_id] : undefined
+  const { layout } = theme
+  // The real menu shows the side panel from tablets (panel) or large screens (bar); the tablet frame is below large.
+  const sidePanel = device === 'tablet' && layout.cart === 'panel'
+  const header = (
+    <div className="flex items-center gap-3 border-b border-line bg-surface/80 px-4 py-3">
+      {logoUrl ? (
+        <img src={logoUrl} alt="" className="h-8 w-8 rounded-lg object-contain" />
+      ) : (
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-brand-ink">
+          <ForkKnifeIcon size={16} weight="bold" aria-hidden />
+        </span>
+      )}
+      <p className="truncate text-sm font-semibold text-ink">{theme.brand.name || businessName}</p>
+    </div>
+  )
 
   useEffect(() => {
     let active = true
@@ -81,33 +96,39 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
             className="overflow-hidden rounded-3xl border-8 border-zinc-900 shadow-lg"
           >
             <ThemeScope theme={theme} imageUrls={imageUrls} contained className="flex h-full flex-col">
-              <div className="flex items-center gap-3 border-b border-line bg-surface/80 px-4 py-3">
-                {logoUrl ? (
-                  <img src={logoUrl} alt="" className="h-8 w-8 rounded-lg object-contain" />
-                ) : (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-brand-ink">
-                    <ForkKnifeIcon size={16} weight="bold" aria-hidden />
-                  </span>
-                )}
-                <p className="truncate text-sm font-semibold text-ink">{theme.brand.name || businessName}</p>
-              </div>
+              {layout.sticky_header && header}
 
-              <div className="min-h-0 flex-1 space-y-8 overflow-y-auto p-4">
-                <MenuHero theme={theme} imageUrls={imageUrls} businessName={businessName} />
-                {menu && <MenuBrowser categories={menu} onAdd={() => Promise.resolve(null)} />}
-                {menuFailed && <p className="text-sm text-muted">The menu could not be loaded for the preview.</p>}
-              </div>
-
-              <div className="p-4">
-                <div className="flex items-center justify-between rounded-2xl bg-cart px-4 py-3 text-cart-ink">
-                  <span className="flex items-center gap-2 text-base font-semibold">
-                    <ShoppingBagIcon size={20} aria-hidden />
-                    Table order
-                    <span className="rounded-md bg-badge px-2 text-sm text-badge-ink tabular-nums">2</span>
-                  </span>
-                  <span className="text-base font-semibold tabular-nums">{formatMoney(4500)}</span>
+              <div className="flex min-h-0 flex-1">
+                <div className="min-w-0 flex-1 space-y-8 overflow-y-auto p-4">
+                  {!layout.sticky_header && header}
+                  <MenuHero theme={theme} imageUrls={imageUrls} businessName={businessName} />
+                  {menu && <MenuBrowser categories={menu} onAdd={() => Promise.resolve(null)} layout={layout} belowFixedBar={false} />}
+                  {menuFailed && <p className="text-sm text-muted">The menu could not be loaded for the preview.</p>}
                 </div>
+                {sidePanel && (
+                  <aside aria-label="Table order" className="w-64 shrink-0 border-l border-line bg-surface p-4">
+                    <p className="text-lg font-semibold tracking-tight text-ink">Table order</p>
+                    <p className="mt-2 text-sm text-muted">2 dishes · {formatMoney(4500)}</p>
+                  </aside>
+                )}
               </div>
+
+              {!sidePanel && (
+                <div className={`p-4 ${layout.cart === 'floating' ? 'flex justify-end' : ''}`}>
+                  <div
+                    className={`flex items-center justify-between gap-4 bg-cart px-4 py-3 text-cart-ink ${
+                      layout.cart === 'floating' ? 'rounded-full shadow-lg' : 'rounded-2xl'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2 text-base font-semibold">
+                      <ShoppingBagIcon size={20} aria-hidden />
+                      Table order
+                      <span className="rounded-md bg-badge px-2 text-sm text-badge-ink tabular-nums">2</span>
+                    </span>
+                    <span className="text-base font-semibold tabular-nums">{formatMoney(4500)}</span>
+                  </div>
+                </div>
+              )}
             </ThemeScope>
           </div>
         </div>

@@ -22,6 +22,8 @@ interface AppShellProps {
   signingOut?: boolean
   /** Text of the sign out button ("Leave" for a guest at a table). */
   signOutLabel?: string
+  /** False: the bar scrolls away with the page instead of staying on top (a table menu's layout choice). */
+  fixedBar?: boolean
   children: ReactNode
 }
 
@@ -56,6 +58,7 @@ export function AppShell({
   onSignOut,
   signingOut = false,
   signOutLabel = 'Sign out',
+  fixedBar = true,
   children,
 }: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -81,7 +84,7 @@ export function AppShell({
         Skip to content
       </a>
 
-      <header className="fixed inset-x-0 top-4 z-40 flex justify-center px-4">
+      <header className={`${fixedBar ? 'fixed' : 'absolute'} inset-x-0 top-4 z-40 flex justify-center px-4`}>
         <nav
           aria-label="Main"
           className="flex max-w-full items-center gap-2 rounded-2xl border border-line bg-surface/80 p-2 shadow-sm backdrop-blur-md"

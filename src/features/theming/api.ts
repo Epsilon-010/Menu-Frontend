@@ -89,11 +89,32 @@ export interface Typography {
   elements: Record<TextElement, TextStyle>
 }
 
+export type Navigation = 'chips' | 'tabs' | 'sidebar' | 'sections'
+export type ProductView = 'grid' | 'list' | 'carousel'
+export type Density = 'compact' | 'comfortable' | 'spacious'
+export type CategoryHeader = 'plain' | 'underline' | 'band'
+export type CartStyle = 'bar' | 'panel' | 'floating'
+
+export interface ThemeLayout {
+  navigation: Navigation
+  product_view: ProductView
+  /** Grid columns on wide screens (1-4); narrow screens show fewer. */
+  columns: number
+  density: Density
+  sticky_header: boolean
+  category_header: CategoryHeader
+  show_banner: boolean
+  show_tagline: boolean
+  show_welcome: boolean
+  cart: CartStyle
+}
+
 export interface Theme {
-  schema_version: 2
+  schema_version: 3
   colors: ThemeColors
   brand: ThemeBrand
   typography: Typography
+  layout: ThemeLayout
 }
 
 /** Delivery URL of each image the theme uses, by public id (missing while the storage is not configured). */
@@ -117,6 +138,7 @@ export interface ThemePreset {
   description: string
   colors: ThemeColors
   typography: Typography
+  layout: ThemeLayout
 }
 
 export interface ThemeDraftState {

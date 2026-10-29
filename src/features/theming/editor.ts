@@ -1,4 +1,16 @@
-import type { ColorField, FontId, FontRole, TextElement, TextStyle, Theme, ThemeBrand, ThemeColors, ThemeMode, ThemePreset } from './api.ts'
+import type {
+  ColorField,
+  FontId,
+  FontRole,
+  TextElement,
+  TextStyle,
+  Theme,
+  ThemeBrand,
+  ThemeColors,
+  ThemeLayout,
+  ThemeMode,
+  ThemePreset,
+} from './api.ts'
 import { fitToFont, TEXT_ELEMENTS } from './typography.ts'
 
 const HEX = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i
@@ -48,15 +60,21 @@ export function withTextStyle(theme: Theme, element: TextElement, changes: Parti
   return { ...theme, typography: { ...theme.typography, elements: { ...theme.typography.elements, [element]: fitted } } }
 }
 
-/** A preset replaces colors and typography; the brand (name, texts, images) stays the tenant's. */
+export function withLayout(theme: Theme, changes: Partial<ThemeLayout>): Theme {
+  return { ...theme, layout: { ...theme.layout, ...changes } }
+}
+
+/** A preset replaces colors, typography and layout; the brand (name, texts, images) stays the tenant's. */
 export function withPreset(theme: Theme, preset: ThemePreset): Theme {
-  return { ...theme, colors: preset.colors, typography: preset.typography }
+  return { ...theme, colors: preset.colors, typography: preset.typography, layout: preset.layout }
 }
 
 /** The preset the theme still looks exactly like, or null once the admin adjusted anything. */
 export function matchingPreset(theme: Theme, presets: ThemePreset[]): string | null {
-  const look = JSON.stringify([theme.colors, theme.typography])
-  return presets.find((preset) => JSON.stringify([preset.colors, preset.typography]) === look)?.id ?? null
+  const look = JSON.stringify([theme.colors, theme.typography, theme.layout])
+  return (
+    presets.find((preset) => JSON.stringify([preset.colors, preset.typography, preset.layout]) === look)?.id ?? null
+  )
 }
 
 /**

@@ -1,11 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   addCartLine,
+  cancelBillRequest,
+  fetchBillRequest,
   fetchCart,
   fetchMenu,
   fetchOrders,
   OrderingError,
   removeCartLine,
+  requestBill,
   submitOrder,
   updateCartLine,
   type Cart,
@@ -56,6 +59,36 @@ afterEach(() => {
 })
 
 describe('table ordering API', () => {
+  it('reads, asks for and cancels the bill request of the table', async () => {
+    const calls = stubFetch(
+      ok({ requested_at: null }),
+      ok({ requested_at: '2026-10-28T18:24:00Z' }),
+      new Response(null, { status: 204 }),
+    )
+
+    expect(await fetchBillRequest()).toBeNull()
+    expect(await requestBill()).toBe('2026-10-28T18:24:00Z')
+    await cancelBillRequest()
+
+    expect(calls.map((call) => [call.init?.method ?? 'GET', call.url])).toEqual([
+      ['GET', '/api/v1/table/bill-request'],
+      ['POST', '/api/v1/table/bill-request'],
+      ['DELETE', '/api/v1/table/bill-request'],
+    ])
+  })
+
+  it('shows why the bill cannot be asked for yet', async () => {
+    stubFetch(problem(409, 'There is nothing to pay yet'))
+
+    const error = await requestBill().then(
+      () => null,
+      (caught: unknown) => caught,
+    )
+
+    expect(error).toBeInstanceOf(OrderingError)
+    expect((error as OrderingError).message).toBe('There is nothing to pay yet.')
+  })
+
   it('reads the menu, the shared cart and the orders of the visit', async () => {
     const calls = stubFetch(ok([]), ok(CART), ok([]))
 

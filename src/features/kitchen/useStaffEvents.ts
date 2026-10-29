@@ -2,7 +2,13 @@ import { useLiveEvents } from '../ordering/useLiveEvents.ts'
 
 const EVENTS_URL = '/api/v1/staff/events'
 
-export type StaffEvent = 'order.created' | 'order.updated' | 'bill.opened' | 'bill.closed'
+export type StaffEvent =
+  | 'order.created'
+  | 'order.updated'
+  | 'bill.opened'
+  | 'bill.closed'
+  | 'bill.requested'
+  | 'bill.request_cleared'
 
 /**
  * Live updates of every order and table of the business, for the kitchen and the waiters.
@@ -17,6 +23,8 @@ export function useStaffEvents(onEvent: (event: StaffEvent) => void, onRefresh: 
       'order.updated': () => onEvent('order.updated'),
       'bill.opened': () => onEvent('bill.opened'),
       'bill.closed': () => onEvent('bill.closed'),
+      'bill.requested': () => onEvent('bill.requested'),
+      'bill.request_cleared': () => onEvent('bill.request_cleared'),
     },
     onRefresh,
   })

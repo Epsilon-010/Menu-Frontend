@@ -7,6 +7,7 @@ import {
   addOrderDish,
   BillError,
   closeTable,
+  dismissBillRequest,
   listTableBills,
   openTable,
   registerPayment,
@@ -14,6 +15,7 @@ import {
   type PaymentMethod,
   type TableOverview,
 } from './api.ts'
+import { tablesForWaiter } from './logic.ts'
 import { TableBillCard } from './TableBillCard.tsx'
 
 const REFRESH_MS = 10_000
@@ -106,6 +108,7 @@ export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = 
       onPay: (method: PaymentMethod) =>
         bill ? act(() => registerPayment(bill.id, method)) : Promise.resolve('This table is not open.'),
       onClose: () => (bill ? act(() => closeTable(bill.id)) : Promise.resolve(null)),
+      onDismissRequest: () => (bill ? act(() => dismissBillRequest(bill.id)) : Promise.resolve(null)),
       onCancelDish: (orderId: string, itemId: string, reason: string) =>
         act(() => updateItemStatus(orderId, [itemId], 'cancelled', reason)),
       onAddDish: (orderId: string, dish: NewOrderDish) => act(() => addOrderDish(orderId, dish)),
@@ -134,7 +137,7 @@ export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = 
           </EmptyState>
         ) : (
           <div className="space-y-4">
-            {list.tables.map((table) => (
+            {tablesForWaiter(list.tables).map((table) => (
               <TableBillCard key={table.table_id} table={table} {...handlers(table)} />
             ))}
           </div>

@@ -137,6 +137,7 @@ function tables(items: OrderItem[]): TableOverview[] {
         opened_at: '2026-10-28T12:00:00Z',
         closed_at: null,
         payment_method: null,
+        bill_requested_at: null,
         orders: [
           {
             id: 'o7',

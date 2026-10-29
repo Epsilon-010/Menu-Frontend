@@ -1,4 +1,4 @@
-import { ChairIcon, DoorOpenIcon, MoneyIcon, XCircleIcon } from '@phosphor-icons/react'
+import { BellRingingIcon, ChairIcon, CheckIcon, DoorOpenIcon, MoneyIcon, XCircleIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { Button } from '../../shared/ui/Button.tsx'
 import { MOTION } from '../../shared/ui/classes.ts'
@@ -9,7 +9,7 @@ import { OrderCard } from '../ordering/OrderCard.tsx'
 import { clockTime } from '../ordering/logic.ts'
 import { PAYMENT_METHODS, type NewOrderDish, type PaymentMethod, type TableOverview } from './api.ts'
 import { AddDishControl, CancelDishControl } from './DishCorrections.tsx'
-import { acceptsNewDishes, canCancelDish } from './logic.ts'
+import { acceptsNewDishes, canCancelDish, tableCardId } from './logic.ts'
 
 type Mode = { kind: 'view' } | { kind: 'pay'; method: PaymentMethod } | { kind: 'confirm-close' }
 
@@ -19,23 +19,41 @@ interface TableBillCardProps {
   onOpen: () => Promise<string | null>
   onPay: (method: PaymentMethod) => Promise<string | null>
   onClose: () => Promise<string | null>
+  /** The waiter attended the table that asked for the bill. */
+  onDismissRequest: () => Promise<string | null>
   /** Corrections while the bill is open: each resolves to an error message, or null when done. */
   onCancelDish: (orderId: string, itemId: string, reason: string) => Promise<string | null>
   onAddDish: (orderId: string, dish: NewOrderDish) => Promise<string | null>
 }
 
 /** One table for the waiter: open it, follow its orders and register the payment. */
-export function TableBillCard({ table, onOpen, onPay, onClose, onCancelDish, onAddDish }: TableBillCardProps) {
+export function TableBillCard({
+  table,
+  onOpen,
+  onPay,
+  onClose,
+  onDismissRequest,
+  onCancelDish,
+  onAddDish,
+}: TableBillCardProps) {
   const [mode, setMode] = useState<Mode>({ kind: 'view' })
   const { busy, error, run: runAction } = useRowAction()
   const { bill } = table
+  const requestedAt = bill?.bill_requested_at ?? null
 
   function run(action: () => Promise<string | null>) {
     return runAction(action, () => setMode({ kind: 'view' }))
   }
 
   return (
-    <section aria-busy={busy} className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-4">
+    <section
+      id={tableCardId(table.table_id)}
+      tabIndex={-1}
+      aria-busy={busy}
+      className={`scroll-mt-24 space-y-4 rounded-2xl border bg-white p-4 focus:outline-none ${
+        requestedAt ? 'border-amber-300 ring-2 ring-amber-200' : 'border-zinc-200'
+      }`}
+    >
       <header className="flex flex-wrap items-center gap-4">
         <span
           className={`flex h-10 w-10 items-center justify-center rounded-lg ${bill ? 'bg-zinc-950 text-white' : 'bg-zinc-100 text-zinc-500'}`}
@@ -46,6 +64,7 @@ export function TableBillCard({ table, onOpen, onPay, onClose, onCancelDish, onA
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="font-semibold text-zinc-950">{table.table_name}</h2>
             {bill ? <Badge tone="success">Open</Badge> : <Badge>Closed</Badge>}
+            {requestedAt && <Badge tone="warning">Bill requested</Badge>}
           </div>
           <p className="text-sm text-zinc-500">
             {bill
@@ -55,6 +74,23 @@ export function TableBillCard({ table, onOpen, onPay, onClose, onCancelDish, onA
         </div>
         {bill && <p className="text-lg font-semibold text-zinc-950 tabular-nums">{formatMoney(bill.total_cents)}</p>}
       </header>
+
+      {requestedAt && (
+        <div className="flex flex-wrap items-center gap-4 rounded-xl bg-amber-50 p-3">
+          <p className="flex flex-1 items-center gap-2 text-sm text-amber-900">
+            <BellRingingIcon size={16} aria-hidden />
+            Asked for the bill at {clockTime(requestedAt)}.
+          </p>
+          <Button
+            variant="secondary"
+            icon={<CheckIcon size={16} aria-hidden />}
+            disabled={busy}
+            onClick={() => void run(onDismissRequest)}
+          >
+            Attended
+          </Button>
+        </div>
+      )}
 
       {!bill && (
         <div className="space-y-2">

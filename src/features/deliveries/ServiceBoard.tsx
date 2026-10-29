@@ -1,12 +1,14 @@
-import { ProhibitIcon, XIcon } from '@phosphor-icons/react'
+import { BellRingingIcon, ProhibitIcon, XIcon } from '@phosphor-icons/react'
 import { useCallback, useRef, useState } from 'react'
 import { IconButton } from '../../shared/ui/Button.tsx'
 import { useNow } from '../../shared/ui/useNow.ts'
 import { useSoundAlert } from '../../shared/sound/useSoundAlert.ts'
 import type { TableOverview } from '../bills/api.ts'
+import { billRequests, newBillRequests, tableCardId, type BillRequest } from '../bills/logic.ts'
 import { TablesBoard } from '../bills/TablesBoard.tsx'
 import { useStaffEvents } from '../kitchen/useStaffEvents.ts'
 import { useStaffQueue } from '../kitchen/useStaffQueue.ts'
+import { clockTime } from '../ordering/logic.ts'
 import { useLateOrderMinutes } from '../settings/useLateOrderMinutes.ts'
 import { fetchDeliveries } from './api.ts'
 import { DeliveryQueue } from './DeliveryQueue.tsx'
@@ -20,6 +22,8 @@ export function ServiceBoard() {
   const [tablesSignal, setTablesSignal] = useState(0)
   const [rejections, setRejections] = useState<Rejection[]>([])
   const seenRejections = useRef<Set<string> | null>(null)
+  const [requests, setRequests] = useState<BillRequest[]>([])
+  const seenRequests = useRef<Set<string> | null>(null)
 
   const queue = useStaffQueue({
     load: fetchDeliveries,
@@ -39,14 +43,53 @@ export function ServiceBoard() {
     },
   )
 
-  const onTablesLoaded = useCallback((tables: TableOverview[]) => {
-    const { seen, rejections: fresh } = newRejections(seenRejections.current, tables)
-    seenRejections.current = seen
-    if (fresh.length > 0) setRejections((current) => [...fresh, ...current])
-  }, [])
+  const alert = sound.alert
+  const onTablesLoaded = useCallback(
+    (tables: TableOverview[]) => {
+      const { seen, rejections: fresh } = newRejections(seenRejections.current, tables)
+      seenRejections.current = seen
+      if (fresh.length > 0) setRejections((current) => [...fresh, ...current])
+      const asked = newBillRequests(seenRequests.current, tables)
+      seenRequests.current = asked.seen
+      setRequests(billRequests(tables))
+      if (asked.fresh > 0) alert()
+    },
+    [alert],
+  )
+
+  function goToTable(tableId: string) {
+    const card = document.getElementById(tableCardId(tableId))
+    card?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    card?.focus({ preventScroll: true })
+  }
 
   return (
     <div className="space-y-12">
+      {requests.length > 0 && (
+        <div
+          role="alert"
+          className="sticky top-20 z-10 space-y-2 rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm"
+        >
+          <p className="flex items-center gap-2 font-semibold text-amber-900">
+            <BellRingingIcon size={18} aria-hidden />
+            {requests.length === 1 ? 'A table is asking for the bill' : `${requests.length} tables are asking for the bill`}
+          </p>
+          <ul className="flex flex-wrap gap-2">
+            {requests.map((request) => (
+              <li key={request.bill_id}>
+                <button
+                  type="button"
+                  onClick={() => goToTable(request.table_id)}
+                  className="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-amber-900 ring-1 ring-amber-200 hover:bg-amber-100 focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:outline-none"
+                >
+                  {request.table_name} · {clockTime(request.requested_at)}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {rejections.length > 0 && (
         <div role="alert" className="space-y-2 rounded-2xl border border-red-200 bg-red-50 p-4">
           <div className="flex items-start justify-between gap-4">

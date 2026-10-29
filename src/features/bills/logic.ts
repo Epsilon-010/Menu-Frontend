@@ -54,16 +54,38 @@ export function tablesForWaiter(tables: TableOverview[]): TableOverview[] {
 }
 
 /**
- * How many bill requests appeared since the previous look, so waiters hear each once. The first
- * look (`previous` null) only records what was already waiting. Asking again after cancelling is new.
+ * How many bill requests appeared since the previous look, so waiters hear each once. On the first
+ * look (`previous` null) only requests made after the screen opened (`openedAt`, epoch ms) are new:
+ * those already waiting stay silent, but none made while the list could not load is missed.
+ * Asking again after cancelling is new.
  */
 export function newBillRequests(
   previous: ReadonlySet<string> | null,
   tables: TableOverview[],
+  openedAt: number,
 ): { seen: Set<string>; fresh: number } {
-  const seen = new Set(billRequests(tables).map((request) => `${request.bill_id}@${request.requested_at}`))
-  const fresh = previous === null ? 0 : [...seen].filter((key) => !previous.has(key)).length
-  return { seen, fresh }
+  const requests = billRequests(tables)
+  const key = (request: BillRequest) => `${request.bill_id}@${request.requested_at}`
+  const fresh =
+    previous === null
+      ? requests.filter((request) => Date.parse(request.requested_at) > openedAt).length
+      : requests.filter((request) => !previous.has(key(request))).length
+  return { seen: new Set(requests.map(key)), fresh }
+}
+
+/** The banner without a table whose request just ended (attended, cancelled or paid). */
+export function withoutTable(requests: BillRequest[], tableId: string): BillRequest[] {
+  return requests.filter((request) => request.table_id !== tableId)
+}
+
+/** The `table_id` of a staff event, or null. */
+export function tableIdOf(data: string): string | null {
+  try {
+    const parsed = JSON.parse(data) as { table_id?: unknown }
+    return typeof parsed.table_id === 'string' ? parsed.table_id : null
+  } catch {
+    return null
+  }
 }
 
 /** The id of a table's card, so the bill-request banner can take the waiter to it. */

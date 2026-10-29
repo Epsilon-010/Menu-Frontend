@@ -4,7 +4,7 @@ import { IconButton } from '../../shared/ui/Button.tsx'
 import { useNow } from '../../shared/ui/useNow.ts'
 import { useSoundAlert } from '../../shared/sound/useSoundAlert.ts'
 import type { TableOverview } from '../bills/api.ts'
-import { billRequests, newBillRequests, tableCardId, type BillRequest } from '../bills/logic.ts'
+import { billRequests, newBillRequests, tableCardId, tableIdOf, withoutTable, type BillRequest } from '../bills/logic.ts'
 import { TablesBoard } from '../bills/TablesBoard.tsx'
 import { useStaffEvents } from '../kitchen/useStaffEvents.ts'
 import { useStaffQueue } from '../kitchen/useStaffQueue.ts'
@@ -24,6 +24,7 @@ export function ServiceBoard() {
   const seenRejections = useRef<Set<string> | null>(null)
   const [requests, setRequests] = useState<BillRequest[]>([])
   const seenRequests = useRef<Set<string> | null>(null)
+  const [openedAt] = useState(() => Date.now())
 
   const queue = useStaffQueue({
     load: fetchDeliveries,
@@ -33,8 +34,11 @@ export function ServiceBoard() {
   })
 
   useStaffEvents(
-    (event) => {
+    (event, data) => {
       if (event === 'order.created' || event === 'order.updated') void queue.reload()
+      // Drop an ended request from the banner at once, even if the reload below fails.
+      const tableId = event === 'bill.request_cleared' || event === 'bill.closed' ? tableIdOf(data) : null
+      if (tableId !== null) setRequests((current) => withoutTable(current, tableId))
       setTablesSignal((signal) => signal + 1)
     },
     () => {
@@ -49,12 +53,12 @@ export function ServiceBoard() {
       const { seen, rejections: fresh } = newRejections(seenRejections.current, tables)
       seenRejections.current = seen
       if (fresh.length > 0) setRejections((current) => [...fresh, ...current])
-      const asked = newBillRequests(seenRequests.current, tables)
+      const asked = newBillRequests(seenRequests.current, tables, openedAt)
       seenRequests.current = asked.seen
       setRequests(billRequests(tables))
       if (asked.fresh > 0) alert()
     },
-    [alert],
+    [alert, openedAt],
   )
 
   function goToTable(tableId: string) {

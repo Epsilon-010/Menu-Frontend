@@ -7,7 +7,9 @@ import {
   canCancelDish,
   dishDraftError,
   newBillRequests,
+  tableIdOf,
   tablesForWaiter,
+  withoutTable,
 } from './logic.ts'
 
 function dish(status: OrderItem['status']): OrderItem {
@@ -107,16 +109,33 @@ describe('bill requests', () => {
   })
 
   it('alerts once per request, and not for those already waiting when the screen opened', () => {
-    const first = newBillRequests(null, tables)
+    const openedAt = Date.parse('2026-10-28T18:35:00Z')
+    const first = newBillRequests(null, tables, openedAt)
     expect(first.fresh).toBe(0)
 
     const asked = [...tables.slice(0, 3), table('4', '2026-10-28T18:20:00Z'), table('1', '2026-10-28T18:40:00Z')]
-    const second = newBillRequests(first.seen, asked)
+    const second = newBillRequests(first.seen, asked, openedAt)
     expect(second.fresh).toBe(1)
-    expect(newBillRequests(second.seen, asked).fresh).toBe(0)
+    expect(newBillRequests(second.seen, asked, openedAt).fresh).toBe(0)
 
     // Cancelled and asked again: a new request, a new alert.
-    const again = newBillRequests(second.seen, [table('1', '2026-10-28T18:50:00Z')])
+    const again = newBillRequests(second.seen, [table('1', '2026-10-28T18:50:00Z')], openedAt)
     expect(again.fresh).toBe(1)
+  })
+
+  it('still alerts for a request made after the screen opened when the first load failed', () => {
+    const openedAt = Date.parse('2026-10-28T18:25:00Z')
+    // Table 4 asked before the screen opened, table 2 while the list could not load.
+    expect(newBillRequests(null, tables, openedAt).fresh).toBe(1)
+  })
+
+  it('drops a table from the banner as soon as its request ends', () => {
+    expect(withoutTable(billRequests(tables), '4').map((request) => request.table_id)).toEqual(['2'])
+  })
+
+  it('reads the table of a staff event', () => {
+    expect(tableIdOf('{"table_id":"t1"}')).toBe('t1')
+    expect(tableIdOf('{"order_id":"o1"}')).toBeNull()
+    expect(tableIdOf('not json')).toBeNull()
   })
 })

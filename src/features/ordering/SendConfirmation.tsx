@@ -61,13 +61,13 @@ export function SendConfirmation({ liveCart, onSend, onSent, onClose }: SendConf
         role="dialog"
         aria-modal="true"
         aria-labelledby="send-title"
-        className="flex max-h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-lg"
+        className="flex max-h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-lg"
       >
         <div className="space-y-1 p-6 pb-4">
-          <h2 id="send-title" className="text-xl font-semibold tracking-tight text-zinc-950">
+          <h2 id="send-title" className="text-xl font-semibold tracking-tight text-ink">
             Review the order before sending
           </h2>
-          <p className="text-sm text-zinc-500">It goes straight to the kitchen for the whole table.</p>
+          <p className="text-sm text-muted">It goes straight to the kitchen for the whole table.</p>
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-6">
@@ -92,21 +92,21 @@ export function SendConfirmation({ liveCart, onSend, onSent, onClose }: SendConf
           {groups.map((group) => (
             <section key={group.person} className="space-y-2">
               <div className="flex items-center justify-between gap-4">
-                <h3 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">{group.person}</h3>
-                <span className="text-xs text-zinc-500 tabular-nums">{formatMoney(group.subtotal_cents)}</span>
+                <h3 className="text-xs font-semibold tracking-wide text-muted uppercase">{group.person}</h3>
+                <span className="text-xs text-muted tabular-nums">{formatMoney(group.subtotal_cents)}</span>
               </div>
               <ul className="space-y-2">
                 {group.lines.map((line) => (
                   <li key={line.id} className="flex items-start justify-between gap-4 text-sm">
                     <div className="min-w-0">
-                      <p className={line.available ? 'text-zinc-950' : 'text-zinc-400 line-through'}>
+                      <p className={line.available ? 'text-ink' : 'text-faint line-through'}>
                         <span className="font-semibold tabular-nums">{line.quantity} ×</span> {line.name}
                       </p>
-                      {line.note && <p className="text-zinc-500">{line.note}</p>}
+                      {line.note && <p className="text-muted">{line.note}</p>}
                       {!line.available && <p className="text-amber-800">No longer available, it will not be sent</p>}
                     </div>
                     <span
-                      className={`shrink-0 tabular-nums ${line.available ? 'text-zinc-950' : 'text-zinc-400 line-through'}`}
+                      className={`shrink-0 tabular-nums ${line.available ? 'text-ink' : 'text-faint line-through'}`}
                     >
                       {formatMoney(line.subtotal_cents)}
                     </span>
@@ -115,13 +115,13 @@ export function SendConfirmation({ liveCart, onSend, onSent, onClose }: SendConf
               </ul>
             </section>
           ))}
-          {groups.length === 0 && <p className="text-sm text-zinc-500">The order is empty now.</p>}
+          {groups.length === 0 && <p className="text-sm text-muted">The order is empty now.</p>}
         </div>
 
         <div className="space-y-4 p-6 pt-4">
-          <div className="flex items-center justify-between rounded-xl bg-zinc-50 p-3">
-            <span className="text-sm text-zinc-600">Total</span>
-            <span className="text-lg font-semibold text-zinc-950 tabular-nums">{formatMoney(reviewed.total_cents)}</span>
+          <div className="flex items-center justify-between rounded-xl bg-canvas p-3">
+            <span className="text-sm text-ink-soft">Total</span>
+            <span className="text-lg font-semibold text-ink tabular-nums">{formatMoney(reviewed.total_cents)}</span>
           </div>
           {error && <ErrorText>{error}</ErrorText>}
           <div className="flex flex-wrap gap-2">

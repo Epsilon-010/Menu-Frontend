@@ -4,6 +4,7 @@ import { CatalogPanel } from '../features/catalog/CatalogPanel.tsx'
 import { OrderSettingsPanel } from '../features/settings/OrderSettingsPanel.tsx'
 import { StaffPanel } from '../features/staff/StaffPanel.tsx'
 import { TablesPanel } from '../features/tables/TablesPanel.tsx'
+import { ThemeEditorPanel } from '../features/theming/ThemeEditorPanel.tsx'
 import { AdminPage } from '../pages/admin/AdminPage.tsx'
 import { HomePage } from '../pages/HomePage.tsx'
 import { JoinTablePage } from '../pages/JoinTablePage.tsx'
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
       { path: 'tables', element: <TablesPanel /> },
       { path: 'staff', element: <StaffPanel /> },
       { path: 'settings', element: <OrderSettingsPanel /> },
+      { path: 'design', element: <ThemeEditorPanel /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

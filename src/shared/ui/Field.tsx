@@ -12,9 +12,9 @@ interface FieldProps {
 export function Field({ label, hint, className = '', children }: FieldProps) {
   return (
     <label className={`block space-y-2 ${className}`}>
-      <span className="text-sm font-medium text-zinc-700">{label}</span>
+      <span className="text-sm font-medium text-ink-soft">{label}</span>
       {children}
-      {hint && <span className="block text-xs text-zinc-500">{hint}</span>}
+      {hint && <span className="block text-xs text-muted">{hint}</span>}
     </label>
   )
 }

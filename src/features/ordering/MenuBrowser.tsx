@@ -17,7 +17,7 @@ interface QuantityStepperProps {
 
 export function QuantityStepper({ value, onChange, disabled = false, label }: QuantityStepperProps) {
   return (
-    <div className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 bg-white p-1">
+    <div className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface p-1">
       <IconButton
         label={`One less ${label}`}
         icon={<MinusIcon size={16} />}
@@ -25,7 +25,7 @@ export function QuantityStepper({ value, onChange, disabled = false, label }: Qu
         onClick={() => onChange(value - 1)}
         className="p-1"
       />
-      <span aria-live="polite" className="min-w-8 text-center text-sm font-semibold text-zinc-950 tabular-nums">
+      <span aria-live="polite" className="min-w-8 text-center text-sm font-semibold text-ink tabular-nums">
         {value}
       </span>
       <IconButton
@@ -69,23 +69,23 @@ function ItemCard({ item, onAdd }: ItemCardProps) {
   }
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white">
+    <article className="flex flex-col overflow-hidden rounded-2xl border border-line bg-surface">
       {image && (
-        <img src={image} alt={item.name} loading="lazy" className="aspect-[4/3] w-full bg-zinc-100 object-cover" />
+        <img src={image} alt={item.name} loading="lazy" className="aspect-[4/3] w-full bg-subtle object-cover" />
       )}
       <div className="flex flex-1 flex-col gap-4 p-4">
         <div className="flex-1 space-y-1">
           <div className="flex items-start justify-between gap-4">
-            <h3 className="font-semibold text-pretty text-zinc-950">{item.name}</h3>
-            <p className="shrink-0 font-semibold text-zinc-950 tabular-nums">{formatMoney(item.price_cents)}</p>
+            <h3 className="font-semibold text-pretty text-ink">{item.name}</h3>
+            <p className="shrink-0 font-semibold text-price tabular-nums">{formatMoney(item.price_cents)}</p>
           </div>
-          {item.description && <p className="line-clamp-3 text-sm text-pretty text-zinc-500">{item.description}</p>}
+          {item.description && <p className="line-clamp-3 text-sm text-pretty text-muted">{item.description}</p>}
         </div>
 
         {adding ? (
-          <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-zinc-50 p-3">
+          <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-canvas p-3">
             <div className="flex items-center justify-between gap-4">
-              <span className="text-sm font-medium text-zinc-700">How many</span>
+              <span className="text-sm font-medium text-ink-soft">How many</span>
               <QuantityStepper value={quantity} onChange={setQuantity} disabled={busy} label={item.name} />
             </div>
             <Field label="Note for the kitchen (optional)">
@@ -145,7 +145,7 @@ export function MenuBrowser({ categories, onAdd }: MenuBrowserProps) {
             <li key={category.id}>
               <a
                 href={`#${sectionId(category.id)}`}
-                className={`inline-flex rounded-lg border border-zinc-200 bg-white/90 px-3 py-2 text-sm font-semibold text-zinc-700 backdrop-blur-md hover:bg-zinc-100 hover:text-zinc-950 active:scale-[0.98] ${MOTION}`}
+                className={`inline-flex rounded-lg border border-line bg-surface/90 px-3 py-2 text-sm font-semibold text-ink-soft backdrop-blur-md hover:bg-brand hover:text-brand-ink active:scale-[0.98] ${MOTION}`}
               >
                 {category.name}
               </a>
@@ -156,8 +156,11 @@ export function MenuBrowser({ categories, onAdd }: MenuBrowserProps) {
 
       {withItems.map((category) => (
         <section key={category.id} id={sectionId(category.id)} className="scroll-mt-32 space-y-4">
-          <h2 className="text-xl font-semibold tracking-tight text-zinc-950">{category.name}</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <h2 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-secondary">
+            <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-accent" />
+            {category.name}
+          </h2>
+          <div className="grid gap-4 @2xl:grid-cols-2">
             {category.items.map((item) => (
               <ItemCard key={item.id} item={item} onAdd={(quantity, note) => onAdd(item.id, quantity, note)} />
             ))}

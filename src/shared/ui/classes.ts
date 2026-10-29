@@ -7,10 +7,10 @@ export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost'
 export type ButtonSize = 'md' | 'sm'
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-zinc-950 text-white hover:bg-zinc-800',
-  secondary: 'border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-100',
-  danger: 'border border-red-200 bg-white text-red-700 hover:bg-red-50',
-  ghost: 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950',
+  primary: 'bg-action text-action-ink hover:bg-action-hover',
+  secondary: 'border border-line bg-surface text-ink hover:bg-subtle',
+  danger: 'border border-red-200 bg-surface text-red-700 hover:bg-red-50',
+  ghost: 'text-ink-soft hover:bg-subtle hover:text-ink',
 }
 
 const SIZES: Record<ButtonSize, string> = {
@@ -29,7 +29,7 @@ export function buttonClass(variant: ButtonVariant = 'secondary', size: ButtonSi
 }
 
 export const CONTROL = [
-  'w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-950 placeholder:text-zinc-400',
-  'hover:border-zinc-300 focus:border-zinc-950 focus:outline-none disabled:bg-zinc-50 disabled:text-zinc-400',
+  'w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-faint',
+  'hover:border-line-strong focus:border-ink focus:outline-none disabled:bg-canvas disabled:text-faint',
   MOTION,
 ].join(' ')

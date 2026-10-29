@@ -1,4 +1,4 @@
-import { BowlFoodIcon, CallBellIcon, ChairIcon, CookingPotIcon, TimerIcon, UsersThreeIcon } from '@phosphor-icons/react'
+import { BowlFoodIcon, CallBellIcon, ChairIcon, CookingPotIcon, PaletteIcon, TimerIcon, UsersThreeIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { Outlet, useNavigate } from 'react-router'
 import { useAuth } from '../../features/auth/useAuth.ts'
@@ -9,6 +9,7 @@ const ADMIN_NAV: NavItem[] = [
   { to: '/admin/tables', label: 'Tables', icon: <ChairIcon size={16} aria-hidden /> },
   { to: '/admin/staff', label: 'Staff', icon: <UsersThreeIcon size={16} aria-hidden /> },
   { to: '/admin/settings', label: 'Orders', icon: <TimerIcon size={16} aria-hidden /> },
+  { to: '/admin/design', label: 'Design', icon: <PaletteIcon size={16} aria-hidden /> },
   // The waiter's tables view: open tables, follow their orders and take payments.
   { to: '/waiter', label: 'Service', icon: <CallBellIcon size={16} aria-hidden /> },
   { to: '/kitchen', label: 'Kitchen', icon: <CookingPotIcon size={16} aria-hidden /> },

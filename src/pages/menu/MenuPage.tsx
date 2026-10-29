@@ -176,7 +176,7 @@ export function MenuPage() {
           <span className="flex items-center gap-2 text-base font-semibold">
             <ShoppingBagIcon size={20} aria-hidden />
             Table order
-            {count > 0 && <span className="rounded-md bg-cart-ink/15 px-2 text-sm tabular-nums">{count}</span>}
+            {count > 0 && <span className="rounded-md bg-badge px-2 text-sm text-badge-ink tabular-nums">{count}</span>}
           </span>
           <span className="text-base font-semibold tabular-nums">{formatMoney(loadedCart?.total_cents ?? 0)}</span>
         </button>
@@ -226,7 +226,8 @@ export function MenuPage() {
     </AppShell>
   )
 
-  if (!theme) return page
+  // Still a size container: the menu lays out by its own width (two columns from tablets up).
+  if (!theme) return <div className="@container">{page}</div>
   return (
     <ThemeScope theme={theme.theme} imageUrls={theme.image_urls} className="min-h-screen">
       {page}

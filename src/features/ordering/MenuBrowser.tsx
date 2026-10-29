@@ -145,7 +145,7 @@ export function MenuBrowser({ categories, onAdd }: MenuBrowserProps) {
             <li key={category.id}>
               <a
                 href={`#${sectionId(category.id)}`}
-                className={`inline-flex rounded-lg border border-line bg-surface/90 px-3 py-2 text-sm font-semibold text-ink-soft backdrop-blur-md hover:bg-subtle hover:text-ink active:scale-[0.98] ${MOTION}`}
+                className={`inline-flex rounded-lg border border-line bg-surface/90 px-3 py-2 text-sm font-semibold text-ink-soft backdrop-blur-md hover:bg-brand hover:text-brand-ink active:scale-[0.98] ${MOTION}`}
               >
                 {category.name}
               </a>
@@ -156,7 +156,10 @@ export function MenuBrowser({ categories, onAdd }: MenuBrowserProps) {
 
       {withItems.map((category) => (
         <section key={category.id} id={sectionId(category.id)} className="scroll-mt-32 space-y-4">
-          <h2 className="text-xl font-semibold tracking-tight text-ink">{category.name}</h2>
+          <h2 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-secondary">
+            <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-accent" />
+            {category.name}
+          </h2>
           <div className="grid gap-4 @2xl:grid-cols-2">
             {category.items.map((item) => (
               <ItemCard key={item.id} item={item} onAdd={(quantity, note) => onAdd(item.id, quantity, note)} />

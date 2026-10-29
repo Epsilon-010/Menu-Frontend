@@ -30,6 +30,12 @@ function navLinkClass({ isActive }: { isActive: boolean }): string {
   return `inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold active:scale-[0.98] ${MOTION} ${state}`
 }
 
+// Full class names per breakpoint, so Tailwind finds them in the source.
+const BAR_BREAKPOINTS = {
+  narrow: { list: 'sm:flex', signOut: 'sm:block', compact: 'sm:hidden' },
+  wide: { list: 'lg:flex', signOut: 'lg:block', compact: 'lg:hidden' },
+}
+
 /** The two lines of the menu toggle rotate into an X instead of swapping icons. */
 function MenuToggleIcon({ open }: { open: boolean }) {
   const line = `absolute left-0 h-0.5 w-4 rounded-full bg-current transition-transform duration-500 ease-smooth`
@@ -54,6 +60,8 @@ export function AppShell({
 }: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const hasMenu = nav.length > 0 || onSignOut !== undefined
+  // A long navigation (the admin's) only fits in the bar on wide screens; shorter ones from tablets up.
+  const bar = nav.length > 4 ? BAR_BREAKPOINTS.wide : BAR_BREAKPOINTS.narrow
 
   useEffect(() => {
     if (!menuOpen) return
@@ -93,7 +101,7 @@ export function AppShell({
           </div>
 
           {nav.length > 0 && (
-            <ul className="hidden items-center gap-1 sm:flex">
+            <ul className={`hidden items-center gap-1 ${bar.list}`}>
               {nav.map((item) => (
                 <li key={item.to}>
                   <NavLink to={item.to} end={item.end} className={navLinkClass}>
@@ -107,7 +115,7 @@ export function AppShell({
 
           {onSignOut && (
             // The wrapper owns the visibility: the button's own classes already set its display.
-            <div className="hidden sm:block">
+            <div className={`hidden ${bar.signOut}`}>
               <button type="button" onClick={onSignOut} disabled={signingOut} className={buttonClass('ghost')}>
                 <SignOutIcon size={16} aria-hidden />
                 {signingOut ? 'Signing out…' : signOutLabel}
@@ -122,7 +130,7 @@ export function AppShell({
               aria-expanded={menuOpen}
               aria-controls="mobile-menu"
               onClick={() => setMenuOpen((open) => !open)}
-              className={`rounded-lg p-2 text-ink-soft hover:bg-subtle active:scale-[0.98] sm:hidden ${MOTION}`}
+              className={`rounded-lg p-2 text-ink-soft hover:bg-subtle active:scale-[0.98] ${bar.compact} ${MOTION}`}
             >
               <MenuToggleIcon open={menuOpen} />
             </button>
@@ -134,7 +142,7 @@ export function AppShell({
         <div
           id="mobile-menu"
           inert={!menuOpen}
-          className={`fixed inset-0 z-30 bg-canvas/95 px-6 pt-24 backdrop-blur-xl transition-opacity duration-500 ease-smooth sm:hidden ${
+          className={`fixed inset-0 z-30 bg-canvas/95 px-6 pt-24 backdrop-blur-xl transition-opacity duration-500 ease-smooth ${bar.compact} ${
             menuOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
           }`}
         >

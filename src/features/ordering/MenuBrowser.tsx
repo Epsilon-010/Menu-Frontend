@@ -5,7 +5,20 @@ import { MOTION } from '../../shared/ui/classes.ts'
 import { Field, TextInput } from '../../shared/ui/Field.tsx'
 import { EmptyState, ErrorText } from '../../shared/ui/Feedback.tsx'
 import { formatMoney } from '../catalog/price.ts'
-import type { CategoryHeader, ThemeLayout } from '../theming/api.ts'
+import { BADGE_LABELS, type Badge } from '../catalog/badges.ts'
+import type { BadgeShape, CardTemplate, CategoryHeader, ThemeCards, ThemeLayout } from '../theming/api.ts'
+import {
+  cardAspectClass,
+  cardFitClass,
+  cardImageClass,
+  cardPaddingClass,
+  cardShellClass,
+  buttonShapeClass,
+  cardTemplate,
+  DEFAULT_CARDS,
+  descriptionClampClass,
+  pillShapeClass,
+} from '../theming/cards.ts'
 import { currentCategoryId, DEFAULT_LAYOUT, densitySpacing, gridColumnsClass, showsOneCategory } from '../theming/layout.ts'
 import { MAX_NOTE_LENGTH, MAX_QUANTITY, MIN_QUANTITY, type MenuCategory, type MenuItem } from './api.ts'
 
@@ -41,20 +54,58 @@ export function QuantityStepper({ value, onChange, disabled = false, label }: Qu
   )
 }
 
+function Badges({ badges, shape }: { badges: Badge[]; shape: BadgeShape }) {
+  if (badges.length === 0) return null
+  return (
+    <ul aria-label="Badges" className="flex flex-wrap gap-1">
+      {badges.map((badge) => (
+        <li key={badge} className={`${pillShapeClass(shape)} bg-badge px-2 py-0.5 text-xs font-semibold text-badge-ink`}>
+          {BADGE_LABELS[badge]}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+interface AddButtonProps {
+  name: string
+  cards: ThemeCards
+  onClick: () => void
+}
+
+function AddButton({ name, cards, onClick }: AddButtonProps) {
+  const { style, shape } = cards.add_button
+  return (
+    <Button
+      variant="secondary"
+      icon={style === 'text' ? undefined : <PlusIcon size={16} aria-hidden />}
+      aria-label={style === 'icon' ? `Add ${name}` : undefined}
+      onClick={onClick}
+      className={`type-button ${buttonShapeClass(shape)}`}
+    >
+      {style === 'icon' ? null : 'Add'}
+    </Button>
+  )
+}
+
 interface ItemCardProps {
   item: MenuItem
   onAdd: (quantity: number, note: string) => Promise<string | null>
-  /** List rows put the image beside the text instead of above it. */
-  horizontal?: boolean
+  cards: ThemeCards
+  template: CardTemplate
 }
 
-function ItemCard({ item, onAdd, horizontal = false }: ItemCardProps) {
+function ItemCard({ item, onAdd, cards, template }: ItemCardProps) {
   const [adding, setAdding] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const image = item.image?.card_url ?? null
+  // Without an image the overlay template is a plain card: there is nothing to write over.
+  const overlay = template === 'overlay' && image !== null
+  const clamp = descriptionClampClass(cards.description_lines)
+  const padding = cardPaddingClass(cards)
 
   function close() {
     setAdding(false)
@@ -72,62 +123,98 @@ function ItemCard({ item, onAdd, horizontal = false }: ItemCardProps) {
     else setError(failure)
   }
 
+  const price = (
+    <p className={`type-price shrink-0 tabular-nums ${overlay ? 'text-white' : 'text-price'}`}>{formatMoney(item.price_cents)}</p>
+  )
+  const text = (
+    <div className="flex-1 space-y-2">
+      <Badges badges={item.badges} shape={cards.badge_shape} />
+      <div className="space-y-1">
+        <div className="flex items-start justify-between gap-4">
+          <h3 className={`type-product-name flex-1 text-pretty ${overlay ? 'text-white' : 'text-ink'}`}>{item.name}</h3>
+          {cards.price_position === 'top' && price}
+        </div>
+        {item.description && clamp && (
+          <p className={`type-description ${clamp} text-pretty ${overlay ? 'text-white/85' : 'text-muted'}`}>{item.description}</p>
+        )}
+      </div>
+    </div>
+  )
+  const button = <AddButton name={item.name} cards={cards} onClick={() => setAdding(true)} />
+  const footer =
+    cards.price_position === 'top' ? (
+      button
+    ) : (
+      <div className="flex items-center justify-between gap-4">
+        {price}
+        {button}
+      </div>
+    )
+  const form = (
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-canvas p-3">
+      <div className="flex items-center justify-between gap-4">
+        <span className="text-sm font-medium text-ink-soft">How many</span>
+        <QuantityStepper value={quantity} onChange={setQuantity} disabled={busy} label={item.name} />
+      </div>
+      <Field label="Note for the kitchen (optional)">
+        <TextInput
+          maxLength={MAX_NOTE_LENGTH}
+          placeholder="No onion, extra salsa"
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          disabled={busy}
+        />
+      </Field>
+      {error && <ErrorText>{error}</ErrorText>}
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" variant="primary" disabled={busy} className="type-button flex-1">
+          {busy ? 'Adding…' : `Add ${quantity} · ${formatMoney(item.price_cents * quantity)}`}
+        </Button>
+        <Button variant="ghost" disabled={busy} onClick={close} className="type-button">
+          Cancel
+        </Button>
+      </div>
+    </form>
+  )
+  const shell = `h-full overflow-hidden bg-surface ${cardShellClass(cards)}`
+
+  if (overlay) {
+    return (
+      <article className={`flex flex-col ${shell}`}>
+        {/* The image fills the card; the text sits at its foot over a dark scrim, and a long text grows the card. */}
+        <div className="relative grid flex-1">
+          <img src={image} alt={item.name} loading="lazy" className={`absolute inset-0 h-full w-full bg-subtle ${cardFitClass(cards)}`} />
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent"
+            style={{ opacity: cards.overlay_opacity / 100 }}
+          />
+          <div aria-hidden className={`[grid-area:1/1] w-full ${cardAspectClass(cards)}`} />
+          <div className={`relative flex flex-col gap-4 self-end [grid-area:1/1] ${padding}`}>
+            {text}
+            {!adding && footer}
+          </div>
+        </div>
+        {adding && <div className={padding}>{form}</div>}
+      </article>
+    )
+  }
+
+  const horizontal = template === 'horizontal'
+  const direction = horizontal ? (cards.image.position === 'right' ? 'flex-row-reverse' : 'flex-row') : 'flex-col'
   return (
-    <article
-      className={`flex h-full overflow-hidden rounded-2xl border border-line bg-surface ${horizontal ? 'flex-row' : 'flex-col'}`}
-    >
+    <article className={`flex ${direction} ${shell}`}>
       {image && (
         <img
           src={image}
           alt={item.name}
           loading="lazy"
-          className={horizontal ? 'w-28 shrink-0 bg-subtle object-cover @2xl:w-40' : 'aspect-[4/3] w-full bg-subtle object-cover'}
+          className={horizontal ? `w-28 shrink-0 bg-subtle ${cardFitClass(cards)} @2xl:w-40` : `w-full bg-subtle ${cardImageClass(cards)}`}
         />
       )}
-      <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
-        <div className="flex-1 space-y-1">
-          <div className="flex items-start justify-between gap-4">
-            <h3 className="type-product-name flex-1 text-pretty text-ink">{item.name}</h3>
-            <p className="type-price shrink-0 text-price tabular-nums">{formatMoney(item.price_cents)}</p>
-          </div>
-          {item.description && <p className="type-description line-clamp-3 text-pretty text-muted">{item.description}</p>}
-        </div>
-
-        {adding ? (
-          <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-canvas p-3">
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-sm font-medium text-ink-soft">How many</span>
-              <QuantityStepper value={quantity} onChange={setQuantity} disabled={busy} label={item.name} />
-            </div>
-            <Field label="Note for the kitchen (optional)">
-              <TextInput
-                maxLength={MAX_NOTE_LENGTH}
-                placeholder="No onion, extra salsa"
-                value={note}
-                onChange={(event) => setNote(event.target.value)}
-                disabled={busy}
-              />
-            </Field>
-            {error && <ErrorText>{error}</ErrorText>}
-            <div className="flex flex-wrap gap-2">
-              <Button type="submit" variant="primary" disabled={busy} className="type-button flex-1">
-                {busy ? 'Adding…' : `Add ${quantity} · ${formatMoney(item.price_cents * quantity)}`}
-              </Button>
-              <Button variant="ghost" disabled={busy} onClick={close} className="type-button">
-                Cancel
-              </Button>
-            </div>
-          </form>
-        ) : (
-          <Button
-            variant="secondary"
-            icon={<PlusIcon size={16} aria-hidden />}
-            onClick={() => setAdding(true)}
-            className="type-button"
-          >
-            Add
-          </Button>
-        )}
+      <div className={`flex min-w-0 flex-1 flex-col gap-4 ${padding}`}>
+        {text}
+        {adding ? form : footer}
       </div>
     </article>
   )
@@ -138,6 +225,8 @@ interface MenuBrowserProps {
   onAdd: (itemId: string, quantity: number, note: string) => Promise<string | null>
   /** How the menu is arranged (the default arrangement while there is no theme). */
   layout?: ThemeLayout
+  /** How each product card looks (the default card while there is no theme). */
+  cards?: ThemeCards
   /** On the real menu the page's fixed bar covers the top; in the editor preview nothing does. */
   belowFixedBar?: boolean
 }
@@ -182,14 +271,21 @@ function CategoryHeading({ name, style }: { name: string; style: CategoryHeader 
 interface ProductsProps {
   category: MenuCategory
   layout: ThemeLayout
+  cards: ThemeCards
   onAdd: MenuBrowserProps['onAdd']
 }
 
-function Products({ category, layout, onAdd }: ProductsProps) {
+function Products({ category, layout, cards, onAdd }: ProductsProps) {
   const { items: gap } = densitySpacing(layout.density)
-  const horizontal = layout.product_view === 'list'
+  const template = cardTemplate(layout.product_view, cards.template)
   const card = (item: MenuItem) => (
-    <ItemCard key={item.id} item={item} horizontal={horizontal} onAdd={(quantity, note) => onAdd(item.id, quantity, note)} />
+    <ItemCard
+      key={item.id}
+      item={item}
+      cards={cards}
+      template={template}
+      onAdd={(quantity, note) => onAdd(item.id, quantity, note)}
+    />
   )
   if (layout.product_view === 'list') return <div className={`flex flex-col ${gap}`}>{category.items.map(card)}</div>
   if (layout.product_view === 'carousel') {
@@ -318,7 +414,13 @@ function SidebarNav({ categories, current, onPick, stickyTop }: CategoryNavProps
 }
 
 /** The menu: a category navigation (as the theme's layout says) and the item cards with their add form. */
-export function MenuBrowser({ categories, onAdd, layout = DEFAULT_LAYOUT, belowFixedBar = true }: MenuBrowserProps) {
+export function MenuBrowser({
+  categories,
+  onAdd,
+  layout = DEFAULT_LAYOUT,
+  cards = DEFAULT_CARDS,
+  belowFixedBar = true,
+}: MenuBrowserProps) {
   const withItems = categories.filter((category) => category.items.length > 0)
   const ids = withItems.map((category) => category.id)
   const [chosen, setChosen] = useState<string | null>(null)
@@ -338,7 +440,7 @@ export function MenuBrowser({ categories, onAdd, layout = DEFAULT_LAYOUT, belowF
   const section = (category: MenuCategory): ReactNode => (
     <section key={category.id} id={sectionId(category.id)} className={`${scrollMargin} space-y-4`}>
       <CategoryHeading name={category.name} style={layout.category_header} />
-      <Products category={category} layout={layout} onAdd={onAdd} />
+      <Products category={category} layout={layout} cards={cards} onAdd={onAdd} />
     </section>
   )
 

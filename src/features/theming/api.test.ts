@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fetchPublishedTheme, publishTheme, saveThemeDraft, ThemeError, uploadThemeImage, type Theme } from './api.ts'
+import { DEFAULT_CARDS } from './cards.ts'
 import { DEFAULT_LAYOUT } from './layout.ts'
 
 function jsonResponse(status: number, body: unknown, contentType = 'application/json'): Response {
@@ -34,7 +35,7 @@ async function failureOf(promise: Promise<unknown>): Promise<ThemeError> {
   return error as ThemeError
 }
 
-const THEME = { schema_version: 3, layout: DEFAULT_LAYOUT } as Theme
+const THEME = { schema_version: 4, layout: DEFAULT_LAYOUT, cards: DEFAULT_CARDS } as Theme
 const DRAFT_STATE = { draft: THEME, published: null, presets: [] }
 const SIGNATURE = {
   upload_url: 'https://upload.test/image/upload',
@@ -61,6 +62,11 @@ describe('theme api', () => {
   it('gives a theme from a server without layouts the default one, so the menu still draws', async () => {
     stubFetch(jsonResponse(200, { theme: { schema_version: 2 }, image_urls: {} }))
     expect((await fetchPublishedTheme()).theme.layout).toEqual(DEFAULT_LAYOUT)
+  })
+
+  it('gives a theme from a server without cards the default card, so the menu still draws', async () => {
+    stubFetch(jsonResponse(200, { theme: { schema_version: 3, layout: DEFAULT_LAYOUT }, image_urls: {} }))
+    expect((await fetchPublishedTheme()).theme.cards).toEqual(DEFAULT_CARDS)
   })
 
   it('saves the whole draft with PUT and publishes with POST', async () => {

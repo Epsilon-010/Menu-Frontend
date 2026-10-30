@@ -11,6 +11,7 @@ import { MenuBrowser } from '../../features/ordering/MenuBrowser.tsx'
 import { OrderCard } from '../../features/ordering/OrderCard.tsx'
 import { SendConfirmation } from '../../features/ordering/SendConfirmation.tsx'
 import { useTableOrdering, type Loadable, type TableOrdering } from '../../features/ordering/useTableOrdering.ts'
+import { DEFAULT_CARDS } from '../../features/theming/cards.ts'
 import { cartPlacement, DEFAULT_LAYOUT, menuWidthClass } from '../../features/theming/layout.ts'
 import { MenuHero } from '../../features/theming/MenuHero.tsx'
 import { ThemeScope } from '../../features/theming/ThemeScope.tsx'
@@ -121,6 +122,7 @@ export function MenuPage() {
   const logoId = theme?.theme.brand.logo.image_id
   const logoUrl = theme && logoId ? theme.image_urls[logoId] : undefined
   const layout = theme?.theme.layout ?? DEFAULT_LAYOUT
+  const cards = theme?.theme.cards ?? DEFAULT_CARDS
   const placement = cartPlacement(layout.cart)
 
   if (published.status === 'loading') {
@@ -149,7 +151,7 @@ export function MenuPage() {
           {menu.status === 'loading' && <MenuSkeleton />}
           {menu.status === 'error' && <LoadError message={menu.message} onRetry={ordering.retryMenu} />}
           {menu.status === 'loaded' && (
-            <MenuBrowser categories={menu.data} onAdd={ordering.addLine} layout={layout} belowFixedBar={layout.sticky_header} />
+            <MenuBrowser categories={menu.data} onAdd={ordering.addLine} layout={layout} cards={cards} belowFixedBar={layout.sticky_header} />
           )}
 
           <section aria-labelledby="orders-title" className="space-y-4">

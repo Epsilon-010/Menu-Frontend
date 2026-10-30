@@ -7,6 +7,7 @@ import type {
   Theme,
   ThemeBrand,
   ThemeColors,
+  ThemeCards,
   ThemeLayout,
   ThemeMode,
   ThemePreset,
@@ -64,16 +65,20 @@ export function withLayout(theme: Theme, changes: Partial<ThemeLayout>): Theme {
   return { ...theme, layout: { ...theme.layout, ...changes } }
 }
 
-/** A preset replaces colors, typography and layout; the brand (name, texts, images) stays the tenant's. */
+export function withCards(theme: Theme, changes: Partial<ThemeCards>): Theme {
+  return { ...theme, cards: { ...theme.cards, ...changes } }
+}
+
+/** A preset replaces colors, typography, layout and cards; the brand (name, texts, images) stays the tenant's. */
 export function withPreset(theme: Theme, preset: ThemePreset): Theme {
-  return { ...theme, colors: preset.colors, typography: preset.typography, layout: preset.layout }
+  return { ...theme, colors: preset.colors, typography: preset.typography, layout: preset.layout, cards: preset.cards }
 }
 
 /** The preset the theme still looks exactly like, or null once the admin adjusted anything. */
 export function matchingPreset(theme: Theme, presets: ThemePreset[]): string | null {
-  const look = JSON.stringify([theme.colors, theme.typography, theme.layout])
+  const look = JSON.stringify([theme.colors, theme.typography, theme.layout, theme.cards])
   return (
-    presets.find((preset) => JSON.stringify([preset.colors, preset.typography, preset.layout]) === look)?.id ?? null
+    presets.find((preset) => JSON.stringify([preset.colors, preset.typography, preset.layout, preset.cards]) === look)?.id ?? null
   )
 }
 

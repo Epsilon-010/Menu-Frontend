@@ -172,6 +172,73 @@ describe('table ordering API', () => {
     expect(failure.unavailableItemIds).toEqual(['i1', 'i2'])
   })
 
+  it('reads the option groups of each menu item, and none from an older server', async () => {
+    const item = { id: 'i1', name: 'Taco', description: '', price_cents: 2500, image: null, badges: [] }
+    const size = {
+      id: 'g1',
+      name: 'Size',
+      min_select: 1,
+      max_select: 1,
+      options: [{ id: 'o1', name: 'Large', price_cents: 1500, available: true }],
+    }
+    stubFetch(ok([{ id: 'c1', name: 'Tacos', items: [item, { ...item, id: 'i2', modifier_groups: [size] }] }]))
+
+    const [tacos] = await fetchMenu()
+
+    expect(tacos.items.map((each) => each.modifier_groups)).toEqual([[], [size]])
+  })
+
+  it('sends the chosen options of a new line only when there are some', async () => {
+    const calls = stubFetch(ok(CART), ok(CART))
+
+    await addCartLine({ id: 'l1', item_id: 'i1', quantity: 1, note: '', modifier_option_ids: ['o1', 'o2'] })
+    await addCartLine({ id: 'l2', item_id: 'i2', quantity: 1, note: '', modifier_option_ids: [] })
+
+    expect(JSON.parse(String(calls[0].init?.body))).toEqual({
+      id: 'l1',
+      item_id: 'i1',
+      quantity: 1,
+      note: '',
+      modifier_option_ids: ['o1', 'o2'],
+    })
+    expect(JSON.parse(String(calls[1].init?.body))).toEqual({ id: 'l2', item_id: 'i2', quantity: 1, note: '' })
+  })
+
+  it('replaces the options of a line with PATCH', async () => {
+    const calls = stubFetch(ok(CART))
+
+    await updateCartLine('l1', { modifier_option_ids: ['o3'] })
+
+    expect(JSON.parse(String(calls[0].init?.body))).toEqual({ modifier_option_ids: ['o3'] })
+  })
+
+  it('reads the options of cart lines and sent dishes, and none from an older server', async () => {
+    const line = {
+      id: 'l1',
+      item_id: 'i1',
+      name: 'Taco',
+      quantity: 1,
+      note: '',
+      added_by: 'Guest 1',
+      available: true,
+      unit_price_cents: 4000,
+      subtotal_cents: 4000,
+    }
+    const chosen = [{ option_id: 'o1', group: 'Size', name: 'Large', price_cents: 1500 }]
+    const dish = { ...line, status: 'queued', cancel_reason: null }
+    const order = { id: 'o1', number: 1, status: 'queued', sent_by: 'Guest 1', created_at: '', total_cents: 0 }
+    stubFetch(
+      ok({ version: 1, total_cents: 4000, lines: [line, { ...line, id: 'l2', modifiers: chosen }] }),
+      ok([{ ...order, items: [dish, { ...dish, id: 'd2', modifiers: [{ group: 'Size', name: 'Large', price_cents: 1500 }] }] }]),
+    )
+
+    const cart = await fetchCart()
+    const [sent] = await fetchOrders()
+
+    expect(cart.lines.map((each) => each.modifiers)).toEqual([[], chosen])
+    expect(sent.items.map((each) => each.modifiers)).toEqual([[], [{ group: 'Size', name: 'Large', price_cents: 1500 }]])
+  })
+
   it('says the server is unreachable when the request never gets an answer', async () => {
     vi.stubGlobal(
       'fetch',

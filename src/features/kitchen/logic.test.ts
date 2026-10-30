@@ -25,6 +25,7 @@ function item(id: string, status: StaffOrderItem['status']): StaffOrderItem {
     cancel_reason: null,
     ready_at: null,
     updated_at: '2026-10-28T12:00:00Z',
+    modifiers: [],
   }
 }
 

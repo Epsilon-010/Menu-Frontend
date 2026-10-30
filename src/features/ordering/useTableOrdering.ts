@@ -162,11 +162,12 @@ export function useTableOrdering() {
   }
 
   /** Each change resolves to an error message, or null when it was saved. */
-  async function addLine(itemId: string, quantity: number, note: string): Promise<string | null> {
+  async function addLine(itemId: string, quantity: number, note: string, optionIds: string[] = []): Promise<string | null> {
     const drafts = draftsFor(itemId)
-    const id = drafts.idFor(lineDraftKey(itemId, quantity, note))
+    // Another selection of options is another add, with its own client id.
+    const id = drafts.idFor(lineDraftKey(itemId, quantity, note, optionIds))
     try {
-      await withCart(() => addCartLine({ id, item_id: itemId, quantity, note: note.trim() }))
+      await withCart(() => addCartLine({ id, item_id: itemId, quantity, note: note.trim(), modifier_option_ids: optionIds }))
       drafts.reset()
       return null
     } catch (error) {

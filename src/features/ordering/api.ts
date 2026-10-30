@@ -1,6 +1,40 @@
 import { knownBadges, type Badge } from '../catalog/badges.ts'
 import { apiFetch } from '../../shared/api/http.ts'
 
+/** One choice inside a modifier group, like "Large" or "Cheese". */
+export interface ModifierOption {
+  id: string
+  name: string
+  /** Integer cents added to the item price; 0 is free. */
+  price_cents: number
+  /** A sold out option is shown but cannot be chosen. */
+  available: boolean
+}
+
+/** Options of an item the table chooses from, like Size or Extras, with how many to pick. */
+export interface ModifierGroup {
+  id: string
+  name: string
+  min_select: number
+  max_select: number
+  options: ModifierOption[]
+}
+
+/** An option chosen on a cart line, as the server priced it. */
+export interface CartLineModifier {
+  option_id: string
+  group: string
+  name: string
+  price_cents: number
+}
+
+/** An option of a sent dish: a copy taken when the order was sent. */
+export interface OrderItemModifier {
+  group: string
+  name: string
+  price_cents: number
+}
+
 /** What the table sees of the menu: visible categories with their available items. */
 export interface MenuItem {
   id: string
@@ -11,6 +45,8 @@ export interface MenuItem {
   /** URLs are null while the image storage is not configured on the server. */
   image: { thumbnail_url: string | null; card_url: string | null } | null
   badges: Badge[]
+  /** In the item's order; empty for an item without options. */
+  modifier_groups: ModifierGroup[]
 }
 
 export interface MenuCategory {
@@ -31,6 +67,8 @@ export interface CartLine {
   available: boolean
   unit_price_cents: number | null
   subtotal_cents: number
+  /** Chosen options, in the item's group order; included in the prices. */
+  modifiers: CartLineModifier[]
 }
 
 /** The cart every device at the table shares; `version` grows with each change. */
@@ -55,6 +93,8 @@ export interface OrderItem {
   cancel_reason: string | null
   unit_price_cents: number
   subtotal_cents: number
+  /** Chosen options, included in the prices. */
+  modifiers: OrderItemModifier[]
 }
 
 export interface Order {
@@ -73,9 +113,14 @@ export interface NewCartLine {
   item_id: string
   quantity: number
   note: string
+  /** Ids of the chosen options; left out of the request when there are none. */
+  modifier_option_ids?: string[]
 }
 
-export type CartLineChanges = Partial<Pick<CartLine, 'quantity' | 'note'>>
+export type CartLineChanges = Partial<Pick<CartLine, 'quantity' | 'note'>> & {
+  /** Replaces the whole selection of the line. */
+  modifier_option_ids?: string[]
+}
 
 export const MIN_QUANTITY = 1
 export const MAX_QUANTITY = 50
@@ -141,24 +186,56 @@ function json(method: string, body: unknown): RequestInit {
   return { method, headers: JSON_HEADERS, body: JSON.stringify(body) }
 }
 
+/** Dishes as the server typed them; an older server sends no `modifiers`, which means no options. */
+function withModifiers<Item extends { modifiers: unknown[] }>(items: Item[] | undefined): Item[] | undefined {
+  return items?.map((item) => ({ ...item, modifiers: item.modifiers ?? [] }))
+}
+
+/** An order (or any answer with dishes) with every dish's options list filled in. */
+export function withItemModifiers<T extends { items: { modifiers: unknown[] }[] }>(order: T): T {
+  return Array.isArray(order.items) ? { ...order, items: withModifiers(order.items) } : order
+}
+
+type RawMenuItem = Omit<MenuItem, 'badges' | 'modifier_groups'> & { badges?: unknown; modifier_groups?: ModifierGroup[] }
+
+function menuItemFrom(item: RawMenuItem): MenuItem {
+  return {
+    ...item,
+    badges: knownBadges(item.badges),
+    modifier_groups: (item.modifier_groups ?? []).map((group) => ({ ...group, options: group.options ?? [] })),
+  }
+}
+
+async function cartOf(response: Response): Promise<Cart> {
+  const cart = (await response.json()) as Cart
+  return { ...cart, lines: withModifiers(cart.lines) ?? [] }
+}
+
+async function orderOf(response: Response): Promise<Order> {
+  return withItemModifiers((await response.json()) as Order)
+}
+
+/** The request body of a new line: the options travel only when some were chosen. */
+function lineBody(line: NewCartLine): NewCartLine {
+  const { modifier_option_ids: options, ...rest } = line
+  return options && options.length > 0 ? { ...rest, modifier_option_ids: options } : rest
+}
+
 export async function fetchMenu(): Promise<MenuCategory[]> {
-  const menu = (await (await send('/menu')).json()) as MenuCategory[]
-  return menu.map((category) => ({
-    ...category,
-    items: category.items.map((item) => ({ ...item, badges: knownBadges(item.badges) })),
-  }))
+  const menu = (await (await send('/menu')).json()) as (Omit<MenuCategory, 'items'> & { items: RawMenuItem[] })[]
+  return menu.map((category) => ({ ...category, items: category.items.map(menuItemFrom) }))
 }
 
 export async function fetchCart(): Promise<Cart> {
-  return (await (await send('/table/cart')).json()) as Cart
+  return cartOf(await send('/table/cart'))
 }
 
 export async function addCartLine(line: NewCartLine): Promise<Cart> {
-  return (await (await send('/table/cart/lines', json('POST', line))).json()) as Cart
+  return cartOf(await send('/table/cart/lines', json('POST', lineBody(line))))
 }
 
 export async function updateCartLine(id: string, changes: CartLineChanges): Promise<Cart> {
-  return (await (await send(`/table/cart/lines/${id}`, json('PATCH', changes))).json()) as Cart
+  return cartOf(await send(`/table/cart/lines/${id}`, json('PATCH', changes)))
 }
 
 /**
@@ -167,7 +244,7 @@ export async function updateCartLine(id: string, changes: CartLineChanges): Prom
  */
 export async function removeCartLine(id: string): Promise<Cart> {
   try {
-    return (await (await send(`/table/cart/lines/${id}`, { method: 'DELETE' })).json()) as Cart
+    return await cartOf(await send(`/table/cart/lines/${id}`, { method: 'DELETE' }))
   } catch (error) {
     if (error instanceof OrderingError && error.status === 404) return fetchCart()
     throw error
@@ -180,12 +257,12 @@ export async function removeCartLine(id: string): Promise<Cart> {
  * succeeds, so a retry after a lost answer never sends the order twice.
  */
 export async function submitOrder(id: string, cartVersion: number): Promise<Order> {
-  return (await (await send('/table/orders', json('POST', { id, cart_version: cartVersion }))).json()) as Order
+  return orderOf(await send('/table/orders', json('POST', { id, cart_version: cartVersion })))
 }
 
 /** The orders of this visit, oldest first. */
 export async function fetchOrders(): Promise<Order[]> {
-  return (await (await send('/table/orders')).json()) as Order[]
+  return ((await (await send('/table/orders')).json()) as Order[]).map(withItemModifiers)
 }
 
 /** When the table asked for the bill on this visit, or null. */

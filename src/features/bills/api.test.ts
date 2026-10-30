@@ -99,6 +99,33 @@ describe('adding a dish to an open order', () => {
     ])
   })
 
+  it('sends the chosen options of the dish only when there are some', async () => {
+    const calls = stubFetch(ok({ id: 'o1', number: 4 }, 201))
+
+    await addOrderDish('o1', { id: 'd1', item_id: 'm1', quantity: 1, note: '', modifier_option_ids: ['x1', 'x2'] })
+
+    expect(JSON.parse(String(calls[0].init?.body))).toEqual({
+      id: 'd1',
+      item_id: 'm1',
+      quantity: 1,
+      note: '',
+      modifier_option_ids: ['x1', 'x2'],
+    })
+  })
+
+  it('reads the options of the dishes of a bill, none from an older server', async () => {
+    const dish = { id: 'd1', name: 'Taco', status: 'queued' }
+    const chosen = [{ group: 'Size', name: 'Large', price_cents: 1500 }]
+    const bill = { id: 'b1', orders: [{ id: 'o1', items: [dish, { ...dish, id: 'd2', modifiers: chosen }] }] }
+    stubFetch(ok([{ table_id: 't1', table_name: 'Table 1', bill }]), ok({ id: 'o1', items: [dish] }, 201))
+
+    const [table] = await listTableBills()
+    const order = await addOrderDish('o1', { id: 'd3', item_id: 'm1', quantity: 1, note: '' })
+
+    expect(table.bill?.orders[0].items.map((item) => item.modifiers)).toEqual([[], chosen])
+    expect(order.items[0].modifiers).toEqual([])
+  })
+
   it('shows the server message when the bill was already paid', async () => {
     stubFetch(problem(409, 'This bill is already paid; its dishes can no longer change'))
 

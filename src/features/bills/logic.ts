@@ -1,5 +1,6 @@
 /** Pure rules of the waiter's corrections to sent orders, kept apart from React so they can be tested. */
-import { MAX_NOTE_LENGTH, MAX_QUANTITY, MIN_QUANTITY, type OrderItem } from '../ordering/api.ts'
+import { MAX_NOTE_LENGTH, MAX_QUANTITY, MIN_QUANTITY, type ModifierGroup, type OrderItem } from '../ordering/api.ts'
+import { selectionError } from '../ordering/modifiers.ts'
 import type { Bill, TableOverview } from './api.ts'
 
 /** A paid bill is frozen: its orders accept no new dishes. */
@@ -12,13 +13,20 @@ export function canCancelDish(bill: Pick<Bill, 'closed_at'>, item: Pick<OrderIte
   return acceptsNewDishes(bill) && item.status === 'queued'
 }
 
-export function dishDraftError(itemId: string, quantity: number, note: string): string | null {
+export function dishDraftError(
+  itemId: string,
+  quantity: number,
+  note: string,
+  groups: ModifierGroup[] = [],
+  selected: readonly string[] = [],
+): string | null {
   if (itemId === '') return 'Choose a dish.'
   if (!Number.isInteger(quantity) || quantity < MIN_QUANTITY || quantity > MAX_QUANTITY) {
     return `Choose a quantity from ${MIN_QUANTITY} to ${MAX_QUANTITY}.`
   }
   if (note.trim().length > MAX_NOTE_LENGTH) return `Keep the note under ${MAX_NOTE_LENGTH} characters.`
-  return null
+  const options = selectionError(groups, selected)
+  return options === null ? null : `${options}.`
 }
 
 export interface BillRequest {

@@ -24,6 +24,7 @@ function item(id: string, status: StaffOrderItem['status'], cancel_reason: strin
     cancel_reason,
     ready_at: status === 'ready' ? '2026-10-28T12:05:00Z' : null,
     updated_at: '2026-10-28T12:05:00Z',
+    modifiers: [],
   }
 }
 
@@ -122,6 +123,7 @@ function tableItem(id: string, status: OrderItem['status'], cancel_reason: strin
     cancel_reason,
     unit_price_cents: 100,
     subtotal_cents: 100,
+    modifiers: [],
   }
 }
 
@@ -168,6 +170,17 @@ describe('newRejections', () => {
 
     const third = newRejections(second.seen, tables([tableItem('a', 'cancelled', 'Old'), tableItem('b', 'cancelled', 'Out of avocado')]))
     expect(third.rejections).toEqual([])
+  })
+})
+
+describe('newRejections with options', () => {
+  it('names the options of a rejected dish so the waiter tells the right one', () => {
+    const large = { ...tableItem('c', 'queued'), modifiers: [{ group: 'Size', name: 'Large', price_cents: 1500 }] }
+    const first = newRejections(null, tables([large]))
+
+    const second = newRejections(first.seen, tables([{ ...large, status: 'cancelled', cancel_reason: 'Out of stock' }]))
+
+    expect(second.rejections.map((each) => each.name)).toEqual(['Dish c (Size: Large)'])
   })
 })
 

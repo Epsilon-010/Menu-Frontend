@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router'
 import { RequireRole } from '../features/auth/RequireRole.tsx'
 import { CatalogPanel } from '../features/catalog/CatalogPanel.tsx'
+import { ModifiersPanel } from '../features/modifiers/ModifiersPanel.tsx'
 import { OrderSettingsPanel } from '../features/settings/OrderSettingsPanel.tsx'
 import { StaffPanel } from '../features/staff/StaffPanel.tsx'
 import { TablesPanel } from '../features/tables/TablesPanel.tsx'
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <CatalogPanel /> },
+      { path: 'modifiers', element: <ModifiersPanel /> },
       { path: 'tables', element: <TablesPanel /> },
       { path: 'staff', element: <StaffPanel /> },
       { path: 'settings', element: <OrderSettingsPanel /> },

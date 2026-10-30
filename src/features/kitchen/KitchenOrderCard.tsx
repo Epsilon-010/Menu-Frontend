@@ -14,6 +14,7 @@ import {
   staffItemLabel,
   staffItemTone,
 } from './logic.ts'
+import { modifierSummary } from '../ordering/modifiers.ts'
 import { OrderTicketHeader } from './OrderTicketHeader.tsx'
 
 interface KitchenOrderCardProps {
@@ -95,6 +96,9 @@ export function KitchenOrderCard({ order, now, late, onAct }: KitchenOrderCardPr
                   <span className={`block ${item.status === 'cancelled' ? 'text-zinc-400 line-through' : 'text-zinc-950'}`}>
                     <span className="font-semibold tabular-nums">{item.quantity} ×</span> {item.name}
                   </span>
+                  {item.modifiers.length > 0 && (
+                    <span className="block text-sm text-zinc-700">{modifierSummary(item.modifiers)}</span>
+                  )}
                   {item.note && <span className="block text-sm text-amber-800">Note: {item.note}</span>}
                   {item.status === 'cancelled' && item.cancel_reason && (
                     <span className="block text-sm text-zinc-500">Rejected: {item.cancel_reason}</span>

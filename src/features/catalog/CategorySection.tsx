@@ -13,6 +13,7 @@ import { Button, IconButton } from '../../shared/ui/Button.tsx'
 import { TextInput } from '../../shared/ui/Field.tsx'
 import { Badge, ErrorText } from '../../shared/ui/Feedback.tsx'
 import { Card } from '../../shared/ui/Section.tsx'
+import type { ModifierGroup } from '../modifiers/api.ts'
 import type { Category, CategoryChanges, CategoryWithItems } from './api.ts'
 import { ItemForm, type ItemFormValues } from './ItemForm.tsx'
 import { ItemRow, type ItemActions } from './ItemRow.tsx'
@@ -34,12 +35,14 @@ export interface CategoryActions {
 interface CategorySectionProps {
   category: CategoryWithItems
   categories: Category[]
+  /** The modifier group library, or null when it could not load. */
+  modifierGroups: ModifierGroup[] | null
   isFirst: boolean
   isLast: boolean
   actions: CategoryActions
 }
 
-export function CategorySection({ category, categories, isFirst, isLast, actions }: CategorySectionProps) {
+export function CategorySection({ category, categories, modifierGroups, isFirst, isLast, actions }: CategorySectionProps) {
   const [mode, setMode] = useState<Mode>({ kind: 'view' })
   const { busy, error, run: runAction } = useRowAction()
   // Client ids for new items: a retry of the same values reuses its id, edited values get a new one.
@@ -158,6 +161,7 @@ export function CategorySection({ category, categories, isFirst, isLast, actions
               key={item.id}
               item={item}
               categories={categories}
+              modifierGroups={modifierGroups}
               isFirst={index === 0}
               isLast={index === items.length - 1}
               actions={actions.itemActions(item.id)}
@@ -170,6 +174,7 @@ export function CategorySection({ category, categories, isFirst, isLast, actions
         {mode.kind === 'add-item' ? (
           <ItemForm
             submitLabel="Add item"
+            modifierGroups={modifierGroups}
             onSubmit={addItem}
             onCancel={() => {
               itemDrafts.reset()

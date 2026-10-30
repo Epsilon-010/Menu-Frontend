@@ -51,9 +51,13 @@ export function unavailableNames(lines: Pick<CartLine, 'item_id' | 'name'>[], it
   return [...new Set(lines.filter((line) => ids.has(line.item_id)).map((line) => line.name))]
 }
 
-/** Draft key of an add: the same item, quantity and note reuse the client id; anything else is a new add. */
-export function lineDraftKey(itemId: string, quantity: number, note: string): string {
-  return JSON.stringify([itemId, quantity, note.trim()])
+/**
+ * Draft key of an add: the same item, quantity, note and options reuse the client id; anything else
+ * is a new add. Without options the key is the same as before options existed.
+ */
+export function lineDraftKey(itemId: string, quantity: number, note: string, optionIds: readonly string[] = []): string {
+  if (optionIds.length === 0) return JSON.stringify([itemId, quantity, note.trim()])
+  return JSON.stringify([itemId, quantity, note.trim(), [...optionIds].sort()])
 }
 
 const ITEM_STATUS_LABELS: Record<OrderItemStatus, string> = {

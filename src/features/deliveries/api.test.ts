@@ -15,6 +15,15 @@ describe('deliveries API', () => {
     expect(calls[0].url).toBe('/api/v1/deliveries')
   })
 
+  it('gives every dish its option names, none from an older server', async () => {
+    const dish = { id: 'i1', name: 'Taco', status: 'ready' }
+    stubFetch(ok([{ id: 'o1', items: [dish, { ...dish, id: 'i2', modifiers: [{ group: 'Size', name: 'Large' }] }] }]))
+
+    const [order] = await fetchDeliveries()
+
+    expect(order.items.map((item) => item.modifiers)).toEqual([[], [{ group: 'Size', name: 'Large' }]])
+  })
+
   it('shows the server message when the role cannot see deliveries', async () => {
     stubFetch(problem(403, 'Not allowed'))
 

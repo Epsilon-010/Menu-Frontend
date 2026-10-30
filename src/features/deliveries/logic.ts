@@ -3,6 +3,7 @@ import type { TableOverview } from '../bills/api.ts'
 import type { StaffOrder, StaffOrderItem } from '../kitchen/api.ts'
 import { isPending } from '../kitchen/logic.ts'
 import { rejectionNote } from '../ordering/logic.ts'
+import { dishLabel } from '../ordering/modifiers.ts'
 
 export interface DeliveryGroups {
   ready: StaffOrderItem[]
@@ -95,7 +96,7 @@ export function newRejections(
             id: item.id,
             table_name: table.table_name,
             order_number: order.number,
-            name: item.name,
+            name: dishLabel(item.name, item.modifiers),
             note: rejectionNote(item) ?? 'Rejected',
           })
         }

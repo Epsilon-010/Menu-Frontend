@@ -19,6 +19,8 @@ export interface CatalogItem {
   is_available: boolean
   image: ItemImage | null
   badges: Badge[]
+  /** The item's modifier groups, in the order guests see them. */
+  modifier_group_ids: string[]
 }
 
 export interface Category {
@@ -40,6 +42,8 @@ export interface ItemDraft {
   description: string
   price_cents: number
   badges?: Badge[]
+  /** Order = order on the item; ids of the tenant's modifier groups. */
+  modifier_group_ids?: string[]
 }
 
 export type ItemChanges = Partial<ItemDraft & { is_available: boolean }>
@@ -84,7 +88,7 @@ async function errorFrom(response: Response): Promise<CatalogError> {
 }
 
 /** A delete is idempotent: if the row is already gone (another tab, a retried request), it is done. */
-async function alreadyGoneIsDone(request: Promise<Response>): Promise<void> {
+export async function alreadyGoneIsDone(request: Promise<Response>): Promise<void> {
   try {
     await request
   } catch (error) {
@@ -92,7 +96,8 @@ async function alreadyGoneIsDone(request: Promise<Response>): Promise<void> {
   }
 }
 
-async function send(path: string, init: RequestInit = {}): Promise<Response> {
+/** Calls the API and turns any failure into a CatalogError ready to show. */
+export async function send(path: string, init: RequestInit = {}): Promise<Response> {
   let response: Response
   try {
     response = await apiFetch(path, init)
@@ -103,17 +108,23 @@ async function send(path: string, init: RequestInit = {}): Promise<Response> {
   return response
 }
 
-function json(method: string, body: unknown): RequestInit {
+export function json(method: string, body: unknown): RequestInit {
   return { method, headers: JSON_HEADERS, body: JSON.stringify(body) }
 }
 
 /** The whole catalog in menu order, hidden categories and unavailable items included. */
 export async function listCatalog(): Promise<CategoryWithItems[]> {
   const catalog = (await (await send('/catalog/categories')).json()) as CategoryWithItems[]
-  return catalog.map((category) => ({
-    ...category,
-    items: category.items.map((item) => ({ ...item, badges: knownBadges(item.badges) })),
-  }))
+  return catalog.map((category) => ({ ...category, items: category.items.map(normalizeItem) }))
+}
+
+/** Keeps only known badges, and reads a missing group list (an older server) as none. */
+function normalizeItem(item: CatalogItem): CatalogItem {
+  return { ...item, badges: knownBadges(item.badges), modifier_group_ids: item.modifier_group_ids ?? [] }
+}
+
+async function itemFrom(response: Response): Promise<CatalogItem> {
+  return normalizeItem((await response.json()) as CatalogItem)
 }
 
 /** `id` is chosen by the client and kept until the create succeeds: a repeat returns the same category. */
@@ -136,11 +147,11 @@ export async function reorderCategories(ids: string[]): Promise<void> {
 }
 
 export async function createItem(draft: ItemDraft): Promise<CatalogItem> {
-  return (await (await send('/catalog/items', json('POST', draft))).json()) as CatalogItem
+  return itemFrom(await send('/catalog/items', json('POST', draft)))
 }
 
 export async function updateItem(id: string, changes: ItemChanges): Promise<CatalogItem> {
-  return (await (await send(`/catalog/items/${id}`, json('PATCH', changes))).json()) as CatalogItem
+  return itemFrom(await send(`/catalog/items/${id}`, json('PATCH', changes)))
 }
 
 export async function deleteItem(id: string): Promise<void> {
@@ -191,9 +202,9 @@ export async function uploadImageFile(file: File): Promise<string> {
 
 /** Attaches an uploaded image to the item; the server re-checks format and size and discards the old one. */
 export async function attachItemImage(itemId: string, publicId: string): Promise<CatalogItem> {
-  return (await (await send(`/catalog/items/${itemId}/image`, json('PUT', { public_id: publicId }))).json()) as CatalogItem
+  return itemFrom(await send(`/catalog/items/${itemId}/image`, json('PUT', { public_id: publicId })))
 }
 
 export async function removeItemImage(itemId: string): Promise<CatalogItem> {
-  return (await (await send(`/catalog/items/${itemId}/image`, { method: 'DELETE' })).json()) as CatalogItem
+  return itemFrom(await send(`/catalog/items/${itemId}/image`, { method: 'DELETE' }))
 }

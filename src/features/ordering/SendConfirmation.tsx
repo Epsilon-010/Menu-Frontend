@@ -5,6 +5,7 @@ import { ErrorText } from '../../shared/ui/Feedback.tsx'
 import { formatMoney } from '../catalog/price.ts'
 import type { Cart, Order } from './api.ts'
 import { groupByPerson } from './logic.ts'
+import { modifierSummary } from './modifiers.ts'
 import type { SendResult } from './useTableOrdering.ts'
 
 interface SendConfirmationProps {
@@ -102,6 +103,7 @@ export function SendConfirmation({ liveCart, onSend, onSent, onClose }: SendConf
                       <p className={line.available ? 'text-ink' : 'text-faint line-through'}>
                         <span className="font-semibold tabular-nums">{line.quantity} ×</span> {line.name}
                       </p>
+                      {line.modifiers.length > 0 && <p className="text-muted">{modifierSummary(line.modifiers)}</p>}
                       {line.note && <p className="text-muted">{line.note}</p>}
                       {!line.available && <p className="text-amber-800">No longer available, it will not be sent</p>}
                     </div>

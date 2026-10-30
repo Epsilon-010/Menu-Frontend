@@ -3,6 +3,7 @@ import { Badge } from '../../shared/ui/Feedback.tsx'
 import { formatMoney } from '../catalog/price.ts'
 import type { Order, OrderItem } from './api.ts'
 import { clockTime, itemStatusLabel, itemStatusTone, orderStatusLabel, rejectionNote } from './logic.ts'
+import { modifierSummary } from './modifiers.ts'
 
 interface OrderCardProps {
   order: Order
@@ -36,6 +37,7 @@ export function OrderCard({ order, showPrices = true, itemActions, footer }: Ord
                 <span className="font-semibold tabular-nums">{item.quantity} ×</span> {item.name}
                 <span className="text-muted"> · {item.added_by}</span>
               </p>
+              {item.modifiers.length > 0 && <p className="text-muted">{modifierSummary(item.modifiers, showPrices)}</p>}
               {item.note && <p className="text-muted">{item.note}</p>}
               {item.status === 'cancelled' ? (
                 <p className="text-sm font-medium text-red-700">{rejectionNote(item)}</p>

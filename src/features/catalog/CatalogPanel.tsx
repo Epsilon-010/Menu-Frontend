@@ -24,6 +24,7 @@ import { CategorySection, type CategoryActions } from './CategorySection.tsx'
 import type { ItemActions } from './ItemRow.tsx'
 import { movedById } from './order.ts'
 import { createDraftIds } from '../../shared/api/idempotency.ts'
+import { listModifierGroups, type ModifierGroup } from '../modifiers/api.ts'
 import { createChangeRunner, createLatestOnly, createSerialQueue } from './sync.ts'
 
 type ListState =
@@ -47,6 +48,9 @@ export function CatalogPanel() {
   // The catalog as last loaded; queued changes read it when they run, not when they were clicked.
   // A stable mutable box (not a ref): it never drives rendering, only the queued changes read it.
   const [catalog] = useState(() => ({ current: [] as CategoryWithItems[] }))
+  // The modifier group library for the item form, loaded once with the panel (it is edited on its own page).
+  // Null until it loads, and when it fails: the item form then keeps each item's groups as they are.
+  const [modifierGroups, setModifierGroups] = useState<ModifierGroup[] | null>(null)
 
   /** Loads the catalog; only the newest load is applied. Returns the error message, if any. */
   const reload = useCallback(
@@ -72,6 +76,19 @@ export function CatalogPanel() {
     void reload(true)
     return () => latest.cancel()
   }, [reload, latest])
+
+  useEffect(() => {
+    let active = true
+    listModifierGroups().then(
+      (groups) => {
+        if (active) setModifierGroups(groups)
+      },
+      () => undefined,
+    )
+    return () => {
+      active = false
+    }
+  }, [])
 
   // Set when a change was saved but the screen could not refresh afterwards.
   const [stale, setStale] = useState<string | null>(null)
@@ -214,6 +231,7 @@ export function CatalogPanel() {
               key={category.id}
               category={category}
               categories={categories}
+              modifierGroups={modifierGroups}
               isFirst={index === 0}
               isLast={index === categories.length - 1}
               actions={categoryActions(category)}

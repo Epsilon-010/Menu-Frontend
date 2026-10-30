@@ -3,6 +3,7 @@ import { RequireRole } from '../features/auth/RequireRole.tsx'
 import { CatalogPanel } from '../features/catalog/CatalogPanel.tsx'
 import { ModifiersPanel } from '../features/modifiers/ModifiersPanel.tsx'
 import { OrderSettingsPanel } from '../features/settings/OrderSettingsPanel.tsx'
+import { StatsPanel } from '../features/stats/StatsPanel.tsx'
 import { StaffPanel } from '../features/staff/StaffPanel.tsx'
 import { TablesPanel } from '../features/tables/TablesPanel.tsx'
 import { ThemeEditorPanel } from '../features/theming/ThemeEditorPanel.tsx'
@@ -37,6 +38,7 @@ export const router = createBrowserRouter([
       { path: 'staff', element: <StaffPanel /> },
       { path: 'settings', element: <OrderSettingsPanel /> },
       { path: 'design', element: <ThemeEditorPanel /> },
+      { path: 'stats', element: <StatsPanel /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

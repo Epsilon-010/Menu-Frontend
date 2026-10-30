@@ -12,6 +12,7 @@ import {
   signUpDraftKey,
 } from '../features/auth/register.ts'
 import { useAuth } from '../features/auth/useAuth.ts'
+import { browserTimeZone } from '../features/stats/logic.ts'
 import { createDraftIds } from '../shared/api/idempotency.ts'
 import { AuthLayout, AuthLogo } from '../shared/ui/AuthLayout.tsx'
 import { Button } from '../shared/ui/Button.tsx'
@@ -72,6 +73,7 @@ export function RegisterPage() {
         email: trimmedEmail,
         password,
         business_name: businessName.trim(),
+        timezone: browserTimeZone(),
       })
       drafts.reset()
       navigate(homePathFor(role), { replace: true })

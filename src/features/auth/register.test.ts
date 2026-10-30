@@ -40,14 +40,20 @@ async function failureOf(promise: Promise<unknown>): Promise<RegisterError> {
   return error as RegisterError
 }
 
-const SIGN_UP = { id: 'b1', email: 'owner@example.com', password: 'long-enough', business_name: 'Taqueria 1' }
+const SIGN_UP = {
+  id: 'b1',
+  email: 'owner@example.com',
+  password: 'long-enough',
+  business_name: 'Taqueria 1',
+  timezone: 'America/Mexico_City',
+}
 
 afterEach(() => {
   vi.unstubAllGlobals()
 })
 
 describe('register', () => {
-  it('posts the client id, email, password and business name and returns the session', async () => {
+  it('posts the client id, email, password, business name and time zone and returns the session', async () => {
     const calls = stubFetch(new Response(JSON.stringify({ expires_in: 900, role: 'admin' }), { status: 201 }))
 
     expect(await register(SIGN_UP)).toEqual({ expires_in: 900, role: 'admin' })

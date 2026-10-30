@@ -37,6 +37,8 @@ describe('card controls', () => {
     expect(select(render({}, { product_view: 'list' }), 'Side')).not.toContain(' disabled=""')
     expect(render()).not.toContain('Darkening under the text')
     expect(render({ template: 'overlay', overlay_opacity: 45 })).toContain('Darkening under the text: 45%')
+    // List rows are never overlays, so the darkening would change nothing there.
+    expect(render({ template: 'overlay' }, { product_view: 'list' })).not.toContain('Darkening under the text')
   })
 
   it('say the list view always draws rows, and disable the border color without a border', () => {

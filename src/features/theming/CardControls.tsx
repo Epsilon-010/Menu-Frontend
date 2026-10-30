@@ -136,7 +136,7 @@ export function CardControls({ theme, onChange }: CardControlsProps) {
         />
       </fieldset>
 
-      {cards.template === 'overlay' && (
+      {cards.template === 'overlay' && !listView && (
         <Field label={`Darkening under the text: ${cards.overlay_opacity}%`}>
           <input
             type="range"

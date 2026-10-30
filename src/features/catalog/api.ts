@@ -1,4 +1,5 @@
 import { apiFetch } from '../../shared/api/http.ts'
+import { knownBadges, type Badge } from './badges.ts'
 
 export interface ItemImage {
   public_id: string
@@ -17,6 +18,7 @@ export interface CatalogItem {
   position: number
   is_available: boolean
   image: ItemImage | null
+  badges: Badge[]
 }
 
 export interface Category {
@@ -37,6 +39,7 @@ export interface ItemDraft {
   name: string
   description: string
   price_cents: number
+  badges?: Badge[]
 }
 
 export type ItemChanges = Partial<ItemDraft & { is_available: boolean }>
@@ -106,7 +109,11 @@ function json(method: string, body: unknown): RequestInit {
 
 /** The whole catalog in menu order, hidden categories and unavailable items included. */
 export async function listCatalog(): Promise<CategoryWithItems[]> {
-  return (await (await send('/catalog/categories')).json()) as CategoryWithItems[]
+  const catalog = (await (await send('/catalog/categories')).json()) as CategoryWithItems[]
+  return catalog.map((category) => ({
+    ...category,
+    items: category.items.map((item) => ({ ...item, badges: knownBadges(item.badges) })),
+  }))
 }
 
 /** `id` is chosen by the client and kept until the create succeeds: a repeat returns the same category. */

@@ -144,6 +144,14 @@ describe('idempotent writes', () => {
     expect(JSON.parse(String(calls[1].init?.body))).toMatchObject({ id: 'i1', category_id: 'c1' })
   })
 
+  it('sends the badges of an item and keeps only known ones when reading the catalog', async () => {
+    const item = { id: 'i1', category_id: 'c1', name: 'Pastor', description: '', price_cents: 2500, badges: ['spicy', 'organic', 'new'] }
+    const calls = stubFetch(jsonResponse(201, item), jsonResponse(200, [{ id: 'c1', name: 'Tacos', position: 0, is_visible: true, items: [item] }]))
+    await createItem({ id: 'i1', category_id: 'c1', name: 'Pastor', description: '', price_cents: 2500, badges: ['new', 'spicy'] })
+    expect(JSON.parse(String(calls[0].init?.body)).badges).toEqual(['new', 'spicy'])
+    expect((await listCatalog())[0].items[0].badges).toEqual(['new', 'spicy'])
+  })
+
   it('treats deleting something already gone as done', async () => {
     stubFetch(problem(404, 'Item not found'), problem(404, 'Category not found'))
 

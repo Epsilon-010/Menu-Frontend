@@ -209,7 +209,7 @@ export interface ThemeVersions {
 /** An exported design checked for this business, ready for the draft (nothing is saved yet). */
 export interface ImportedTheme {
   theme: Theme
-  /** Image slots emptied: those images belong to another business. */
+  /** Image slots emptied: those images belong to another business, or no design of this one uses them anymore. */
   removed_images: ImageSlot[]
   image_urls: ImageUrls
 }

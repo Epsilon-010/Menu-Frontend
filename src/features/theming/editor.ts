@@ -116,8 +116,11 @@ export function removedImagesText(slots: ImageSlot[]): string | null {
   if (slots.length === 0) return null
   const names = slots.map((slot) => SLOT_NAMES[slot])
   const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
-  const verb = slots.length === 1 ? 'was left out: it belongs' : 'were left out: they belong'
-  return `The ${list} ${verb} to another business. Upload your own.`
+  const one = slots.length === 1
+  const reason = one
+    ? 'was left out: it belongs to another business or is no longer in your designs. Upload it again.'
+    : 'were left out: they belong to another business or are no longer in your designs. Upload them again.'
+  return `The ${list} ${reason}`
 }
 
 /** The preset the theme still looks exactly like, or null once the admin adjusted anything. */

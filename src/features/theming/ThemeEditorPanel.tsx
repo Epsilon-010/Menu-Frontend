@@ -52,7 +52,8 @@ function download(theme: Theme, fileName: string) {
   link.href = url
   link.download = fileName
   link.click()
-  URL.revokeObjectURL(url)
+  // Some browsers start the download after click() returns; freeing the file right away could cancel it.
+  setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }
 
 function sameTheme(first: Theme, second: Theme): boolean {

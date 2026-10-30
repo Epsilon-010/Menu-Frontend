@@ -240,9 +240,11 @@ describe('reset, export and import', () => {
 
   it('tells which images were left out of an import', () => {
     expect(removedImagesText([])).toBeNull()
-    expect(removedImagesText(['logo'])).toBe('The logo was left out: it belongs to another business. Upload your own.')
+    expect(removedImagesText(['logo'])).toBe(
+      'The logo was left out: it belongs to another business or is no longer in your designs. Upload it again.',
+    )
     expect(removedImagesText(['logo', 'banner', 'background'])).toBe(
-      'The logo, banner and background image were left out: they belong to another business. Upload your own.',
+      'The logo, banner and background image were left out: they belong to another business or are no longer in your designs. Upload them again.',
     )
   })
 })

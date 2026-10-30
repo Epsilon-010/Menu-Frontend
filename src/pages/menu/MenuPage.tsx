@@ -51,7 +51,13 @@ function CartArea({ cart, ordering, onSend }: CartAreaProps) {
   if (cart.status === 'loading') return <ListSkeleton rows={2} label="Loading the table order" />
   if (cart.status === 'error') return <LoadError message={cart.message} onRetry={ordering.retryCart} />
   return (
-    <CartContents cart={cart.data} onChange={ordering.changeLine} onRemove={ordering.removeLine} onSend={onSend} />
+    <CartContents
+      cart={cart.data}
+      menu={ordering.menu.status === 'loaded' ? ordering.menu.data : []}
+      onChange={ordering.changeLine}
+      onRemove={ordering.removeLine}
+      onSend={onSend}
+    />
   )
 }
 

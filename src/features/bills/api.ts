@@ -1,5 +1,5 @@
 import { apiFetch } from '../../shared/api/http.ts'
-import type { Order } from '../ordering/api.ts'
+import { withItemModifiers, type Order } from '../ordering/api.ts'
 
 export type PaymentMethod = 'cash' | 'card' | 'other'
 
@@ -70,19 +70,25 @@ function json(body: unknown): RequestInit {
   return { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) }
 }
 
+/** A bill with every dish's options list filled in (an older server sends none). */
+function billFrom(bill: Bill): Bill {
+  return Array.isArray(bill.orders) ? { ...bill, orders: bill.orders.map(withItemModifiers) } : bill
+}
+
 /** Every table with its open bill, if any. */
 export async function listTableBills(): Promise<TableOverview[]> {
-  return (await (await send('/bills/tables')).json()) as TableOverview[]
+  const tables = (await (await send('/bills/tables')).json()) as TableOverview[]
+  return tables.map((table) => (table.bill ? { ...table, bill: billFrom(table.bill) } : table))
 }
 
 /** Opens the table so its QR lets guests in. Idempotent: an open table answers with its bill. */
 export async function openTable(tableId: string): Promise<Bill> {
-  return (await (await send('/bills', json({ table_id: tableId }))).json()) as Bill
+  return billFrom((await (await send('/bills', json({ table_id: tableId }))).json()) as Bill)
 }
 
 /** Registers the payment, which closes the bill and ends every guest session at the table. */
 export async function registerPayment(billId: string, method: PaymentMethod): Promise<Bill> {
-  return (await (await send(`/bills/${billId}/payment`, json({ method }))).json()) as Bill
+  return billFrom((await (await send(`/bills/${billId}/payment`, json({ method }))).json()) as Bill)
 }
 
 /** Closes a table that has no orders (a bill with orders is closed by its payment). */
@@ -105,6 +111,8 @@ export interface NewOrderDish {
   item_id: string
   quantity: number
   note: string
+  /** Ids of the chosen options; left out of the request when there are none. */
+  modifier_option_ids?: string[]
 }
 
 /**
@@ -113,5 +121,7 @@ export interface NewOrderDish {
  */
 export async function addOrderDish(orderId: string, dish: NewOrderDish): Promise<Order> {
   const body = { id: dish.id, item_id: dish.item_id, quantity: dish.quantity, note: dish.note.trim() }
-  return (await (await send(`/orders/${orderId}/items`, json(body))).json()) as Order
+  const options = dish.modifier_option_ids ?? []
+  const request = options.length > 0 ? { ...body, modifier_option_ids: options } : body
+  return withItemModifiers((await (await send(`/orders/${orderId}/items`, json(request))).json()) as Order)
 }

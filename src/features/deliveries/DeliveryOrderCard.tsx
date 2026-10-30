@@ -7,6 +7,7 @@ import type { StaffOrder, StaffOrderItem } from '../kitchen/api.ts'
 import { staffItemLabel, staffItemTone } from '../kitchen/logic.ts'
 import { OrderTicketHeader } from '../kitchen/OrderTicketHeader.tsx'
 import { rejectionNote } from '../ordering/logic.ts'
+import { modifierSummary } from '../ordering/modifiers.ts'
 import { deliveryCounter, deliveryProgress, splitDelivery, visibleSections, type DeliverySection, type DeliveryView } from './logic.ts'
 
 interface DeliveryOrderCardProps {
@@ -34,6 +35,7 @@ function DishLine({ item, children }: { item: StaffOrderItem; children?: ReactNo
           <span className="font-semibold tabular-nums">{item.quantity} ×</span> {item.name}
           <span className="text-zinc-500"> · {item.added_by}</span>
         </p>
+        {item.modifiers.length > 0 && <p className="text-zinc-600">{modifierSummary(item.modifiers)}</p>}
         {item.note && <p className="text-amber-800">Note: {item.note}</p>}
         {note && <p className="font-medium text-red-700">{note}</p>}
       </div>

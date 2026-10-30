@@ -41,6 +41,28 @@ describe('kitchen API', () => {
     ])
   })
 
+  it('reads the option names of each dish, and none from an older server', async () => {
+    const dish = {
+      id: 'i1',
+      name: 'Taco',
+      quantity: 1,
+      note: '',
+      added_by: 'Guest 1',
+      status: 'queued',
+      cancel_reason: null,
+      ready_at: null,
+      updated_at: '2026-10-28T12:00:00Z',
+    }
+    const options = [{ group: 'Size', name: 'Large' }]
+    stubFetch(ok([{ ...ORDER, items: [dish, { ...dish, id: 'i2', modifiers: options }] }]), ok({ ...ORDER, items: [dish] }))
+
+    const [order] = await fetchKitchenOrders()
+    const moved = await updateItemStatus('o1', ['i1'], 'preparing')
+
+    expect(order.items.map((item) => item.modifiers)).toEqual([[], options])
+    expect(moved.items[0].modifiers).toEqual([])
+  })
+
   it('recognizes dishes that changed meanwhile', async () => {
     stubFetch(problem(409, 'Some dishes already changed; reload the order'))
 

@@ -9,6 +9,7 @@ import { formatMoney } from '../catalog/price.ts'
 import { MAX_REASON_LENGTH, rejectReasonError } from '../kitchen/logic.ts'
 import { fetchMenu, MAX_NOTE_LENGTH, MAX_QUANTITY, MIN_QUANTITY, OrderingError, type MenuCategory } from '../ordering/api.ts'
 import { lineDraftKey } from '../ordering/logic.ts'
+import { ModifierPicker } from '../ordering/ModifierPicker.tsx'
 import type { NewOrderDish } from './api.ts'
 import { dishDraftError } from './logic.ts'
 
@@ -83,6 +84,8 @@ export function AddDishControl({ onAdd }: { onAdd: (dish: NewOrderDish) => Promi
 function AddDishForm({ onAdd, onClose }: { onAdd: (dish: NewOrderDish) => Promise<string | null>; onClose: () => void }) {
   const [menu, setMenu] = useState<MenuState>({ status: 'loading' })
   const [itemId, setItemId] = useState('')
+  // The chosen options of the chosen dish; picking another dish starts them over.
+  const [selected, setSelected] = useState<string[]>([])
   const [quantity, setQuantity] = useState('1')
   const [note, setNote] = useState('')
   const [problem, setProblem] = useState<string | null>(null)
@@ -106,15 +109,27 @@ function AddDishForm({ onAdd, onClose }: { onAdd: (dish: NewOrderDish) => Promis
     }
   }, [])
 
+  const item =
+    menu.status === 'loaded'
+      ? menu.categories.flatMap((category) => category.items).find((each) => each.id === itemId)
+      : undefined
+  const groups = item?.modifier_groups ?? []
+
+  function chooseDish(id: string) {
+    setItemId(id)
+    setSelected([])
+    setProblem(null)
+  }
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const count = Number(quantity)
-    const invalid = dishDraftError(itemId, count, note)
+    const invalid = dishDraftError(itemId, count, note, groups, selected)
     setProblem(invalid)
     if (invalid !== null) return
-    const id = drafts.idFor(lineDraftKey(itemId, count, note))
+    const id = drafts.idFor(lineDraftKey(itemId, count, note, selected))
     void run(
-      () => onAdd({ id, item_id: itemId, quantity: count, note }),
+      () => onAdd({ id, item_id: itemId, quantity: count, note, modifier_option_ids: selected }),
       () => {
         drafts.reset()
         onClose()
@@ -129,7 +144,7 @@ function AddDishForm({ onAdd, onClose }: { onAdd: (dish: NewOrderDish) => Promis
       {menu.status === 'loaded' && (
         <>
           <Field label="Dish">
-            <Select value={itemId} onChange={(event) => setItemId(event.target.value)}>
+            <Select value={itemId} onChange={(event) => chooseDish(event.target.value)}>
               <option value="">Choose a dish</option>
               {menu.categories.map((category) => (
                 <optgroup key={category.id} label={category.name}>
@@ -142,6 +157,7 @@ function AddDishForm({ onAdd, onClose }: { onAdd: (dish: NewOrderDish) => Promis
               ))}
             </Select>
           </Field>
+          {groups.length > 0 && <ModifierPicker groups={groups} selected={selected} onChange={setSelected} disabled={busy} />}
           <div className="flex flex-wrap gap-3">
             <Field label="Quantity" className="w-24">
               <TextInput

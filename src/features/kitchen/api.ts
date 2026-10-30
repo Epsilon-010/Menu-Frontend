@@ -1,5 +1,11 @@
 import { apiFetch } from '../../shared/api/http.ts'
-import type { OrderItemStatus, OrderStatus } from '../ordering/api.ts'
+import { withItemModifiers, type OrderItemStatus, type OrderStatus } from '../ordering/api.ts'
+
+/** An option chosen for a dish, by name only: the staff queues never show prices. */
+export interface StaffModifier {
+  group: string
+  name: string
+}
 
 /** A dish as the staff queues show it: no prices, ever. */
 export interface StaffOrderItem {
@@ -14,6 +20,8 @@ export interface StaffOrderItem {
   cancel_reason: string | null
   ready_at: string | null
   updated_at: string
+  /** Chosen options, in the item's group order. */
+  modifiers: StaffModifier[]
 }
 
 /** An order as the kitchen and the waiters see it (the same shape for both queues). */
@@ -85,20 +93,20 @@ export function jsonBody(method: string, body: unknown): RequestInit {
 }
 
 /** Orders with dishes still queued or being prepared, oldest number first. */
-export function fetchKitchenOrders(): Promise<StaffOrder[]> {
-  return ordersRequest<StaffOrder[]>('/kitchen/orders')
+export async function fetchKitchenOrders(): Promise<StaffOrder[]> {
+  return (await ordersRequest<StaffOrder[]>('/kitchen/orders')).map(withItemModifiers)
 }
 
 /**
  * Moves one or more dishes of one order to `status`, all or nothing. A rejection (`cancelled`)
  * needs a reason. Answers with the whole order as it is now.
  */
-export function updateItemStatus(
+export async function updateItemStatus(
   orderId: string,
   itemIds: string[],
   status: ItemTarget,
   reason?: string,
 ): Promise<StaffOrder> {
   const body = status === 'cancelled' ? { item_ids: itemIds, status, reason: reason?.trim() ?? '' } : { item_ids: itemIds, status }
-  return ordersRequest<StaffOrder>(`/orders/${orderId}/items/status`, jsonBody('POST', body))
+  return withItemModifiers(await ordersRequest<StaffOrder>(`/orders/${orderId}/items/status`, jsonBody('POST', body)))
 }

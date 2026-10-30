@@ -11,7 +11,7 @@ const CATEGORIES: MenuCategory[] = [
     id: 'tacos',
     name: 'Tacos',
     items: [
-      { id: 't1', name: 'Pastor', description: 'With pineapple', price_cents: 2500, image: null, badges: ['vegan', 'gluten_free'] },
+      { id: 't1', name: 'Pastor', description: 'With pineapple', price_cents: 2500, image: null, badges: ['vegan', 'gluten_free'], modifier_groups: [] },
       {
         id: 't2',
         name: 'Suadero',
@@ -19,10 +19,11 @@ const CATEGORIES: MenuCategory[] = [
         price_cents: 2200,
         image: { thumbnail_url: null, card_url: 'https://img.test/s.jpg' },
         badges: [],
+        modifier_groups: [],
       },
     ],
   },
-  { id: 'drinks', name: 'Drinks', items: [{ id: 'd1', name: 'Horchata', description: '', price_cents: 3000, image: null, badges: [] }] },
+  { id: 'drinks', name: 'Drinks', items: [{ id: 'd1', name: 'Horchata', description: '', price_cents: 3000, image: null, badges: [], modifier_groups: [] }] },
   { id: 'empty', name: 'Coming soon', items: [] },
 ]
 

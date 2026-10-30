@@ -24,6 +24,7 @@ function dish(status: OrderItem['status']): OrderItem {
     cancel_reason: status === 'cancelled' ? 'Out of stock' : null,
     unit_price_cents: 100,
     subtotal_cents: 100,
+    modifiers: [],
   }
 }
 
@@ -76,6 +77,19 @@ describe('dishDraftError', () => {
     expect(dishDraftError('m1', 1.5, '')).toBe('Choose a quantity from 1 to 50.')
     expect(dishDraftError('m1', 2, 'x'.repeat(201))).toBe('Keep the note under 200 characters.')
     expect(dishDraftError('m1', 2, 'No onion')).toBeNull()
+  })
+
+  it('also needs the options of a dish that has them', () => {
+    const size = {
+      id: 'g1',
+      name: 'Size',
+      min_select: 1,
+      max_select: 1,
+      options: [{ id: 'x1', name: 'Large', price_cents: 1500, available: true }],
+    }
+    expect(dishDraftError('m1', 1, '', [size], [])).toBe('Choose 1 option for Size.')
+    expect(dishDraftError('m1', 1, '', [size], ['x1'])).toBeNull()
+    expect(dishDraftError('', 1, '', [size], [])).toBe('Choose a dish.')
   })
 })
 

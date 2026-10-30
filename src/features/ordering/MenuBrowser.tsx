@@ -1,9 +1,8 @@
-import { BowlFoodIcon, MinusIcon, PlusIcon } from '@phosphor-icons/react'
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { Button, IconButton } from '../../shared/ui/Button.tsx'
+import { BowlFoodIcon, PlusIcon } from '@phosphor-icons/react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { Button } from '../../shared/ui/Button.tsx'
 import { MOTION } from '../../shared/ui/classes.ts'
-import { Field, TextInput } from '../../shared/ui/Field.tsx'
-import { EmptyState, ErrorText } from '../../shared/ui/Feedback.tsx'
+import { EmptyState } from '../../shared/ui/Feedback.tsx'
 import { formatMoney } from '../catalog/price.ts'
 import { BADGE_LABELS, type Badge } from '../catalog/badges.ts'
 import type { BadgeShape, CardTemplate, CategoryHeader, ThemeCards, ThemeLayout } from '../theming/api.ts'
@@ -20,39 +19,8 @@ import {
   descriptionClampClass,
 } from '../theming/cards.ts'
 import { currentCategoryId, DEFAULT_LAYOUT, densitySpacing, gridColumnsClass, showsOneCategory } from '../theming/layout.ts'
-import { MAX_NOTE_LENGTH, MAX_QUANTITY, MIN_QUANTITY, type MenuCategory, type MenuItem } from './api.ts'
-
-interface QuantityStepperProps {
-  value: number
-  onChange: (value: number) => void
-  disabled?: boolean
-  /** What is being counted, for screen readers ("Tacos al pastor"). */
-  label: string
-}
-
-export function QuantityStepper({ value, onChange, disabled = false, label }: QuantityStepperProps) {
-  return (
-    <div className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface p-1">
-      <IconButton
-        label={`One less ${label}`}
-        icon={<MinusIcon size={16} />}
-        disabled={disabled || value <= MIN_QUANTITY}
-        onClick={() => onChange(value - 1)}
-        className="p-1"
-      />
-      <span aria-live="polite" className="min-w-8 text-center text-sm font-semibold text-ink tabular-nums">
-        {value}
-      </span>
-      <IconButton
-        label={`One more ${label}`}
-        icon={<PlusIcon size={16} />}
-        disabled={disabled || value >= MAX_QUANTITY}
-        onClick={() => onChange(value + 1)}
-        className="p-1"
-      />
-    </div>
-  )
-}
+import { AddLineForm } from './AddLineForm.tsx'
+import type { MenuCategory, MenuItem } from './api.ts'
 
 function Badges({ badges, shape }: { badges: Badge[]; shape: BadgeShape }) {
   if (badges.length === 0) return null
@@ -90,17 +58,13 @@ function AddButton({ name, cards, onClick }: AddButtonProps) {
 
 interface ItemCardProps {
   item: MenuItem
-  onAdd: (quantity: number, note: string) => Promise<string | null>
+  onAdd: (quantity: number, note: string, optionIds: string[]) => Promise<string | null>
   cards: ThemeCards
   template: CardTemplate
 }
 
 function ItemCard({ item, onAdd, cards, template }: ItemCardProps) {
   const [adding, setAdding] = useState(false)
-  const [quantity, setQuantity] = useState(1)
-  const [note, setNote] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const image = item.image?.card_url ?? null
   // Without an image the overlay template is a plain card: there is nothing to write over.
   const overlay = template === 'overlay' && image !== null
@@ -108,22 +72,6 @@ function ItemCard({ item, onAdd, cards, template }: ItemCardProps) {
   const padding = cardPaddingClass(cards)
   // The add form takes the footer's place, so the price moves next to the name while it is open.
   const priceBesideName = cards.price_position === 'top' || adding
-
-  function close() {
-    setAdding(false)
-    setQuantity(1)
-    setNote('')
-    setError(null)
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setBusy(true)
-    const failure = await onAdd(quantity, note)
-    setBusy(false)
-    if (failure === null) close()
-    else setError(failure)
-  }
 
   const price = (
     <p className={`type-price shrink-0 tabular-nums ${overlay ? 'text-white' : 'text-price'}`}>{formatMoney(item.price_cents)}</p>
@@ -152,32 +100,8 @@ function ItemCard({ item, onAdd, cards, template }: ItemCardProps) {
         {button}
       </div>
     )
-  const form = (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-canvas p-3">
-      <div className="flex items-center justify-between gap-4">
-        <span className="text-sm font-medium text-ink-soft">How many</span>
-        <QuantityStepper value={quantity} onChange={setQuantity} disabled={busy} label={item.name} />
-      </div>
-      <Field label="Note for the kitchen (optional)">
-        <TextInput
-          maxLength={MAX_NOTE_LENGTH}
-          placeholder="No onion, extra salsa"
-          value={note}
-          onChange={(event) => setNote(event.target.value)}
-          disabled={busy}
-        />
-      </Field>
-      {error && <ErrorText>{error}</ErrorText>}
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" variant="primary" disabled={busy} className="type-button flex-1">
-          {busy ? 'Adding…' : `Add ${quantity} · ${formatMoney(item.price_cents * quantity)}`}
-        </Button>
-        <Button variant="ghost" disabled={busy} onClick={close} className="type-button">
-          Cancel
-        </Button>
-      </div>
-    </form>
-  )
+  // Closing unmounts the form, so the next open starts again from one dish and no options.
+  const form = <AddLineForm item={item} onAdd={onAdd} onDone={() => setAdding(false)} />
   const shell = `h-full overflow-hidden bg-surface ${cardShellClass(cards)}`
 
   if (overlay) {
@@ -225,7 +149,7 @@ function ItemCard({ item, onAdd, cards, template }: ItemCardProps) {
 
 interface MenuBrowserProps {
   categories: MenuCategory[]
-  onAdd: (itemId: string, quantity: number, note: string) => Promise<string | null>
+  onAdd: (itemId: string, quantity: number, note: string, optionIds: string[]) => Promise<string | null>
   /** How the menu is arranged (the default arrangement while there is no theme). */
   layout?: ThemeLayout
   /** How each product card looks (the default card while there is no theme). */
@@ -287,7 +211,7 @@ function Products({ category, layout, cards, onAdd }: ProductsProps) {
       item={item}
       cards={cards}
       template={template}
-      onAdd={(quantity, note) => onAdd(item.id, quantity, note)}
+      onAdd={(quantity, note, optionIds) => onAdd(item.id, quantity, note, optionIds)}
     />
   )
   if (layout.product_view === 'list') return <div className={`flex flex-col ${gap}`}>{category.items.map(card)}</div>

@@ -4,7 +4,11 @@ import {
   keepNewerEdits,
   matchingPreset,
   parseHexInput,
+  readThemeFile,
+  removedImagesText,
+  themeFileName,
   withBrand,
+  withDefaults,
   withColor,
   withCards,
   withLayout,
@@ -186,5 +190,61 @@ describe('after a save or publish answers', () => {
     const sent = withColor(THEME, 'primary', '#123456')
     const editedMeanwhile = withBrand(sent, { tagline: 'Since 1990', logo: { ...sent.brand.logo, image_id: 'tenants/t/logos/a' } })
     expect(keepNewerEdits(editedMeanwhile, sent, sent)).toBe(editedMeanwhile)
+  })
+})
+
+describe('reset, export and import', () => {
+  const brand = { name: 'Tacos El Primo', logo: { image_id: 'tenants/t/logo/a' } } as unknown as Theme['brand']
+  const preset = (id: string, primary: string): ThemePreset =>
+    ({
+      id,
+      name: id,
+      description: '',
+      colors: { ...LIGHT, primary },
+      typography: DEFAULT_TYPOGRAPHY,
+      layout: DEFAULT_LAYOUT,
+      cards: DEFAULT_CARDS,
+    }) as ThemePreset
+
+  it('resets everything but the brand to the default design (the first template)', () => {
+    const theme = {
+      schema_version: 4,
+      colors: { ...LIGHT, primary: '#000000' },
+      brand,
+      typography: DEFAULT_TYPOGRAPHY,
+      layout: { ...DEFAULT_LAYOUT, navigation: 'tabs' },
+      cards: { ...DEFAULT_CARDS, template: 'overlay' },
+    } as Theme
+    const reset = withDefaults(theme, [preset('classic', '#c2410c'), preset('bistro', '#111111')])
+    expect(reset.colors.primary).toBe('#c2410c')
+    expect(reset.layout).toEqual(DEFAULT_LAYOUT)
+    expect(reset.cards).toEqual(DEFAULT_CARDS)
+    expect(reset.brand).toBe(brand)
+  })
+
+  it('leaves the theme as it is when the server sent no templates', () => {
+    const theme = { colors: LIGHT, brand } as Theme
+    expect(withDefaults(theme, [])).toBe(theme)
+  })
+
+  it('reads an exported file as JSON, or says it is not a design', () => {
+    expect(readThemeFile('{"schema_version": 3}')).toEqual({ schema_version: 3 })
+    expect(() => readThemeFile('not json')).toThrow('That file is not a menu design. Choose a .json file exported from this editor.')
+    expect(() => readThemeFile('[1, 2]')).toThrow('That file is not a menu design. Choose a .json file exported from this editor.')
+  })
+
+  it('names the file with the business and the day', () => {
+    expect(themeFileName('Tacos El Primo!', new Date(2026, 9, 30))).toBe('tacos-el-primo-design-2026-10-30.json')
+    expect(themeFileName('', new Date(2026, 0, 5))).toBe('menu-design-2026-01-05.json')
+  })
+
+  it('tells which images were left out of an import', () => {
+    expect(removedImagesText([])).toBeNull()
+    expect(removedImagesText(['logo'])).toBe(
+      'The logo was left out: it belongs to another business or is no longer in your designs. Upload it again.',
+    )
+    expect(removedImagesText(['logo', 'banner', 'background'])).toBe(
+      'The logo, banner and background image were left out: they belong to another business or are no longer in your designs. Upload them again.',
+    )
   })
 })

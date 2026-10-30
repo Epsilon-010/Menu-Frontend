@@ -1,6 +1,7 @@
 import type {
   ColorField,
   FontId,
+  ImageSlot,
   FontRole,
   TextElement,
   TextStyle,
@@ -72,6 +73,54 @@ export function withCards(theme: Theme, changes: Partial<ThemeCards>): Theme {
 /** A preset replaces colors, typography, layout and cards; the brand (name, texts, images) stays the tenant's. */
 export function withPreset(theme: Theme, preset: ThemePreset): Theme {
   return { ...theme, colors: preset.colors, typography: preset.typography, layout: preset.layout, cards: preset.cards }
+}
+
+/**
+ * Colors, typography, layout and cards back to the default design; the brand stays. The server sends the default
+ * design as the first template (pinned by its tests), so this is applying that template.
+ */
+export function withDefaults(theme: Theme, presets: ThemePreset[]): Theme {
+  return presets.length > 0 ? withPreset(theme, presets[0]) : theme
+}
+
+const NOT_A_DESIGN = 'That file is not a menu design. Choose a .json file exported from this editor.'
+
+/** The JSON object inside an exported file; the server checks every value when it is imported. */
+export function readThemeFile(text: string): Record<string, unknown> {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(text)
+  } catch {
+    throw new Error(NOT_A_DESIGN)
+  }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) throw new Error(NOT_A_DESIGN)
+  return parsed as Record<string, unknown>
+}
+
+/** `<business>-design-<yyyy-mm-dd>.json`, with only letters, digits and dashes. */
+export function themeFileName(businessName: string, day: Date): string {
+  const slug = businessName
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  const date = [day.getFullYear(), day.getMonth() + 1, day.getDate()].map((part) => String(part).padStart(2, '0')).join('-')
+  return `${slug ? `${slug}-design` : 'menu-design'}-${date}.json`
+}
+
+const SLOT_NAMES: Record<ImageSlot, string> = { logo: 'logo', banner: 'banner', background: 'background image' }
+
+/** The warning for images an import left out, or null when it kept them all. */
+export function removedImagesText(slots: ImageSlot[]): string | null {
+  if (slots.length === 0) return null
+  const names = slots.map((slot) => SLOT_NAMES[slot])
+  const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
+  const one = slots.length === 1
+  const reason = one
+    ? 'was left out: it belongs to another business or is no longer in your designs. Upload it again.'
+    : 'were left out: they belong to another business or are no longer in your designs. Upload them again.'
+  return `The ${list} ${reason}`
 }
 
 /** The preset the theme still looks exactly like, or null once the admin adjusted anything. */

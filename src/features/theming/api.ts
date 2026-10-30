@@ -191,6 +191,29 @@ export interface ThemeDraftState {
   image_urls: ImageUrls
 }
 
+/** A published design kept in the history (the last 20); restoring one copies it into the draft. */
+export interface ThemeVersion {
+  id: string
+  /** Counts the business's publishes: 1, 2, 3... */
+  number: number
+  published_at: string
+  theme: Theme
+}
+
+export interface ThemeVersions {
+  /** Newest first. */
+  versions: ThemeVersion[]
+  image_urls: ImageUrls
+}
+
+/** An exported design checked for this business, ready for the draft (nothing is saved yet). */
+export interface ImportedTheme {
+  theme: Theme
+  /** Image slots emptied: those images belong to another business, or no design of this one uses them anymore. */
+  removed_images: ImageSlot[]
+  image_urls: ImageUrls
+}
+
 interface UploadSignature {
   upload_url: string
   api_key: string
@@ -265,6 +288,18 @@ export async function saveThemeDraft(theme: Theme): Promise<ThemeDraftState> {
 
 export async function publishTheme(): Promise<ThemeDraftState> {
   return drawable((await (await send('/theme/publish', { method: 'POST' })).json()) as ThemeDraftState)
+}
+
+export async function fetchThemeVersions(): Promise<ThemeVersions> {
+  const history = (await (await send('/theme/versions')).json()) as ThemeVersions
+  return { ...history, versions: history.versions.map((version) => ({ ...version, theme: withDrawableLayout(version.theme) })) }
+}
+
+/** Checks an exported design (any version, older ones are upgraded by the server); nothing is saved. */
+export async function importTheme(document: unknown): Promise<ImportedTheme> {
+  const init = { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(document) }
+  const imported = (await (await send('/theme/import', init)).json()) as ImportedTheme
+  return { ...imported, theme: withDrawableLayout(imported.theme) }
 }
 
 const FORMAT_BY_TYPE: Record<string, string> = {

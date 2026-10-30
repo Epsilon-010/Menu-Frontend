@@ -20,6 +20,7 @@ import { ColorControls } from './ColorControls.tsx'
 import { keepNewerEdits, matchingPreset, withBrand, withPreset } from './editor.ts'
 import { PresetGallery } from './PresetGallery.tsx'
 import { ThemePreview } from './ThemePreview.tsx'
+import { LayoutControls } from './LayoutControls.tsx'
 import { TypographyControls } from './TypographyControls.tsx'
 
 type LoadState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded'; saved: ThemeDraftState }
@@ -189,7 +190,7 @@ export function ThemeEditorPanel() {
         <div className="space-y-1">
           <h2 className="text-lg font-semibold tracking-tight text-ink">Templates</h2>
           <p className="text-sm text-muted">
-            Want something quick? Pick a template: it sets the colors and fonts, and keeps your name, logo and images.
+            Want something quick? Pick a template: it sets the colors, fonts and layout, and keeps your name, logo and images.
           </p>
         </div>
         <PresetGallery presets={saved.presets} selected={matchingPreset(theme, saved.presets)} onApply={applyPreset} />
@@ -214,6 +215,10 @@ export function ThemeEditorPanel() {
           <Card className="space-y-4 p-4">
             <h2 className="text-lg font-semibold tracking-tight text-ink">Typography</h2>
             <TypographyControls theme={theme} onChange={edit} />
+          </Card>
+          <Card className="space-y-4 p-4">
+            <h2 className="text-lg font-semibold tracking-tight text-ink">Layout</h2>
+            <LayoutControls theme={theme} onChange={edit} />
           </Card>
         </div>
 

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fetchPublishedTheme, publishTheme, saveThemeDraft, ThemeError, uploadThemeImage, type Theme } from './api.ts'
+import { DEFAULT_LAYOUT } from './layout.ts'
 
 function jsonResponse(status: number, body: unknown, contentType = 'application/json'): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': contentType } })
@@ -33,7 +34,8 @@ async function failureOf(promise: Promise<unknown>): Promise<ThemeError> {
   return error as ThemeError
 }
 
-const THEME = { schema_version: 2 } as Theme
+const THEME = { schema_version: 3, layout: DEFAULT_LAYOUT } as Theme
+const DRAFT_STATE = { draft: THEME, published: null, presets: [] }
 const SIGNATURE = {
   upload_url: 'https://upload.test/image/upload',
   api_key: 'key',
@@ -56,8 +58,13 @@ describe('theme api', () => {
     expect(calls[0].url).toBe('/api/v1/theme')
   })
 
+  it('gives a theme from a server without layouts the default one, so the menu still draws', async () => {
+    stubFetch(jsonResponse(200, { theme: { schema_version: 2 }, image_urls: {} }))
+    expect((await fetchPublishedTheme()).theme.layout).toEqual(DEFAULT_LAYOUT)
+  })
+
   it('saves the whole draft with PUT and publishes with POST', async () => {
-    const calls = stubFetch(jsonResponse(200, { draft: THEME }), jsonResponse(200, { draft: THEME }))
+    const calls = stubFetch(jsonResponse(200, DRAFT_STATE), jsonResponse(200, DRAFT_STATE))
     await saveThemeDraft(THEME)
     await publishTheme()
     expect(calls.map((call) => [call.url, call.init?.method])).toEqual([

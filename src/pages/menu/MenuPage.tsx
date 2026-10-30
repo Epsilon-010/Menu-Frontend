@@ -11,6 +11,7 @@ import { MenuBrowser } from '../../features/ordering/MenuBrowser.tsx'
 import { OrderCard } from '../../features/ordering/OrderCard.tsx'
 import { SendConfirmation } from '../../features/ordering/SendConfirmation.tsx'
 import { useTableOrdering, type Loadable, type TableOrdering } from '../../features/ordering/useTableOrdering.ts'
+import { cartPlacement, DEFAULT_LAYOUT, menuWidthClass } from '../../features/theming/layout.ts'
 import { MenuHero } from '../../features/theming/MenuHero.tsx'
 import { ThemeScope } from '../../features/theming/ThemeScope.tsx'
 import { usePublishedTheme } from '../../features/theming/usePublishedTheme.ts'
@@ -119,6 +120,8 @@ export function MenuPage() {
   const theme = published.status === 'loaded' ? published.data : null
   const logoId = theme?.theme.brand.logo.image_id
   const logoUrl = theme && logoId ? theme.image_urls[logoId] : undefined
+  const layout = theme?.theme.layout ?? DEFAULT_LAYOUT
+  const placement = cartPlacement(layout.cart)
 
   if (published.status === 'loading') {
     // A moment at most (the theme is cached): avoids showing the neutral look before the business's.
@@ -137,13 +140,17 @@ export function MenuPage() {
       onSignOut={guest ? () => void handleLeave() : undefined}
       signingOut={leaving}
       signOutLabel="Leave"
+      fixedBar={layout.sticky_header}
+      width={menuWidthClass(layout)}
     >
-      <div className="grid gap-8 pb-24 lg:grid-cols-3 lg:pb-0">
-        <div className="min-w-0 space-y-12 lg:col-span-2">
+      <div className={`grid gap-8 pb-24 ${placement.grid}`}>
+        <div className={`min-w-0 space-y-12 ${placement.main}`}>
           {theme && <MenuHero theme={theme.theme} imageUrls={theme.image_urls} businessName={tenant.name} />}
           {menu.status === 'loading' && <MenuSkeleton />}
           {menu.status === 'error' && <LoadError message={menu.message} onRetry={ordering.retryMenu} />}
-          {menu.status === 'loaded' && <MenuBrowser categories={menu.data} onAdd={ordering.addLine} />}
+          {menu.status === 'loaded' && (
+            <MenuBrowser categories={menu.data} onAdd={ordering.addLine} layout={layout} belowFixedBar={layout.sticky_header} />
+          )}
 
           <section aria-labelledby="orders-title" className="space-y-4">
             <h2 id="orders-title" className="text-xl font-semibold tracking-tight text-ink">
@@ -156,22 +163,29 @@ export function MenuPage() {
           </section>
         </div>
 
-        <aside aria-label="Table order" className="hidden lg:block">
-          <Card className="sticky top-24 max-h-[calc(100vh-8rem)] space-y-4 overflow-y-auto p-4">
+        <aside aria-label="Table order" className={placement.aside}>
+          <Card
+            className={`sticky max-h-[calc(100vh-8rem)] space-y-4 overflow-y-auto p-4 ${layout.sticky_header ? 'top-24' : 'top-4'}`}
+          >
             <h2 className="text-lg font-semibold tracking-tight text-ink">Table order</h2>
             <CartArea cart={cart} ordering={ordering} onSend={openConfirmation} />
           </Card>
         </aside>
       </div>
 
-      {/* Phones and tablets: a bottom bar with the running total that expands into the full order. */}
-      <div className="fixed inset-x-0 bottom-0 z-20 p-4 lg:hidden" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+      {/* Without the side panel: a bottom bar (or a corner button) with the running total that opens the full order. */}
+      <div
+        className={`fixed bottom-0 z-20 p-4 ${layout.cart === 'floating' ? 'right-0' : 'inset-x-0'} ${placement.compact}`}
+        style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+      >
         <button
           type="button"
           aria-expanded={sheetOpen}
           aria-controls="cart-sheet"
           onClick={() => setSheetOpen(true)}
-          className={`mx-auto flex w-full max-w-lg items-center justify-between gap-4 rounded-2xl bg-cart px-4 py-3 text-cart-ink shadow-lg hover:bg-cart/90 active:scale-[0.98] ${MOTION}`}
+          className={`flex items-center justify-between gap-4 bg-cart px-4 py-3 text-cart-ink shadow-lg hover:bg-cart/90 active:scale-[0.98] ${MOTION} ${
+            layout.cart === 'floating' ? 'rounded-full' : 'mx-auto w-full max-w-lg rounded-2xl'
+          }`}
         >
           <span className="flex items-center gap-2 text-base font-semibold">
             <ShoppingBagIcon size={20} aria-hidden />
@@ -188,7 +202,7 @@ export function MenuPage() {
         aria-modal="true"
         aria-label="Table order"
         inert={!sheetOpen}
-        className={`fixed inset-0 z-30 overflow-y-auto bg-canvas/95 px-4 pt-24 pb-8 backdrop-blur-xl transition-opacity duration-500 ease-smooth lg:hidden ${
+        className={`fixed inset-0 z-30 overflow-y-auto bg-canvas/95 px-4 pt-24 pb-8 backdrop-blur-xl transition-opacity duration-500 ease-smooth ${placement.compact} ${
           sheetOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
       >
@@ -213,7 +227,7 @@ export function MenuPage() {
       )}
 
       {notice && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center px-4 lg:bottom-8">
+        <div className={`pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center px-4 ${placement.notice}`}>
           <p
             role="status"
             className="flex items-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-semibold text-white shadow-lg"

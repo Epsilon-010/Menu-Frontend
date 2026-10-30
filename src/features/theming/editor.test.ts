@@ -6,12 +6,14 @@ import {
   parseHexInput,
   withBrand,
   withColor,
+  withLayout,
   withMode,
   withPreset,
   withRoleFont,
   withScale,
   withTextStyle,
 } from './editor.ts'
+import { DEFAULT_LAYOUT } from './layout.ts'
 import { DEFAULT_TYPOGRAPHY } from './typography.ts'
 
 const LIGHT: ThemeColors = {
@@ -37,7 +39,7 @@ const LIGHT: ThemeColors = {
 const DARK: ThemeColors = { ...LIGHT, mode: 'dark', background: '#09090b', text: '#fafafa' }
 
 const THEME: Theme = {
-  schema_version: 2,
+  schema_version: 3,
   colors: LIGHT,
   brand: {
     name: '',
@@ -48,6 +50,7 @@ const THEME: Theme = {
     background: { kind: 'none', image_id: null, pattern: 'dots', opacity: 10, blur: 0 },
   },
   typography: DEFAULT_TYPOGRAPHY,
+  layout: DEFAULT_LAYOUT,
 }
 
 describe('parseHexInput', () => {
@@ -116,13 +119,21 @@ describe('presets', () => {
     description: 'Black and yellow.',
     colors: { ...DARK, primary: '#facc15' },
     typography: { ...DEFAULT_TYPOGRAPHY, fonts: { heading: 'oswald', body: 'inter', price: 'oswald', button: 'oswald' } },
+    layout: { ...DEFAULT_LAYOUT, navigation: 'tabs', product_view: 'list', cart: 'floating' },
   }
-  const CLASSIC: ThemePreset = { id: 'classic', name: 'Classic', description: 'Default.', colors: LIGHT, typography: DEFAULT_TYPOGRAPHY }
+  const CLASSIC: ThemePreset = {
+    id: 'classic',
+    name: 'Classic',
+    description: 'Default.',
+    colors: LIGHT,
+    typography: DEFAULT_TYPOGRAPHY,
+    layout: DEFAULT_LAYOUT,
+  }
 
-  it('applying a preset replaces colors and typography and keeps the brand', () => {
+  it('applying a preset replaces colors, typography and layout and keeps the brand', () => {
     const mine = withBrand(THEME, { name: 'Tacos El Primo', logo: { ...THEME.brand.logo, image_id: 'tenants/t/logos/a' } })
     const applied = withPreset(mine, STREET)
-    expect(applied).toEqual({ ...mine, colors: STREET.colors, typography: STREET.typography })
+    expect(applied).toEqual({ ...mine, colors: STREET.colors, typography: STREET.typography, layout: STREET.layout })
     expect(applied.brand).toBe(mine.brand)
   })
 
@@ -131,6 +142,17 @@ describe('presets', () => {
     expect(matchingPreset(withPreset(THEME, STREET), [CLASSIC, STREET])).toBe('street')
     expect(matchingPreset(withColor(THEME, 'price', '#000000'), [CLASSIC, STREET])).toBeNull()
     expect(matchingPreset(withScale(THEME, 120), [CLASSIC, STREET])).toBeNull()
+    expect(matchingPreset(withLayout(THEME, { columns: 3 }), [CLASSIC, STREET])).toBeNull()
+  })
+})
+
+describe('layout edits', () => {
+  it('changes only the given layout options', () => {
+    const changed = withLayout(THEME, { navigation: 'sidebar', cart: 'panel' })
+    expect(changed.layout).toEqual({ ...DEFAULT_LAYOUT, navigation: 'sidebar', cart: 'panel' })
+    expect(changed.colors).toBe(THEME.colors)
+    expect(changed.typography).toBe(THEME.typography)
+    expect(changed.brand).toBe(THEME.brand)
   })
 })
 

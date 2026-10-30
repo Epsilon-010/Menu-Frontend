@@ -1,10 +1,12 @@
 import { BowlFoodIcon, MinusIcon, PlusIcon } from '@phosphor-icons/react'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Button, IconButton } from '../../shared/ui/Button.tsx'
 import { MOTION } from '../../shared/ui/classes.ts'
 import { Field, TextInput } from '../../shared/ui/Field.tsx'
 import { EmptyState, ErrorText } from '../../shared/ui/Feedback.tsx'
 import { formatMoney } from '../catalog/price.ts'
+import type { CategoryHeader, ThemeLayout } from '../theming/api.ts'
+import { currentCategoryId, DEFAULT_LAYOUT, densitySpacing, gridColumnsClass, showsOneCategory } from '../theming/layout.ts'
 import { MAX_NOTE_LENGTH, MAX_QUANTITY, MIN_QUANTITY, type MenuCategory, type MenuItem } from './api.ts'
 
 interface QuantityStepperProps {
@@ -42,9 +44,11 @@ export function QuantityStepper({ value, onChange, disabled = false, label }: Qu
 interface ItemCardProps {
   item: MenuItem
   onAdd: (quantity: number, note: string) => Promise<string | null>
+  /** List rows put the image beside the text instead of above it. */
+  horizontal?: boolean
 }
 
-function ItemCard({ item, onAdd }: ItemCardProps) {
+function ItemCard({ item, onAdd, horizontal = false }: ItemCardProps) {
   const [adding, setAdding] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const [note, setNote] = useState('')
@@ -69,11 +73,18 @@ function ItemCard({ item, onAdd }: ItemCardProps) {
   }
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-line bg-surface">
+    <article
+      className={`flex h-full overflow-hidden rounded-2xl border border-line bg-surface ${horizontal ? 'flex-row' : 'flex-col'}`}
+    >
       {image && (
-        <img src={image} alt={item.name} loading="lazy" className="aspect-[4/3] w-full bg-subtle object-cover" />
+        <img
+          src={image}
+          alt={item.name}
+          loading="lazy"
+          className={horizontal ? 'w-28 shrink-0 bg-subtle object-cover @2xl:w-40' : 'aspect-[4/3] w-full bg-subtle object-cover'}
+        />
       )}
-      <div className="flex flex-1 flex-col gap-4 p-4">
+      <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
         <div className="flex-1 space-y-1">
           <div className="flex items-start justify-between gap-4">
             <h3 className="type-product-name flex-1 text-pretty text-ink">{item.name}</h3>
@@ -125,15 +136,194 @@ function ItemCard({ item, onAdd }: ItemCardProps) {
 interface MenuBrowserProps {
   categories: MenuCategory[]
   onAdd: (itemId: string, quantity: number, note: string) => Promise<string | null>
+  /** How the menu is arranged (the default arrangement while there is no theme). */
+  layout?: ThemeLayout
+  /** On the real menu the page's fixed bar covers the top; in the editor preview nothing does. */
+  belowFixedBar?: boolean
 }
 
 function sectionId(categoryId: string): string {
   return `category-${categoryId}`
 }
 
-/** The menu: category chips that jump to each section, and the item cards with their add form. */
-export function MenuBrowser({ categories, onAdd }: MenuBrowserProps) {
+/** The section in view while scrolling one long page (the one crossing the upper third of the screen). */
+function useActiveSection(ids: string[], enabled: boolean): string | null {
+  const [active, setActive] = useState<string | null>(null)
+  const key = ids.join(' ')
+  useEffect(() => {
+    if (!enabled) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.find((entry) => entry.isIntersecting)
+        if (visible) setActive(visible.target.id)
+      },
+      { rootMargin: '-30% 0px -60% 0px' },
+    )
+    for (const id of key.split(' ')) {
+      const element = document.getElementById(sectionId(id))
+      if (element) observer.observe(element)
+    }
+    return () => observer.disconnect()
+  }, [key, enabled])
+  return active
+}
+
+function CategoryHeading({ name, style }: { name: string; style: CategoryHeader }) {
+  if (style === 'band') return <h2 className="type-category rounded-xl bg-brand px-4 py-2 text-brand-ink">{name}</h2>
+  if (style === 'underline') return <h2 className="type-category border-b-2 border-accent pb-2 text-secondary">{name}</h2>
+  return (
+    <h2 className="type-category text-secondary">
+      <span aria-hidden className="mr-2 inline-block h-2 w-2 rounded-full bg-accent align-middle" />
+      {name}
+    </h2>
+  )
+}
+
+interface ProductsProps {
+  category: MenuCategory
+  layout: ThemeLayout
+  onAdd: MenuBrowserProps['onAdd']
+}
+
+function Products({ category, layout, onAdd }: ProductsProps) {
+  const { items: gap } = densitySpacing(layout.density)
+  const horizontal = layout.product_view === 'list'
+  const card = (item: MenuItem) => (
+    <ItemCard key={item.id} item={item} horizontal={horizontal} onAdd={(quantity, note) => onAdd(item.id, quantity, note)} />
+  )
+  if (layout.product_view === 'list') return <div className={`flex flex-col ${gap}`}>{category.items.map(card)}</div>
+  if (layout.product_view === 'carousel') {
+    return (
+      <div
+        role="region"
+        aria-label={`${category.name}, swipe for more`}
+        tabIndex={0}
+        className={`-mx-4 flex snap-x snap-mandatory scroll-px-4 overflow-x-auto px-4 pb-2 ${gap}`}
+      >
+        {category.items.map((item) => (
+          <div key={item.id} className="w-[78%] max-w-80 shrink-0 snap-start @2xl:w-72">
+            {card(item)}
+          </div>
+        ))}
+      </div>
+    )
+  }
+  return <div className={`grid ${gap} ${gridColumnsClass(layout.columns)}`}>{category.items.map(card)}</div>
+}
+
+interface CategoryNavProps {
+  categories: MenuCategory[]
+  current: string | null
+  onPick?: (categoryId: string) => void
+  stickyTop: string
+}
+
+/** Rounded chips that jump to each section of the page. */
+function ChipsNav({ categories, stickyTop }: CategoryNavProps) {
+  return (
+    <nav aria-label="Menu categories" className={`sticky ${stickyTop} z-20 -mx-4 overflow-x-auto px-4 py-2 sm:mx-0 sm:px-0`}>
+      <ul className="flex w-max gap-2">
+        {categories.map((category) => (
+          <li key={category.id}>
+            <a
+              href={`#${sectionId(category.id)}`}
+              className={`inline-flex rounded-lg border border-line bg-surface/90 px-3 py-2 text-sm font-semibold text-ink-soft backdrop-blur-md hover:bg-brand hover:text-brand-ink active:scale-[0.98] ${MOTION}`}
+            >
+              {category.name}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+
+const BAR = 'sticky z-20 -mx-4 overflow-x-auto border-b border-line bg-canvas/90 px-4 backdrop-blur-md'
+const UNDERLINED = 'inline-flex border-b-2 px-4 py-3 text-sm font-semibold'
+
+function underlined(active: boolean): string {
+  return `${UNDERLINED} ${MOTION} ${active ? 'border-brand text-ink' : 'border-transparent text-muted hover:text-ink'}`
+}
+
+/** A text bar over the long page that underlines the section in view. */
+function SectionsNav({ categories, current, stickyTop }: CategoryNavProps) {
+  return (
+    <nav aria-label="Menu categories" className={`${BAR} ${stickyTop}`}>
+      <ul className="flex w-max gap-1">
+        {categories.map((category) => {
+          const active = sectionId(category.id) === current
+          return (
+            <li key={category.id}>
+              <a href={`#${sectionId(category.id)}`} aria-current={active ? 'true' : undefined} className={underlined(active)}>
+                {category.name}
+              </a>
+            </li>
+          )
+        })}
+      </ul>
+    </nav>
+  )
+}
+
+/** Tabs over the products: one category at a time. */
+function TabsNav({ categories, current, onPick, stickyTop }: CategoryNavProps) {
+  return (
+    <nav aria-label="Menu categories" className={`${BAR} ${stickyTop}`}>
+      <ul className="flex w-max gap-1">
+        {categories.map((category) => (
+          <li key={category.id}>
+            <button
+              type="button"
+              aria-current={category.id === current ? 'true' : undefined}
+              onClick={() => onPick?.(category.id)}
+              className={underlined(category.id === current)}
+            >
+              {category.name}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+
+/** A column of categories beside the products when the menu is wide enough; a scrolling row otherwise. */
+function SidebarNav({ categories, current, onPick, stickyTop }: CategoryNavProps) {
+  return (
+    <nav
+      aria-label="Menu categories"
+      className={`sticky ${stickyTop} z-20 -mx-4 overflow-x-auto bg-canvas/90 px-4 py-2 backdrop-blur-md @xl:mx-0 @xl:overflow-visible @xl:bg-transparent @xl:px-0 @xl:backdrop-blur-none`}
+    >
+      <ul className="flex w-max gap-2 @xl:w-auto @xl:flex-col @xl:gap-1">
+        {categories.map((category) => {
+          const active = category.id === current
+          return (
+            <li key={category.id}>
+              <button
+                type="button"
+                aria-current={active ? 'true' : undefined}
+                onClick={() => onPick?.(category.id)}
+                className={`w-full rounded-lg px-3 py-2 text-left text-sm font-semibold active:scale-[0.98] ${MOTION} ${
+                  active ? 'bg-brand text-brand-ink' : 'text-ink-soft hover:bg-surface'
+                }`}
+              >
+                {category.name}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </nav>
+  )
+}
+
+/** The menu: a category navigation (as the theme's layout says) and the item cards with their add form. */
+export function MenuBrowser({ categories, onAdd, layout = DEFAULT_LAYOUT, belowFixedBar = true }: MenuBrowserProps) {
   const withItems = categories.filter((category) => category.items.length > 0)
+  const ids = withItems.map((category) => category.id)
+  const [chosen, setChosen] = useState<string | null>(null)
+  const activeSection = useActiveSection(ids, layout.navigation === 'sections')
+
   if (withItems.length === 0) {
     return (
       <EmptyState icon={<BowlFoodIcon size={24} aria-hidden />} title="The menu is being prepared">
@@ -142,36 +332,44 @@ export function MenuBrowser({ categories, onAdd }: MenuBrowserProps) {
     )
   }
 
-  return (
-    <div className="space-y-8">
-      <nav aria-label="Menu categories" className="sticky top-20 z-20 -mx-4 overflow-x-auto px-4 py-2 sm:mx-0 sm:px-0">
-        <ul className="flex w-max gap-2">
-          {withItems.map((category) => (
-            <li key={category.id}>
-              <a
-                href={`#${sectionId(category.id)}`}
-                className={`inline-flex rounded-lg border border-line bg-surface/90 px-3 py-2 text-sm font-semibold text-ink-soft backdrop-blur-md hover:bg-brand hover:text-brand-ink active:scale-[0.98] ${MOTION}`}
-              >
-                {category.name}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+  const spacing = densitySpacing(layout.density)
+  const stickyTop = belowFixedBar ? 'top-20' : 'top-0'
+  const scrollMargin = belowFixedBar ? 'scroll-mt-32' : 'scroll-mt-16'
+  const section = (category: MenuCategory): ReactNode => (
+    <section key={category.id} id={sectionId(category.id)} className={`${scrollMargin} space-y-4`}>
+      <CategoryHeading name={category.name} style={layout.category_header} />
+      <Products category={category} layout={layout} onAdd={onAdd} />
+    </section>
+  )
 
-      {withItems.map((category) => (
-        <section key={category.id} id={sectionId(category.id)} className="scroll-mt-32 space-y-4">
-          <h2 className="type-category text-secondary">
-            <span aria-hidden className="mr-2 inline-block h-2 w-2 rounded-full bg-accent align-middle" />
-            {category.name}
-          </h2>
-          <div className="grid gap-4 @2xl:grid-cols-2">
-            {category.items.map((item) => (
-              <ItemCard key={item.id} item={item} onAdd={(quantity, note) => onAdd(item.id, quantity, note)} />
-            ))}
+  if (showsOneCategory(layout.navigation)) {
+    const current = currentCategoryId(ids, chosen)
+    const shown = withItems.find((category) => category.id === current) ?? withItems[0]
+    const navProps = { categories: withItems, current, onPick: setChosen }
+    if (layout.navigation === 'sidebar') {
+      return (
+        <div className="@container">
+          <div className="space-y-6 @xl:grid @xl:grid-cols-[11rem_minmax(0,1fr)] @xl:items-start @xl:gap-6 @xl:space-y-0">
+            <SidebarNav {...navProps} stickyTop={belowFixedBar ? 'top-20 @xl:top-24' : 'top-0'} />
+            {section(shown)}
           </div>
-        </section>
-      ))}
+        </div>
+      )
+    }
+    return (
+      <div className={`@container ${spacing.sections}`}>
+        <TabsNav {...navProps} stickyTop={stickyTop} />
+        {section(shown)}
+      </div>
+    )
+  }
+
+  const navProps = { categories: withItems, current: activeSection, stickyTop }
+  return (
+    // A size container: cards and columns follow the menu's own width, not the page's.
+    <div className={`@container ${spacing.sections}`}>
+      {layout.navigation === 'sections' ? <SectionsNav {...navProps} /> : <ChipsNav {...navProps} />}
+      {withItems.map(section)}
     </div>
   )
 }

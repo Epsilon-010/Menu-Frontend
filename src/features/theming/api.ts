@@ -1,4 +1,5 @@
 import { apiFetch } from '../../shared/api/http.ts'
+import { normalizeLayout, withDrawableLayout } from './layout.ts'
 
 export type ThemeMode = 'light' | 'dark'
 export type LogoSize = 'sm' | 'md' | 'lg'
@@ -89,11 +90,32 @@ export interface Typography {
   elements: Record<TextElement, TextStyle>
 }
 
+export type Navigation = 'chips' | 'tabs' | 'sidebar' | 'sections'
+export type ProductView = 'grid' | 'list' | 'carousel'
+export type Density = 'compact' | 'comfortable' | 'spacious'
+export type CategoryHeader = 'plain' | 'underline' | 'band'
+export type CartStyle = 'bar' | 'panel' | 'floating'
+
+export interface ThemeLayout {
+  navigation: Navigation
+  product_view: ProductView
+  /** Grid columns on wide screens (1-4); narrow screens show fewer. */
+  columns: number
+  density: Density
+  sticky_header: boolean
+  category_header: CategoryHeader
+  show_banner: boolean
+  show_tagline: boolean
+  show_welcome: boolean
+  cart: CartStyle
+}
+
 export interface Theme {
-  schema_version: 2
+  schema_version: 3
   colors: ThemeColors
   brand: ThemeBrand
   typography: Typography
+  layout: ThemeLayout
 }
 
 /** Delivery URL of each image the theme uses, by public id (missing while the storage is not configured). */
@@ -117,6 +139,7 @@ export interface ThemePreset {
   description: string
   colors: ThemeColors
   typography: Typography
+  layout: ThemeLayout
 }
 
 export interface ThemeDraftState {
@@ -178,21 +201,32 @@ async function send(path: string, init: RequestInit = {}): Promise<Response> {
 
 /** What the tables see: the published theme, or the defaults until the admin publishes one. */
 export async function fetchPublishedTheme(): Promise<PublishedTheme> {
-  return (await (await send('/theme')).json()) as PublishedTheme
+  const published = (await (await send('/theme')).json()) as PublishedTheme
+  return { ...published, theme: withDrawableLayout(published.theme) }
+}
+
+/** Every theme in a draft state with a layout the menu and the preview can always draw. */
+function drawable(state: ThemeDraftState): ThemeDraftState {
+  return {
+    ...state,
+    draft: withDrawableLayout(state.draft),
+    published: state.published && withDrawableLayout(state.published),
+    presets: state.presets.map((preset) => ({ ...preset, layout: normalizeLayout(preset.layout) })),
+  }
 }
 
 export async function fetchThemeDraft(): Promise<ThemeDraftState> {
-  return (await (await send('/theme/draft')).json()) as ThemeDraftState
+  return drawable((await (await send('/theme/draft')).json()) as ThemeDraftState)
 }
 
 /** Saves the whole draft; the tables keep the published theme until `publishTheme`. */
 export async function saveThemeDraft(theme: Theme): Promise<ThemeDraftState> {
   const init = { method: 'PUT', headers: JSON_HEADERS, body: JSON.stringify(theme) }
-  return (await (await send('/theme/draft', init)).json()) as ThemeDraftState
+  return drawable((await (await send('/theme/draft', init)).json()) as ThemeDraftState)
 }
 
 export async function publishTheme(): Promise<ThemeDraftState> {
-  return (await (await send('/theme/publish', { method: 'POST' })).json()) as ThemeDraftState
+  return drawable((await (await send('/theme/publish', { method: 'POST' })).json()) as ThemeDraftState)
 }
 
 const FORMAT_BY_TYPE: Record<string, string> = {

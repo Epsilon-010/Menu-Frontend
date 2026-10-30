@@ -7,6 +7,7 @@ import {
   deleteCategory,
   deleteItem,
   listCatalog,
+  updateItem,
   uploadImageFile,
 } from './api.ts'
 
@@ -150,6 +151,23 @@ describe('idempotent writes', () => {
     await createItem({ id: 'i1', category_id: 'c1', name: 'Pastor', description: '', price_cents: 2500, badges: ['new', 'spicy'] })
     expect(JSON.parse(String(calls[0].init?.body)).badges).toEqual(['new', 'spicy'])
     expect((await listCatalog())[0].items[0].badges).toEqual(['new', 'spicy'])
+  })
+
+  it('sends the modifier groups of an item and reads a missing list as none', async () => {
+    const withGroups = { id: 'i1', category_id: 'c1', name: 'Pastor', description: '', price_cents: 2500, badges: [], modifier_group_ids: ['g2', 'g1'] }
+    const legacy = { id: 'i2', category_id: 'c1', name: 'Agua', description: '', price_cents: 1500, badges: [] }
+    const calls = stubFetch(
+      jsonResponse(201, withGroups),
+      jsonResponse(200, withGroups),
+      jsonResponse(200, [{ id: 'c1', name: 'Tacos', position: 0, is_visible: true, items: [withGroups, legacy] }]),
+    )
+    await createItem({ id: 'i1', category_id: 'c1', name: 'Pastor', description: '', price_cents: 2500, modifier_group_ids: ['g2', 'g1'] })
+    expect(JSON.parse(String(calls[0].init?.body)).modifier_group_ids).toEqual(['g2', 'g1'])
+    await updateItem('i1', { modifier_group_ids: [] })
+    expect(JSON.parse(String(calls[1].init?.body))).toEqual({ modifier_group_ids: [] })
+
+    const [items] = (await listCatalog()).map((category) => category.items)
+    expect(items.map((item) => item.modifier_group_ids)).toEqual([['g2', 'g1'], []])
   })
 
   it('treats deleting something already gone as done', async () => {

@@ -14,6 +14,7 @@ import { Button, IconButton } from '../../shared/ui/Button.tsx'
 import { MOTION } from '../../shared/ui/classes.ts'
 import { Field, Select } from '../../shared/ui/Field.tsx'
 import { Badge, ErrorText } from '../../shared/ui/Feedback.tsx'
+import type { ModifierGroup } from '../modifiers/api.ts'
 import type { CatalogItem, Category, ItemChanges } from './api.ts'
 import { ItemForm } from './ItemForm.tsx'
 import { formatMoney } from './price.ts'
@@ -33,12 +34,14 @@ export interface ItemActions {
 interface ItemRowProps {
   item: CatalogItem
   categories: Category[]
+  /** The modifier group library, or null when it could not load. */
+  modifierGroups: ModifierGroup[] | null
   isFirst: boolean
   isLast: boolean
   actions: ItemActions
 }
 
-export function ItemRow({ item, categories, isFirst, isLast, actions }: ItemRowProps) {
+export function ItemRow({ item, categories, modifierGroups, isFirst, isLast, actions }: ItemRowProps) {
   const [mode, setMode] = useState<Mode>('view')
   const { busy, error, run: runAction } = useRowAction()
 
@@ -128,6 +131,7 @@ export function ItemRow({ item, categories, isFirst, isLast, actions }: ItemRowP
           </Field>
           <ItemForm
             initial={item}
+            modifierGroups={modifierGroups}
             submitLabel="Save changes"
             onSubmit={(values) => run(() => actions.update(values), true)}
             onCancel={() => setMode('view')}

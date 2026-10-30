@@ -182,7 +182,8 @@ function ItemCard({ item, onAdd, cards, template }: ItemCardProps) {
     return (
       <article className={`flex flex-col ${shell}`}>
         {/* The image fills the card; the text sits at its foot over a dark scrim, and a long text grows the card. */}
-        <div className="relative grid flex-1">
+        {/* One column as wide as the card (never as wide as the text), so long texts wrap inside it. */}
+        <div className="relative grid flex-1 grid-cols-[minmax(0,1fr)]">
           <img src={image} alt={item.name} loading="lazy" className={`absolute inset-0 h-full w-full bg-subtle ${cardFitClass(cards)}`} />
           <div
             aria-hidden
@@ -190,7 +191,7 @@ function ItemCard({ item, onAdd, cards, template }: ItemCardProps) {
             style={{ opacity: cards.overlay_opacity / 100 }}
           />
           <div aria-hidden className={`[grid-area:1/1] w-full ${cardAspectClass(cards)}`} />
-          <div className={`relative flex flex-col gap-4 self-end [grid-area:1/1] ${padding}`}>
+          <div className={`relative flex min-w-0 flex-col gap-4 self-end [grid-area:1/1] ${padding}`}>
             {text}
             {!adding && footer}
           </div>

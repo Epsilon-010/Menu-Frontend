@@ -48,7 +48,7 @@ const TEMPLATE_LABELS: Record<CardTemplate, string> = {
   horizontal: 'Horizontal: image beside the text',
   overlay: 'Full image with the text over it',
 }
-const ASPECT_LABELS: Record<ImageAspect, string> = { square: 'Square (1:1)', landscape: 'Landscape (4:3)', wide: 'Wide (16:9)' }
+const ASPECT_LABELS: Record<ImageAspect, string> = { square: 'Square', landscape: '4:3', wide: '16:9' }
 const FIT_LABELS: Record<ImageFit, string> = { cover: 'Fill and crop', contain: 'Show it whole' }
 const POSITION_LABELS: Record<ImagePosition, string> = { left: 'Left', right: 'Right' }
 const RADIUS_LABELS: Record<CardRadius, string> = {

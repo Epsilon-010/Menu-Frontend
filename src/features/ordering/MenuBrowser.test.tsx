@@ -133,6 +133,8 @@ describe('the product cards by the theme', () => {
     const suadero = card(html, 'Suadero')
     expect(suadero).toContain('style="opacity:0.7"')
     expect(suadero).toContain('text-white')
+    // The text wraps inside the card's width instead of widening it.
+    expect(suadero).toContain('grid-cols-[minmax(0,1fr)]')
     const pastor = card(html, 'Pastor')
     expect(pastor).not.toContain('opacity:')
     expect(pastor).not.toContain('text-white')

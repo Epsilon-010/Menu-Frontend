@@ -4,7 +4,7 @@ import { Button } from '../../shared/ui/Button.tsx'
 import { Field, TextArea, TextInput } from '../../shared/ui/Field.tsx'
 import { ErrorText } from '../../shared/ui/Feedback.tsx'
 import type { ModifierGroup } from '../modifiers/api.ts'
-import { pickInOrder, selectionRule } from '../modifiers/logic.ts'
+import { groupsToSave, pickInOrder, selectionRule } from '../modifiers/logic.ts'
 import { BADGE_LABELS, BADGES, type Badge } from './badges.ts'
 import { CURRENCY_SYMBOL, formatPrice, MAX_PRICE_CENTS, parsePrice } from './price.ts'
 
@@ -43,9 +43,7 @@ export function ItemForm({ initial, modifierGroups, submitLabel, onSubmit, onCan
       setError(`Enter a price from 0 to ${formatPrice(MAX_PRICE_CENTS)}, like 25 or 25.50.`)
       return
     }
-    // Without the library the item keeps its groups; with it, groups deleted meanwhile are dropped.
-    const modifierGroupIds =
-      modifierGroups === null ? groupIds : modifierGroups.filter((group) => groupIds.includes(group.id)).map((group) => group.id)
+    const modifierGroupIds = groupsToSave(modifierGroups, groupIds)
     setBusy(true)
     const failure = await onSubmit({ name, description, price_cents: priceCents, badges, modifier_group_ids: modifierGroupIds })
     setBusy(false)

@@ -117,3 +117,13 @@ export function moveRow<T>(rows: readonly T[], index: number, delta: -1 | 1): T[
 export function pickInOrder<T>(all: readonly T[], current: readonly T[], value: T, checked: boolean): T[] {
   return all.filter((each) => (each === value ? checked : current.includes(each)))
 }
+
+/**
+ * The groups an item form saves. Without the library (it failed to load) the item keeps its groups as they
+ * are, so an unrelated edit never detaches them; with it, groups deleted meanwhile are dropped and the rest
+ * follow the library order.
+ */
+export function groupsToSave(library: readonly ModifierGroup[] | null, current: readonly string[]): string[] {
+  if (library === null) return [...current]
+  return library.filter((group) => current.includes(group.id)).map((group) => group.id)
+}

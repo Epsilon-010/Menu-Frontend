@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import type { ModifierGroup } from './api.ts'
-import { blankOption, formFromGroup, groupPayload, moveRow, pickInOrder, selectionRule, type GroupForm } from './logic.ts'
+import {
+  blankOption,
+  formFromGroup,
+  groupPayload,
+  groupsToSave,
+  moveRow,
+  pickInOrder,
+  selectionRule,
+  type GroupForm,
+} from './logic.ts'
 
 function form(overrides: Partial<GroupForm> = {}): GroupForm {
   return {
@@ -133,5 +142,21 @@ describe('picking in a fixed order', () => {
     expect(pickInOrder(all, ['vegan'], 'new', true)).toEqual(['new', 'vegan'])
     expect(pickInOrder(all, ['new', 'vegan'], 'new', true)).toEqual(['new', 'vegan'])
     expect(pickInOrder(all, ['new', 'vegan'], 'new', false)).toEqual(['vegan'])
+  })
+})
+
+describe('groups an item saves', () => {
+  const library = [
+    { id: 'g1', name: 'Extras', min_select: 0, max_select: 2, options: [] },
+    { id: 'g2', name: 'Size', min_select: 1, max_select: 1, options: [] },
+  ] satisfies ModifierGroup[]
+
+  it('keeps the current groups untouched when the library did not load', () => {
+    expect(groupsToSave(null, ['g2', 'gone', 'g1'])).toEqual(['g2', 'gone', 'g1'])
+  })
+
+  it('drops groups deleted meanwhile and sends the rest in library order', () => {
+    expect(groupsToSave(library, ['g2', 'gone', 'g1'])).toEqual(['g1', 'g2'])
+    expect(groupsToSave(library, [])).toEqual([])
   })
 })

@@ -1,3 +1,4 @@
+import { knownBadges, type Badge } from '../catalog/badges.ts'
 import { apiFetch } from '../../shared/api/http.ts'
 
 /** What the table sees of the menu: visible categories with their available items. */
@@ -9,6 +10,7 @@ export interface MenuItem {
   price_cents: number
   /** URLs are null while the image storage is not configured on the server. */
   image: { thumbnail_url: string | null; card_url: string | null } | null
+  badges: Badge[]
 }
 
 export interface MenuCategory {
@@ -140,7 +142,11 @@ function json(method: string, body: unknown): RequestInit {
 }
 
 export async function fetchMenu(): Promise<MenuCategory[]> {
-  return (await (await send('/menu')).json()) as MenuCategory[]
+  const menu = (await (await send('/menu')).json()) as MenuCategory[]
+  return menu.map((category) => ({
+    ...category,
+    items: category.items.map((item) => ({ ...item, badges: knownBadges(item.badges) })),
+  }))
 }
 
 export async function fetchCart(): Promise<Cart> {

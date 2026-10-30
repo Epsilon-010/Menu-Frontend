@@ -1,4 +1,5 @@
 import { apiFetch } from '../../shared/api/http.ts'
+import { normalizeCards } from './cards.ts'
 import { normalizeLayout, withDrawableLayout } from './layout.ts'
 
 export type ThemeMode = 'light' | 'dark'
@@ -110,12 +111,48 @@ export interface ThemeLayout {
   cart: CartStyle
 }
 
+export type CardTemplate = 'vertical' | 'horizontal' | 'overlay'
+export type ImageAspect = 'square' | 'landscape' | 'wide'
+export type ImageFit = 'cover' | 'contain'
+export type ImagePosition = 'left' | 'right'
+export type CardRadius = 'none' | 'sm' | 'md' | 'lg' | 'xl'
+export type CardShadow = 'none' | 'sm' | 'md' | 'lg'
+export type BorderWidth = 'none' | 'thin' | 'thick'
+export type BorderColor = 'border' | 'primary' | 'accent'
+export type CardPadding = 'compact' | 'comfortable' | 'spacious'
+export type PricePosition = 'top' | 'bottom'
+export type AddButtonStyle = 'text' | 'icon' | 'both'
+export type ButtonShape = 'square' | 'rounded' | 'pill'
+export type CardHover = 'none' | 'lift' | 'grow'
+export type CardAnimation = 'none' | 'fade' | 'rise'
+export type BadgeShape = 'pill' | 'rounded'
+
+export interface ThemeCards {
+  /** Grid and carousel cards; list rows are always horizontal. */
+  template: CardTemplate
+  image: { aspect: ImageAspect; fit: ImageFit; position: ImagePosition }
+  radius: CardRadius
+  shadow: CardShadow
+  border: { width: BorderWidth; color: BorderColor }
+  padding: CardPadding
+  /** 0 hides the description. */
+  description_lines: number
+  price_position: PricePosition
+  add_button: { style: AddButtonStyle; shape: ButtonShape }
+  hover: CardHover
+  animation: CardAnimation
+  /** % of the dark scrim under the text of the overlay template (30-90). */
+  overlay_opacity: number
+  badge_shape: BadgeShape
+}
+
 export interface Theme {
-  schema_version: 3
+  schema_version: 4
   colors: ThemeColors
   brand: ThemeBrand
   typography: Typography
   layout: ThemeLayout
+  cards: ThemeCards
 }
 
 /** Delivery URL of each image the theme uses, by public id (missing while the storage is not configured). */
@@ -132,7 +169,7 @@ export interface ContrastWarning {
   ratio: number
 }
 
-/** A complete design (colors and typography) the admin starts from; applying one keeps the brand. */
+/** A complete design (colors, typography, layout and cards) the admin starts from; applying one keeps the brand. */
 export interface ThemePreset {
   id: string
   name: string
@@ -140,6 +177,7 @@ export interface ThemePreset {
   colors: ThemeColors
   typography: Typography
   layout: ThemeLayout
+  cards: ThemeCards
 }
 
 export interface ThemeDraftState {
@@ -211,7 +249,7 @@ function drawable(state: ThemeDraftState): ThemeDraftState {
     ...state,
     draft: withDrawableLayout(state.draft),
     published: state.published && withDrawableLayout(state.published),
-    presets: state.presets.map((preset) => ({ ...preset, layout: normalizeLayout(preset.layout) })),
+    presets: state.presets.map((preset) => ({ ...preset, layout: normalizeLayout(preset.layout), cards: normalizeCards(preset.cards) })),
   }
 }
 

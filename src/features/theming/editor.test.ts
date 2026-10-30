@@ -6,6 +6,7 @@ import {
   parseHexInput,
   withBrand,
   withColor,
+  withCards,
   withLayout,
   withMode,
   withPreset,
@@ -13,6 +14,7 @@ import {
   withScale,
   withTextStyle,
 } from './editor.ts'
+import { DEFAULT_CARDS } from './cards.ts'
 import { DEFAULT_LAYOUT } from './layout.ts'
 import { DEFAULT_TYPOGRAPHY } from './typography.ts'
 
@@ -39,7 +41,7 @@ const LIGHT: ThemeColors = {
 const DARK: ThemeColors = { ...LIGHT, mode: 'dark', background: '#09090b', text: '#fafafa' }
 
 const THEME: Theme = {
-  schema_version: 3,
+  schema_version: 4,
   colors: LIGHT,
   brand: {
     name: '',
@@ -51,6 +53,7 @@ const THEME: Theme = {
   },
   typography: DEFAULT_TYPOGRAPHY,
   layout: DEFAULT_LAYOUT,
+  cards: DEFAULT_CARDS,
 }
 
 describe('parseHexInput', () => {
@@ -120,6 +123,7 @@ describe('presets', () => {
     colors: { ...DARK, primary: '#facc15' },
     typography: { ...DEFAULT_TYPOGRAPHY, fonts: { heading: 'oswald', body: 'inter', price: 'oswald', button: 'oswald' } },
     layout: { ...DEFAULT_LAYOUT, navigation: 'tabs', product_view: 'list', cart: 'floating' },
+    cards: { ...DEFAULT_CARDS, template: 'horizontal', radius: 'none' },
   }
   const CLASSIC: ThemePreset = {
     id: 'classic',
@@ -128,12 +132,19 @@ describe('presets', () => {
     colors: LIGHT,
     typography: DEFAULT_TYPOGRAPHY,
     layout: DEFAULT_LAYOUT,
+    cards: DEFAULT_CARDS,
   }
 
-  it('applying a preset replaces colors, typography and layout and keeps the brand', () => {
+  it('applying a preset replaces colors, typography, layout and cards and keeps the brand', () => {
     const mine = withBrand(THEME, { name: 'Tacos El Primo', logo: { ...THEME.brand.logo, image_id: 'tenants/t/logos/a' } })
     const applied = withPreset(mine, STREET)
-    expect(applied).toEqual({ ...mine, colors: STREET.colors, typography: STREET.typography, layout: STREET.layout })
+    expect(applied).toEqual({
+      ...mine,
+      colors: STREET.colors,
+      typography: STREET.typography,
+      layout: STREET.layout,
+      cards: STREET.cards,
+    })
     expect(applied.brand).toBe(mine.brand)
   })
 
@@ -143,6 +154,13 @@ describe('presets', () => {
     expect(matchingPreset(withColor(THEME, 'price', '#000000'), [CLASSIC, STREET])).toBeNull()
     expect(matchingPreset(withScale(THEME, 120), [CLASSIC, STREET])).toBeNull()
     expect(matchingPreset(withLayout(THEME, { columns: 3 }), [CLASSIC, STREET])).toBeNull()
+    expect(matchingPreset(withCards(THEME, { hover: 'lift' }), [CLASSIC, STREET])).toBeNull()
+  })
+
+  it('changes card options and keeps everything else', () => {
+    const changed = withCards(THEME, { template: 'overlay', add_button: { style: 'icon', shape: 'pill' } })
+    expect(changed.cards).toEqual({ ...DEFAULT_CARDS, template: 'overlay', add_button: { style: 'icon', shape: 'pill' } })
+    expect({ ...changed, cards: THEME.cards }).toEqual(THEME)
   })
 })
 

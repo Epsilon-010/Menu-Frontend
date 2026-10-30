@@ -1,4 +1,5 @@
 import { Field, Select } from '../../shared/ui/Field.tsx'
+import { Choice } from './Choice.tsx'
 import type { CartStyle, CategoryHeader, Density, Navigation, ProductView, Theme, ThemeLayout } from './api.ts'
 import { withLayout } from './editor.ts'
 import {
@@ -41,29 +42,6 @@ const FLAGS: { field: Flag; label: string }[] = [
   { field: 'show_tagline', label: 'Show the tagline' },
   { field: 'show_welcome', label: 'Show the welcome message' },
 ]
-
-interface ChoiceProps<T extends string> {
-  label: string
-  value: T
-  options: T[]
-  labels: Record<T, string>
-  onChange: (value: T) => void
-  hint?: string
-}
-
-function Choice<T extends string>({ label, value, options, labels, onChange, hint }: ChoiceProps<T>) {
-  return (
-    <Field label={label} hint={hint}>
-      <Select value={value} onChange={(event) => onChange(event.target.value as T)}>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {labels[option]}
-          </option>
-        ))}
-      </Select>
-    </Field>
-  )
-}
 
 interface LayoutControlsProps {
   theme: Theme

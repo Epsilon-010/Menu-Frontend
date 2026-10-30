@@ -2,12 +2,14 @@ import { useState, type FormEvent } from 'react'
 import { Button } from '../../shared/ui/Button.tsx'
 import { Field, TextArea, TextInput } from '../../shared/ui/Field.tsx'
 import { ErrorText } from '../../shared/ui/Feedback.tsx'
+import { BADGE_LABELS, BADGES, type Badge } from './badges.ts'
 import { CURRENCY_SYMBOL, formatPrice, MAX_PRICE_CENTS, parsePrice } from './price.ts'
 
 export interface ItemFormValues {
   name: string
   description: string
   price_cents: number
+  badges: Badge[]
 }
 
 interface ItemFormProps {
@@ -22,6 +24,7 @@ export function ItemForm({ initial, submitLabel, onSubmit, onCancel }: ItemFormP
   const [name, setName] = useState(initial?.name ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
   const [price, setPrice] = useState(initial ? formatPrice(initial.price_cents) : '')
+  const [badges, setBadges] = useState<Badge[]>(initial?.badges ?? [])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -33,7 +36,7 @@ export function ItemForm({ initial, submitLabel, onSubmit, onCancel }: ItemFormP
       return
     }
     setBusy(true)
-    const failure = await onSubmit({ name, description, price_cents: priceCents })
+    const failure = await onSubmit({ name, description, price_cents: priceCents, badges })
     setBusy(false)
     setError(failure)
   }
@@ -69,6 +72,27 @@ export function ItemForm({ initial, submitLabel, onSubmit, onCancel }: ItemFormP
           onChange={(e) => setDescription(e.target.value)}
         />
       </Field>
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-medium text-ink-soft">Badges (optional)</legend>
+        <div className="flex flex-wrap gap-x-4 gap-y-2">
+          {BADGES.map((badge) => (
+            <label key={badge} className="flex items-center gap-2 text-sm text-ink-soft">
+              <input
+                type="checkbox"
+                checked={badges.includes(badge)}
+                onChange={(event) =>
+                  setBadges((current) =>
+                    // Kept in the fixed order, once each, like the server stores them.
+                    BADGES.filter((each) => (each === badge ? event.target.checked : current.includes(each))),
+                  )
+                }
+                className="h-4 w-4 accent-zinc-950"
+              />
+              {BADGE_LABELS[badge]}
+            </label>
+          ))}
+        </div>
+      </fieldset>
       {error && <ErrorText>{error}</ErrorText>}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" variant="primary" disabled={busy}>

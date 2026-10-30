@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { Theme, ThemeLayout } from './api.ts'
+import { DEFAULT_CARDS } from './cards.ts'
 import { DEFAULT_LAYOUT } from './layout.ts'
 import { MenuHero } from './MenuHero.tsx'
 import { DEFAULT_TYPOGRAPHY } from './typography.ts'
@@ -8,7 +9,7 @@ import { DEFAULT_TYPOGRAPHY } from './typography.ts'
 const BANNER = 'tenants/t/banners/b'
 
 const THEME = {
-  schema_version: 3,
+  schema_version: 4,
   colors: { gradient: { enabled: false, from: '#000000', to: '#ffffff', angle: 135 } },
   brand: {
     name: 'Tacos El Primo',
@@ -20,6 +21,7 @@ const THEME = {
   },
   typography: DEFAULT_TYPOGRAPHY,
   layout: DEFAULT_LAYOUT,
+  cards: DEFAULT_CARDS,
 } as unknown as Theme
 
 function render(changes: Partial<ThemeLayout>): string {

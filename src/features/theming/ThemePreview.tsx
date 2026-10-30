@@ -43,7 +43,7 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
   const frame = DEVICES[device]
   const { ref, scale } = useFitScale(frame.width)
   const logoUrl = theme.brand.logo.image_id ? imageUrls[theme.brand.logo.image_id] : undefined
-  const { layout } = theme
+  const { layout, cards } = theme
   // The real menu shows the side panel from tablets (panel) or large screens (bar); the tablet frame is below large.
   const sidePanel = device === 'tablet' && layout.cart === 'panel'
   const header = (
@@ -102,7 +102,7 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
                 <div className="min-w-0 flex-1 space-y-8 overflow-y-auto p-4">
                   {!layout.sticky_header && header}
                   <MenuHero theme={theme} imageUrls={imageUrls} businessName={businessName} />
-                  {menu && <MenuBrowser categories={menu} onAdd={() => Promise.resolve(null)} layout={layout} belowFixedBar={false} />}
+                  {menu && <MenuBrowser categories={menu} onAdd={() => Promise.resolve(null)} layout={layout} cards={cards} belowFixedBar={false} />}
                   {menuFailed && <p className="text-sm text-muted">The menu could not be loaded for the preview.</p>}
                 </div>
                 {sidePanel && (

@@ -20,6 +20,7 @@ import { ColorControls } from './ColorControls.tsx'
 import { keepNewerEdits, matchingPreset, withBrand, withPreset } from './editor.ts'
 import { PresetGallery } from './PresetGallery.tsx'
 import { ThemePreview } from './ThemePreview.tsx'
+import { CardControls } from './CardControls.tsx'
 import { LayoutControls } from './LayoutControls.tsx'
 import { TypographyControls } from './TypographyControls.tsx'
 
@@ -219,6 +220,10 @@ export function ThemeEditorPanel() {
           <Card className="space-y-4 p-4">
             <h2 className="text-lg font-semibold tracking-tight text-ink">Layout</h2>
             <LayoutControls theme={theme} onChange={edit} />
+          </Card>
+          <Card className="space-y-4 p-4">
+            <h2 className="text-lg font-semibold tracking-tight text-ink">Product cards</h2>
+            <CardControls theme={theme} onChange={edit} />
           </Card>
         </div>
 

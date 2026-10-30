@@ -89,6 +89,15 @@ describe('table ordering API', () => {
     expect((error as OrderingError).message).toBe('There is nothing to pay yet.')
   })
 
+  it('gives every menu item its known badges only, and none when an older server sends no badges', async () => {
+    const item = { id: 'i1', name: 'Pastor', description: '', price_cents: 2500, image: null }
+    stubFetch(ok([{ id: 'c1', name: 'Tacos', items: [item, { ...item, id: 'i2', badges: ['spicy', 'organic', 'new'] }] }]))
+
+    const [tacos] = await fetchMenu()
+
+    expect(tacos.items.map((each) => each.badges)).toEqual([[], ['new', 'spicy']])
+  })
+
   it('reads the menu, the shared cart and the orders of the visit', async () => {
     const calls = stubFetch(ok([]), ok(CART), ok([]))
 

@@ -5,6 +5,21 @@
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
   /* Weighted deceleration: every transition in the app uses it (never ease, linear or ease-in-out). */
   --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Product cards entering the menu (Slice 13); only under motion-safe. */
+  --animate-card-fade: card-fade 500ms var(--ease-smooth) both;
+  --animate-card-rise: card-rise 500ms var(--ease-smooth) both;
+
+  @keyframes card-fade {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes card-rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
 
   /* Semantic colors of the shared UI and the table menu. These defaults are the app's neutral look; the
      menu sets them from the business's theme on its root (see features/theming/style.ts). */

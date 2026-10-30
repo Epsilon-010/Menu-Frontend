@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { Button } from '../../shared/ui/Button.tsx'
 import { ErrorText, ListSkeleton, LoadError, SuccessText } from '../../shared/ui/Feedback.tsx'
 import { Card, SectionHeader } from '../../shared/ui/Section.tsx'
 import { useAuth } from '../auth/useAuth.ts'
 import {
   fetchThemeDraft,
+  fetchThemeVersions,
+  importTheme,
   publishTheme,
   saveThemeDraft,
   ThemeError,
@@ -14,20 +16,43 @@ import {
   type Theme,
   type ThemeDraftState,
   type ThemePreset,
+  type ThemeVersion,
 } from './api.ts'
 import { BrandControls } from './BrandControls.tsx'
 import { ColorControls } from './ColorControls.tsx'
-import { keepNewerEdits, matchingPreset, withBrand, withPreset } from './editor.ts'
+import {
+  keepNewerEdits,
+  matchingPreset,
+  readThemeFile,
+  removedImagesText,
+  themeFileName,
+  withBrand,
+  withDefaults,
+  withPreset,
+} from './editor.ts'
 import { PresetGallery } from './PresetGallery.tsx'
 import { ThemePreview } from './ThemePreview.tsx'
 import { CardControls } from './CardControls.tsx'
 import { LayoutControls } from './LayoutControls.tsx'
+import { ThemeHistory } from './ThemeHistory.tsx'
 import { TypographyControls } from './TypographyControls.tsx'
 
 type LoadState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded'; saved: ThemeDraftState }
 
+type HistoryState = { versions: ThemeVersion[] | null; error: string | null }
+
 function messageOf(error: unknown): string {
   return error instanceof ThemeError ? error.message : 'Something went wrong. Please try again.'
+}
+
+/** Saves the design as a JSON file the admin can import here or in another business. */
+function download(theme: Theme, fileName: string) {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(theme, null, 2)], { type: 'application/json' }))
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName
+  link.click()
+  URL.revokeObjectURL(url)
 }
 
 function sameTheme(first: Theme, second: Theme): boolean {
@@ -61,7 +86,10 @@ export function ThemeEditorPanel() {
   const [draft, setDraft] = useState<Theme | null>(null)
   // Images uploaded in this visit, shown from the file until the server returns their delivery URLs.
   const [localUrls, setLocalUrls] = useState<ImageUrls>({})
-  const [busy, setBusy] = useState<'saving' | 'publishing' | null>(null)
+  const [busy, setBusy] = useState<'saving' | 'publishing' | 'importing' | null>(null)
+  const [history, setHistory] = useState<HistoryState>({ versions: null, error: null })
+  const [historyKey, setHistoryKey] = useState(0)
+  const importInput = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
 
@@ -80,6 +108,23 @@ export function ThemeEditorPanel() {
       active = false
     }
   }, [loadKey])
+
+  useEffect(() => {
+    let active = true
+    fetchThemeVersions()
+      .then((loaded) => {
+        if (!active) return
+        // Restoring a version shows its images in the preview even when the draft no longer uses them.
+        setLocalUrls((urls) => ({ ...loaded.image_urls, ...urls }))
+        setHistory({ versions: loaded.versions, error: null })
+      })
+      .catch((caught: unknown) => {
+        if (active) setHistory({ versions: null, error: messageOf(caught) })
+      })
+    return () => {
+      active = false
+    }
+  }, [historyKey])
 
   if (load.status === 'loading' || (load.status === 'loaded' && draft === null)) {
     return <ListSkeleton rows={3} label="Loading the menu design" />
@@ -108,6 +153,34 @@ export function ThemeEditorPanel() {
   function applyPreset(preset: ThemePreset) {
     setDraft(withPreset(theme, preset))
     setNotice(`${preset.name} applied to the draft. Adjust anything below, then save or publish.`)
+  }
+
+  function restore(version: ThemeVersion) {
+    setDraft(version.theme)
+    setNotice(`Version ${version.number} is in the draft. Publish it to show it on the tables again.`)
+  }
+
+  function reset() {
+    setDraft(withDefaults(theme, saved.presets))
+    setNotice('Colors, fonts, layout and cards are back to the defaults; your name, texts and images stay. Save or publish to keep it.')
+  }
+
+  async function handleImport(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = '' // choosing the same file again imports it again
+    if (!file) return
+    setBusy('importing')
+    try {
+      const imported = await importTheme(readThemeFile(await file.text()))
+      setLocalUrls((urls) => ({ ...urls, ...imported.image_urls }))
+      setDraft(imported.theme)
+      setError(null)
+      const warning = removedImagesText(imported.removed_images)
+      setNotice(`Design imported into the draft. Adjust it, then save or publish.${warning ? ` ${warning}` : ''}`)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : messageOf(caught))
+    }
+    setBusy(null)
   }
 
   async function upload(slot: ImageSlot, file: File): Promise<string | null> {
@@ -151,6 +224,7 @@ export function ThemeEditorPanel() {
         setLoad({ status: 'loaded', saved: result })
         setError(null)
         setNotice('Published. The tables show the new design within a minute.')
+        setHistoryKey((key) => key + 1)
       } catch (caught) {
         setError(messageOf(caught))
       }
@@ -195,6 +269,43 @@ export function ThemeEditorPanel() {
           </p>
         </div>
         <PresetGallery presets={saved.presets} selected={matchingPreset(theme, saved.presets)} onApply={applyPreset} />
+      </Card>
+
+      <Card className="space-y-4 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold tracking-tight text-ink">Versions and backups</h2>
+            <p className="text-sm text-muted">
+              Go back to a design you published, start over from the defaults, or move a design between businesses.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button disabled={busy !== null} onClick={reset}>
+              Reset to defaults
+            </Button>
+            <Button onClick={() => download(theme, themeFileName(businessName, new Date()))}>Export design</Button>
+            <Button disabled={busy !== null} onClick={() => importInput.current?.click()}>
+              {busy === 'importing' ? 'Importing…' : 'Import design'}
+            </Button>
+            <input
+              ref={importInput}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              aria-label="Design file to import"
+              onChange={(event) => void handleImport(event)}
+            />
+          </div>
+        </div>
+        <ThemeHistory
+          versions={history.versions}
+          error={history.error}
+          onRestore={restore}
+          onRetry={() => {
+            setHistory({ versions: null, error: null })
+            setHistoryKey((key) => key + 1)
+          }}
+        />
       </Card>
 
       <div className="grid gap-8 lg:grid-cols-2">

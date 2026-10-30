@@ -13,11 +13,11 @@ import {
   cardImageClass,
   cardPaddingClass,
   cardShellClass,
+  badgeShapeClass,
   buttonShapeClass,
   cardTemplate,
   DEFAULT_CARDS,
   descriptionClampClass,
-  pillShapeClass,
 } from '../theming/cards.ts'
 import { currentCategoryId, DEFAULT_LAYOUT, densitySpacing, gridColumnsClass, showsOneCategory } from '../theming/layout.ts'
 import { MAX_NOTE_LENGTH, MAX_QUANTITY, MIN_QUANTITY, type MenuCategory, type MenuItem } from './api.ts'
@@ -59,7 +59,7 @@ function Badges({ badges, shape }: { badges: Badge[]; shape: BadgeShape }) {
   return (
     <ul aria-label="Badges" className="flex flex-wrap gap-1">
       {badges.map((badge) => (
-        <li key={badge} className={`${pillShapeClass(shape)} bg-badge px-2 py-0.5 text-xs font-semibold text-badge-ink`}>
+        <li key={badge} className={`${badgeShapeClass(shape)} bg-badge px-2 py-0.5 text-xs font-semibold text-badge-ink`}>
           {BADGE_LABELS[badge]}
         </li>
       ))}
@@ -106,6 +106,8 @@ function ItemCard({ item, onAdd, cards, template }: ItemCardProps) {
   const overlay = template === 'overlay' && image !== null
   const clamp = descriptionClampClass(cards.description_lines)
   const padding = cardPaddingClass(cards)
+  // The add form takes the footer's place, so the price moves next to the name while it is open.
+  const priceBesideName = cards.price_position === 'top' || adding
 
   function close() {
     setAdding(false)
@@ -132,7 +134,7 @@ function ItemCard({ item, onAdd, cards, template }: ItemCardProps) {
       <div className="space-y-1">
         <div className="flex items-start justify-between gap-4">
           <h3 className={`type-product-name flex-1 text-pretty ${overlay ? 'text-white' : 'text-ink'}`}>{item.name}</h3>
-          {cards.price_position === 'top' && price}
+          {priceBesideName && price}
         </div>
         {item.description && clamp && (
           <p className={`type-description ${clamp} text-pretty ${overlay ? 'text-white/85' : 'text-muted'}`}>{item.description}</p>
@@ -142,7 +144,7 @@ function ItemCard({ item, onAdd, cards, template }: ItemCardProps) {
   )
   const button = <AddButton name={item.name} cards={cards} onClick={() => setAdding(true)} />
   const footer =
-    cards.price_position === 'top' ? (
+    priceBesideName ? (
       button
     ) : (
       <div className="flex items-center justify-between gap-4">

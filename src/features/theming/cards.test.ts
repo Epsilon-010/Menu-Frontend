@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { ThemeCards } from './api.ts'
 import {
+  badgeShapeClass,
   buttonShapeClass,
   cardImageClass,
   cardPaddingClass,
@@ -8,8 +9,8 @@ import {
   cardTemplate,
   DEFAULT_CARDS,
   descriptionClampClass,
+  MAX_DESCRIPTION_LINES,
   normalizeCards,
-  pillShapeClass,
 } from './cards.ts'
 
 function cards(changes: Partial<ThemeCards> = {}): ThemeCards {
@@ -55,8 +56,8 @@ describe('product cards', () => {
       'aspect-video object-contain',
     )
     expect(cardPaddingClass(cards({ padding: 'spacious' }))).toBe('p-6')
-    expect(pillShapeClass('pill')).toBe('rounded-full')
-    expect(pillShapeClass('rounded')).toBe('rounded-lg')
+    expect(badgeShapeClass('pill')).toBe('rounded-full')
+    expect(badgeShapeClass('rounded')).toBe('rounded-lg')
     expect(buttonShapeClass('pill')).toBe('rounded-full!')
     expect(buttonShapeClass('square')).toBe('rounded-none!')
   })
@@ -65,6 +66,9 @@ describe('product cards', () => {
     expect(descriptionClampClass(0)).toBeNull()
     expect(descriptionClampClass(1)).toBe('line-clamp-1')
     expect(descriptionClampClass(6)).toBe('line-clamp-6')
+    for (let lines = 1; lines <= MAX_DESCRIPTION_LINES; lines++) {
+      expect(descriptionClampClass(lines)).toBe(`line-clamp-${lines}`)
+    }
   })
 
   it('draws list rows horizontally whatever the template, and the template elsewhere', () => {

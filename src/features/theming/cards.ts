@@ -81,6 +81,7 @@ const ANIMATION: Record<CardAnimation, string> = {
 const ASPECT: Record<ImageAspect, string> = { square: 'aspect-square', landscape: 'aspect-[4/3]', wide: 'aspect-video' }
 const FIT: Record<ImageFit, string> = { cover: 'object-cover', contain: 'object-contain' }
 const PADDING: Record<CardPadding, string> = { compact: 'p-3', comfortable: 'p-4', spacious: 'p-6' }
+// One class per line count from 1 to MAX_DESCRIPTION_LINES, written out (a test checks none is missing); 0 hides it.
 const CLAMP: Record<number, string> = {
   1: 'line-clamp-1',
   2: 'line-clamp-2',
@@ -89,11 +90,7 @@ const CLAMP: Record<number, string> = {
   5: 'line-clamp-5',
   6: 'line-clamp-6',
 }
-const SHAPE: Record<ButtonShape | BadgeShape, string> = {
-  square: 'rounded-none',
-  rounded: 'rounded-lg',
-  pill: 'rounded-full',
-}
+const BADGE_SHAPE: Record<BadgeShape, string> = { pill: 'rounded-full', rounded: 'rounded-lg' }
 
 /** The card's frame: corners, shadow, border, hover effect and entrance animation. */
 export function cardShellClass(cards: ThemeCards): string {
@@ -125,12 +122,11 @@ export function descriptionClampClass(lines: number): string | null {
   return CLAMP[lines] ?? null
 }
 
-/** Corners of the badges. */
-export function pillShapeClass(shape: ButtonShape | BadgeShape): string {
-  return SHAPE[shape]
+export function badgeShapeClass(shape: BadgeShape): string {
+  return BADGE_SHAPE[shape]
 }
 
-// Important: they beat the corners every shared button already has.
+// The same corners as the badges, marked important: they beat the corners every shared button already has.
 const BUTTON_SHAPE: Record<ButtonShape, string> = { square: 'rounded-none!', rounded: 'rounded-lg!', pill: 'rounded-full!' }
 
 /** Corners of the add button. */

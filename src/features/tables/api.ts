@@ -1,4 +1,5 @@
 import { apiFetch } from '../../shared/api/http.ts'
+import { collectPages, type Page } from '../../shared/api/pagination.ts'
 
 export interface Table {
   id: string
@@ -60,8 +61,7 @@ async function send(path: string, init: RequestInit): Promise<Response> {
   return response
 }
 export async function listTables(): Promise<Table[]> {
-  const response = await send('/tables', {})
-  return (await response.json()) as Table[]
+  return collectPages(async (query) => (await (await send(`/tables${query}`, {})).json()) as Page<Table>)
 }
 
 /** `id` is chosen by the client and kept until the create succeeds: a repeat never makes a second table. */

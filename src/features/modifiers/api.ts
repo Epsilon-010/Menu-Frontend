@@ -1,3 +1,4 @@
+import { collectPages, type Page } from '../../shared/api/pagination.ts'
 import { alreadyGoneIsDone, json, send } from '../catalog/api.ts'
 
 export interface ModifierOption {
@@ -41,7 +42,7 @@ const PATH = '/catalog/modifier-groups'
 
 /** The tenant's library, by name, each group with its options in order. */
 export async function listModifierGroups(): Promise<ModifierGroup[]> {
-  return (await (await send(PATH)).json()) as ModifierGroup[]
+  return collectPages(async (query) => (await (await send(`${PATH}${query}`)).json()) as Page<ModifierGroup>)
 }
 
 export async function createModifierGroup(draft: ModifierGroupDraft): Promise<ModifierGroup> {

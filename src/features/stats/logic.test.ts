@@ -3,6 +3,7 @@ import {
   addDays,
   chartModel,
   formatDuration,
+  knownTimeZone,
   labelledDays,
   niceMax,
   presetRange,
@@ -131,5 +132,14 @@ describe('statsRequestKey', () => {
     expect(statsRequestKey('UTC', range, 0)).not.toBe(statsRequestKey('UTC', range, 1))
     expect(statsRequestKey(null, range, 0)).toBeNull()
     expect(statsRequestKey('UTC', null, 0)).toBeNull()
+  })
+})
+
+describe('knownTimeZone', () => {
+  it('keeps a real zone and drops one the browser could not detect', () => {
+    expect(knownTimeZone('America/Mexico_City')).toBe('America/Mexico_City')
+    expect(knownTimeZone('Etc/Unknown')).toBeUndefined()
+    expect(knownTimeZone('Mars/Olympus')).toBeUndefined()
+    expect(knownTimeZone(undefined)).toBeUndefined()
   })
 })

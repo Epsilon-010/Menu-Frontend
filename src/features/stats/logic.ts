@@ -16,13 +16,23 @@ export function todayIn(timeZone: string, now: Date = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now)
 }
 
-/** The browser's time zone, sent when a business signs up. */
+/**
+ * The browser's time zone, sent when a business signs up. Undefined when the browser could not detect a real
+ * one (Chrome reports "Etc/Unknown"), so the sign-up falls back to the default zone instead of failing.
+ */
 export function browserTimeZone(): string | undefined {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined
+    return knownTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone)
   } catch {
     return undefined
   }
+}
+
+/** The zone when it is a real IANA name the browser lists; undefined otherwise. */
+export function knownTimeZone(zone: string | undefined): string | undefined {
+  if (!zone || zone === 'Etc/Unknown') return undefined
+  if (typeof Intl.supportedValuesOf !== 'function') return zone
+  return Intl.supportedValuesOf('timeZone').includes(zone) ? zone : undefined
 }
 
 /** A date `days` before or after `day` (calendar arithmetic, no time zone involved). */

@@ -11,6 +11,8 @@ import {
 } from './api.ts'
 import { DEFAULT_CARDS } from './cards.ts'
 import { DEFAULT_LAYOUT } from './layout.ts'
+import { DEFAULT_BRAND, DEFAULT_LIGHT_COLORS } from './normalize.ts'
+import { DEFAULT_TYPOGRAPHY } from './typography.ts'
 
 function jsonResponse(status: number, body: unknown, contentType = 'application/json'): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': contentType } })
@@ -44,7 +46,14 @@ async function failureOf(promise: Promise<unknown>): Promise<ThemeError> {
   return error as ThemeError
 }
 
-const THEME = { schema_version: 4, layout: DEFAULT_LAYOUT, cards: DEFAULT_CARDS } as Theme
+const THEME: Theme = {
+  schema_version: 4,
+  colors: DEFAULT_LIGHT_COLORS,
+  brand: DEFAULT_BRAND,
+  typography: DEFAULT_TYPOGRAPHY,
+  layout: DEFAULT_LAYOUT,
+  cards: DEFAULT_CARDS,
+}
 const DRAFT_STATE = { draft: THEME, published: null, presets: [] }
 const SIGNATURE = {
   upload_url: 'https://upload.test/image/upload',

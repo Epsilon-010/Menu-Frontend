@@ -3,6 +3,7 @@ import type { Order, OrderItem } from '../ordering/api.ts'
 import type { Bill, TableOverview } from './api.ts'
 import {
   acceptsNewDishes,
+  hasSomethingToCharge,
   billRequests,
   canCancelDish,
   dishDraftError,
@@ -151,5 +152,12 @@ describe('bill requests', () => {
     expect(tableIdOf('{"table_id":"t1"}')).toBe('t1')
     expect(tableIdOf('{"order_id":"o1"}')).toBeNull()
     expect(tableIdOf('not json')).toBeNull()
+  })
+})
+
+describe('hasSomethingToCharge', () => {
+  it('is false for a bill of $0, which is closed instead of paid', () => {
+    expect(hasSomethingToCharge({ total_cents: 0 })).toBe(false)
+    expect(hasSomethingToCharge({ total_cents: 2500 })).toBe(true)
   })
 })

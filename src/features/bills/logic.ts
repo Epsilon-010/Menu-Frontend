@@ -8,6 +8,11 @@ export function acceptsNewDishes(bill: Pick<Bill, 'closed_at'>): boolean {
   return bill.closed_at === null
 }
 
+/** A bill of $0 (no orders, or every dish cancelled) is closed, never paid: the API refuses a $0 payment. */
+export function hasSomethingToCharge(bill: Pick<Bill, 'total_cents'>): boolean {
+  return bill.total_cents > 0
+}
+
 /** Only dishes the kitchen has not started can be cancelled, and only while the bill is open. */
 export function canCancelDish(bill: Pick<Bill, 'closed_at'>, item: Pick<OrderItem, 'status'>): boolean {
   return acceptsNewDishes(bill) && item.status === 'queued'

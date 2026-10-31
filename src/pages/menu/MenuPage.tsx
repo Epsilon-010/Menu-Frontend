@@ -6,7 +6,7 @@ import { formatMoney } from '../../features/catalog/price.ts'
 import type { Cart, Order } from '../../features/ordering/api.ts'
 import { BillRequestControl } from '../../features/ordering/BillRequestControl.tsx'
 import { CartContents } from '../../features/ordering/CartContents.tsx'
-import { dishCount } from '../../features/ordering/logic.ts'
+import { dishCount, hasSomethingToPay } from '../../features/ordering/logic.ts'
 import { MenuBrowser } from '../../features/ordering/MenuBrowser.tsx'
 import { OrderCard } from '../../features/ordering/OrderCard.tsx'
 import { SendConfirmation } from '../../features/ordering/SendConfirmation.tsx'
@@ -165,7 +165,10 @@ export function MenuPage() {
               Orders from this table
             </h2>
             <OrdersArea orders={orders} />
-            {orders.status === 'loaded' && orders.data.length > 0 && (
+            {/* Shown while there is something to pay, or to cancel a request already made. */}
+            {orders.status === 'loaded' &&
+              (hasSomethingToPay(orders.data) ||
+                (ordering.billRequestedAt.status === 'loaded' && ordering.billRequestedAt.data !== null)) && (
               <BillRequestControl requestedAt={ordering.billRequestedAt} onChange={ordering.setBillRequest} />
             )}
           </section>

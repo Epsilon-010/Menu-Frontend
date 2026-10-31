@@ -5,6 +5,8 @@ import { ModifiersPanel } from '../features/modifiers/ModifiersPanel.tsx'
 import { OrderSettingsPanel } from '../features/settings/OrderSettingsPanel.tsx'
 import { StatsPanel } from '../features/stats/StatsPanel.tsx'
 import { StaffPanel } from '../features/staff/StaffPanel.tsx'
+import { AdminsPanel } from '../features/admins/AdminsPanel.tsx'
+import { AccountPanel } from '../features/account/AccountPanel.tsx'
 import { TablesPanel } from '../features/tables/TablesPanel.tsx'
 import { ThemeEditorPanel } from '../features/theming/ThemeEditorPanel.tsx'
 import { AdminPage } from '../pages/admin/AdminPage.tsx'
@@ -36,6 +38,8 @@ export const router = createBrowserRouter([
       { path: 'modifiers', element: <ModifiersPanel /> },
       { path: 'tables', element: <TablesPanel /> },
       { path: 'staff', element: <StaffPanel /> },
+      { path: 'admins', element: <AdminsPanel /> },
+      { path: 'account', element: <AccountPanel /> },
       { path: 'settings', element: <OrderSettingsPanel /> },
       { path: 'design', element: <ThemeEditorPanel /> },
       { path: 'stats', element: <StatsPanel /> },

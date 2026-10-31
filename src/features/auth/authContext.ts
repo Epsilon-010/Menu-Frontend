@@ -26,6 +26,8 @@ export interface AuthContextValue {
    * LoginError('unavailable') when the account was created but could not be loaded.
    */
   register: (signUp: SignUp) => Promise<Role>
+  /** Replaces the admin's password and reloads the account. Throws PasswordChangeError. */
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>
   signOut: () => Promise<void>
 }
 

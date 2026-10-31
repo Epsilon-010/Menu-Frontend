@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router'
 import type { Role } from '../../shared/api/http.ts'
 import { Skeleton } from '../../shared/ui/Feedback.tsx'
+import { ForcedPasswordScreen } from '../account/ForcedPasswordScreen.tsx'
 import { accountRole, homePathFor } from './api.ts'
 import { useAuth } from './useAuth.ts'
 import { VisitEndedScreen } from './VisitEndedScreen.tsx'
@@ -39,5 +40,7 @@ export function RequireRole({ roles, children }: RequireRoleProps) {
   if (!roles.includes(role)) {
     return <Navigate to={homePathFor(role)} replace />
   }
+  // The server refuses everything else until a temporary password is replaced.
+  if (state.account.user?.must_change_password) return <ForcedPasswordScreen />
   return children
 }

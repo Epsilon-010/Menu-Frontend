@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { onSessionEnded, type Role, type SessionInfo } from '../../shared/api/http.ts'
+import { changePassword as replacePassword } from '../account/api.ts'
 import { accountRole, fetchAccount, login, logout, LoginError, qrLogin, tableLogin } from './api.ts'
 import { AuthContext, type AuthContextValue, type AuthState } from './authContext.ts'
 import { hadGuestVisit, rememberGuestVisit } from './guestMarker.ts'
@@ -70,6 +71,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback((signUp: SignUp) => startSession(registerBusiness(signUp)), [startSession])
 
+  const changePassword = useCallback(
+    async (currentPassword: string, newPassword: string) => {
+      await startSession(replacePassword(currentPassword, newPassword))
+    },
+    [startSession],
+  )
+
   const signOut = useCallback(async () => {
     const wasGuest = roleRef.current === 'guest'
     try {
@@ -88,8 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ state, signIn, signInTable, joinTable, register, signOut }),
-    [state, signIn, signInTable, joinTable, register, signOut],
+    () => ({ state, signIn, signInTable, joinTable, register, changePassword, signOut }),
+    [state, signIn, signInTable, joinTable, register, changePassword, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -4,6 +4,7 @@ import {
   cartVersionOf,
   createOrderSender,
   groupByPerson,
+  hasSomethingToPay,
   itemStatusLabel,
   lineDraftKey,
   needsCartReload,
@@ -118,5 +119,13 @@ describe('rejectionNote', () => {
     expect(rejectionNote({ status: 'ready', cancel_reason: null })).toBeNull()
     expect(rejectionNote({ status: 'cancelled', cancel_reason: null })).toBe('Rejected')
     expect(rejectionNote({ status: 'cancelled', cancel_reason: '  ' })).toBe('Rejected')
+  })
+})
+
+describe('hasSomethingToPay', () => {
+  it('is false with no orders or with every dish cancelled', () => {
+    expect(hasSomethingToPay([])).toBe(false)
+    expect(hasSomethingToPay([{ total_cents: 0 }, { total_cents: 0 }])).toBe(false)
+    expect(hasSomethingToPay([{ total_cents: 0 }, { total_cents: 1200 }])).toBe(true)
   })
 })

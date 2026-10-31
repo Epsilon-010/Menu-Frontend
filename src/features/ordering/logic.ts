@@ -76,6 +76,11 @@ const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   cancelled: 'Cancelled',
 }
 
+/** The table can ask for the bill only when something is left to pay (not every dish cancelled). */
+export function hasSomethingToPay(orders: Pick<Order, 'total_cents'>[]): boolean {
+  return orders.some((order) => order.total_cents > 0)
+}
+
 export function itemStatusLabel(status: OrderItemStatus): string {
   return ITEM_STATUS_LABELS[status]
 }

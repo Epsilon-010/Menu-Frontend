@@ -6,7 +6,15 @@ import { apiFetch, publicFetch, type Role, type SessionInfo } from '../../shared
  */
 export interface Account {
   /** Admins sign in with an email, waiters and cooks with a username. */
-  user: { id: string; email: string | null; username: string | null; full_name: string; role: Role } | null
+  user: {
+    id: string
+    email: string | null
+    username: string | null
+    full_name: string
+    role: Role
+    /** An admin on a temporary password: the app shows only the change-password screen. */
+    must_change_password: boolean
+  } | null
   table: { id: string; name: string } | null
   guest: { id: string; name: string } | null
   tenant: { id: string; name: string }

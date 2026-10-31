@@ -11,6 +11,8 @@ export interface SignUp {
   email: string
   password: string
   business_name: string
+  /** The browser's IANA time zone: the statistics cut the business's days in it. */
+  timezone?: string
 }
 
 /** Where a sign-up error belongs: the email of step 1, or the form as a whole. */

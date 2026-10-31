@@ -14,6 +14,8 @@ export type Role = 'admin' | 'waiter' | 'kitchen' | 'table' | 'guest'
 export interface SessionInfo {
   expires_in: number
   role: Role
+  /** An admin on a temporary password: only changing it is allowed. */
+  must_change_password?: boolean
 }
 
 const API_BASE = '/api/v1'

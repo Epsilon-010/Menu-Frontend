@@ -9,7 +9,7 @@ import { OrderCard } from '../ordering/OrderCard.tsx'
 import { clockTime } from '../ordering/logic.ts'
 import { PAYMENT_METHODS, type NewOrderDish, type PaymentMethod, type TableOverview } from './api.ts'
 import { AddDishControl, CancelDishControl } from './DishCorrections.tsx'
-import { acceptsNewDishes, canCancelDish, tableCardId } from './logic.ts'
+import { acceptsNewDishes, canCancelDish, hasSomethingToCharge, tableCardId } from './logic.ts'
 
 type Mode = { kind: 'view' } | { kind: 'pay'; method: PaymentMethod } | { kind: 'confirm-close' }
 
@@ -120,7 +120,7 @@ export function TableBillCard({
 
       {bill && mode.kind === 'view' && (
         <div className="flex flex-wrap gap-2">
-          {bill.orders.length > 0 ? (
+          {hasSomethingToCharge(bill) ? (
             <Button
               variant="primary"
               icon={<MoneyIcon size={16} aria-hidden />}

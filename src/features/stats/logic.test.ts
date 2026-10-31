@@ -8,6 +8,7 @@ import {
   presetRange,
   rangeError,
   shortDay,
+  statsRequestKey,
   todayIn,
 } from './logic.ts'
 
@@ -116,5 +117,19 @@ describe('labelledDays', () => {
 
     expect(shown.size).toBeLessThanOrEqual(9)
     expect(shown.has(0) && shown.has(29)).toBe(true)
+  })
+})
+
+describe('statsRequestKey', () => {
+  const range = { from: '2026-10-01', to: '2026-10-07' }
+
+  it('changes with the time zone, so a saved zone reloads the same dates', () => {
+    expect(statsRequestKey('America/Mexico_City', range, 0)).not.toBe(statsRequestKey('UTC', range, 0))
+  })
+
+  it('changes with a retry and is null until the zone and the range are known', () => {
+    expect(statsRequestKey('UTC', range, 0)).not.toBe(statsRequestKey('UTC', range, 1))
+    expect(statsRequestKey(null, range, 0)).toBeNull()
+    expect(statsRequestKey('UTC', null, 0)).toBeNull()
   })
 })

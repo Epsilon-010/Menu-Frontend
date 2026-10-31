@@ -49,6 +49,15 @@ export function rangeError(range: DateRange): string | null {
   return null
 }
 
+/**
+ * Identifies one statistics request; null while the zone or the range is unknown. The zone is part of it:
+ * the same dates cut in another zone are other figures, so saving a new zone loads them again.
+ */
+export function statsRequestKey(zone: string | null, range: DateRange | null, attempt: number): string | null {
+  if (zone === null || range === null) return null
+  return `${zone}|${range.from}|${range.to}|${attempt}`
+}
+
 /** "45 s", "12 min 30 s", "12 min", "1 h 05 min"; an em dash when nothing was measured. */
 export function formatDuration(seconds: number | null): string {
   if (seconds === null) return '—'

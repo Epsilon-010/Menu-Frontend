@@ -6,7 +6,7 @@ import { EmptyState, ErrorText, ListSkeleton, LoadError, SuccessText } from '../
 import { Card, SectionHeader } from '../../shared/ui/Section.tsx'
 import { OrdersError } from '../kitchen/api.ts'
 import { fetchStatistics, fetchTenantSettings, updateTenantSettings, type Statistics } from './api.ts'
-import { presetRange, rangeError, todayIn, type DateRange, type RangePreset } from './logic.ts'
+import { presetRange, rangeError, statsRequestKey, todayIn, type DateRange, type RangePreset } from './logic.ts'
 import { StatsReport } from './StatsReport.tsx'
 
 const PRESETS: { value: RangePreset; label: string }[] = [
@@ -22,8 +22,12 @@ function messageOf(error: unknown): string {
   return error instanceof OrdersError ? error.message : 'Something went wrong. Please try again.'
 }
 
-/** Every IANA zone the browser knows, plus the current one in case it is missing from that list. */
-function zoneOptions(current: string): string[] {
+/**
+ * Every IANA zone the browser knows, plus the current one in case it is missing from that list; null on
+ * browsers without `Intl.supportedValuesOf` (they get a text field instead of a list).
+ */
+function zoneOptions(current: string): string[] | null {
+  if (typeof Intl.supportedValuesOf !== 'function') return null
   const zones = Intl.supportedValuesOf('timeZone')
   return zones.includes(current) ? zones : [current, ...zones]
 }
@@ -75,13 +79,17 @@ function TimezoneSetting({ timezone, onSaved }: { timezone: string; onSaved: (ti
   return (
     <div className="flex flex-wrap items-end gap-3">
       <Field label="Time zone of the business" className="min-w-64">
-        <Select value={choice} onChange={(event) => setChoice(event.target.value)}>
-          {options.map((zone) => (
-            <option key={zone} value={zone}>
-              {zone}
-            </option>
-          ))}
-        </Select>
+        {options === null ? (
+          <TextInput value={choice} placeholder="America/Mexico_City" onChange={(event) => setChoice(event.target.value)} />
+        ) : (
+          <Select value={choice} onChange={(event) => setChoice(event.target.value)}>
+            {options.map((zone) => (
+              <option key={zone} value={zone}>
+                {zone}
+              </option>
+            ))}
+          </Select>
+        )}
       </Field>
       <Button variant="primary" disabled={saving} onClick={() => void save()}>
         {saving ? 'Saving…' : 'Save'}
@@ -127,7 +135,7 @@ export function StatsPanel() {
     return preset === 'custom' ? applied : presetRange(preset, todayIn(zone))
   }, [zone, preset, applied])
 
-  const requestKey = range === null ? null : `${range.from}|${range.to}|${statsKey}`
+  const requestKey = statsRequestKey(zone, range, statsKey)
   useEffect(() => {
     if (range === null || requestKey === null) return
     let active = true

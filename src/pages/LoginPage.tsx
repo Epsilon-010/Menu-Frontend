@@ -4,7 +4,7 @@ import { Link, Navigate, useNavigate } from 'react-router'
 import { accountRole, homePathFor, LoginError, type LoginFailure } from '../features/auth/api.ts'
 import { useAuth } from '../features/auth/useAuth.ts'
 import { normalizeStaffCode, STAFF_CODE_LENGTH, STAFF_PIN_LENGTH } from '../features/staff/credentials.ts'
-import { PIN_LENGTH, TABLE_CODE_LENGTH } from '../features/tables/credentials.ts'
+import { LEGACY_PIN_LENGTH, PIN_LENGTH, TABLE_CODE_LENGTH } from '../features/tables/credentials.ts'
 import type { Role } from '../shared/api/http.ts'
 import { AuthLayout, AuthLogo } from '../shared/ui/AuthLayout.tsx'
 import { buttonClass, MOTION } from '../shared/ui/classes.ts'
@@ -172,7 +172,7 @@ export function LoginPage() {
                 className="font-mono tracking-widest"
               />
             </Field>
-            <Field label="PIN" hint={`${STAFF_PIN_LENGTH} digits.`}>
+            <Field label="PIN" hint={`${STAFF_PIN_LENGTH} digits (${LEGACY_PIN_LENGTH} for a PIN given before).`}>
               <TextInput
                 type="password"
                 inputMode="numeric"
@@ -212,8 +212,8 @@ export function LoginPage() {
                 inputMode="numeric"
                 autoComplete="off"
                 required
-                pattern={`\\d{${PIN_LENGTH}}`}
-                title={`${PIN_LENGTH} digits`}
+                pattern={`\\d{${LEGACY_PIN_LENGTH}}|\\d{${PIN_LENGTH}}`}
+                title={`${PIN_LENGTH} digits (${LEGACY_PIN_LENGTH} for a PIN given before)`}
                 maxLength={PIN_LENGTH}
                 value={secret}
                 onChange={(event) => setSecret(event.target.value)}

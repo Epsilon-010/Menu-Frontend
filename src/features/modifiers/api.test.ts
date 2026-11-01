@@ -17,9 +17,9 @@ afterEach(() => {
 
 describe('modifier groups API', () => {
   it('lists the library', async () => {
-    const calls = stubFetch(ok([group]))
+    const calls = stubFetch(ok({ items: [group], next_cursor: null }))
     expect(await listModifierGroups()).toEqual([group])
-    expect(calls[0].url).toBe('/api/v1/catalog/modifier-groups')
+    expect(calls[0].url).toBe('/api/v1/catalog/modifier-groups?limit=100')
   })
 
   it('creates a group with the client id and its options', async () => {

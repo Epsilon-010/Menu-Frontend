@@ -1,6 +1,8 @@
 import { apiFetch } from '../../shared/api/http.ts'
 import { normalizeCards } from './cards.ts'
 import { normalizeLayout, withDrawableLayout } from './layout.ts'
+import { normalizeColors } from './normalize.ts'
+import { normalizeTypography } from './typography.ts'
 
 export type ThemeMode = 'light' | 'dark'
 export type LogoSize = 'sm' | 'md' | 'lg'
@@ -266,13 +268,19 @@ export async function fetchPublishedTheme(): Promise<PublishedTheme> {
   return { ...published, theme: withDrawableLayout(published.theme) }
 }
 
-/** Every theme in a draft state with a layout the menu and the preview can always draw. */
+/** Every theme in a draft state as the menu and the preview can always draw it (see `withDrawableLayout`). */
 function drawable(state: ThemeDraftState): ThemeDraftState {
   return {
     ...state,
     draft: withDrawableLayout(state.draft),
     published: state.published && withDrawableLayout(state.published),
-    presets: state.presets.map((preset) => ({ ...preset, layout: normalizeLayout(preset.layout), cards: normalizeCards(preset.cards) })),
+    presets: state.presets.map((preset) => ({
+      ...preset,
+      colors: normalizeColors(preset.colors),
+      typography: normalizeTypography(preset.typography),
+      layout: normalizeLayout(preset.layout),
+      cards: normalizeCards(preset.cards),
+    })),
   }
 }
 

@@ -1,4 +1,6 @@
 import { normalizeCards } from './cards.ts'
+import { normalizeBrand, normalizeColors } from './normalize.ts'
+import { normalizeTypography } from './typography.ts'
 import type { CartStyle, CategoryHeader, Density, Navigation, ProductView, Theme, ThemeLayout } from './api.ts'
 
 export const NAVIGATIONS: Navigation[] = ['chips', 'tabs', 'sidebar', 'sections']
@@ -113,9 +115,20 @@ export function normalizeLayout(raw: unknown): ThemeLayout {
   }
 }
 
-/** The theme with a layout and cards the menu can always draw (see `normalizeLayout` and `normalizeCards`). */
+/**
+ * The theme as the menu can always draw it: colors, brand, typography, layout and cards each fall back to their
+ * defaults where a value is missing or unknown (see `normalizeColors`, `normalizeBrand`, `normalizeTypography`,
+ * `normalizeLayout` and `normalizeCards`).
+ */
 export function withDrawableLayout<T extends Theme>(theme: T): T {
-  return { ...theme, layout: normalizeLayout(theme.layout), cards: normalizeCards(theme.cards) }
+  return {
+    ...theme,
+    colors: normalizeColors(theme.colors),
+    brand: normalizeBrand(theme.brand),
+    typography: normalizeTypography(theme.typography),
+    layout: normalizeLayout(theme.layout),
+    cards: normalizeCards(theme.cards),
+  }
 }
 
 /** The category on screen: the chosen one while it still exists, otherwise the first. */

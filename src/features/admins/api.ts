@@ -1,4 +1,5 @@
 import { apiFetch } from '../../shared/api/http.ts'
+import { collectPages, type Page } from '../../shared/api/pagination.ts'
 
 export interface AdminAccount {
   id: string
@@ -67,8 +68,7 @@ async function send(path: string, init: RequestInit): Promise<Response> {
 }
 
 export async function listAdmins(): Promise<AdminAccount[]> {
-  const response = await send('/admins', {})
-  return (await response.json()) as AdminAccount[]
+  return collectPages(async (query) => (await (await send(`/admins${query}`, {})).json()) as Page<AdminAccount>)
 }
 
 /** The server generates the temporary password; the new admin must replace it on first sign-in. */

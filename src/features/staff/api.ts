@@ -1,4 +1,5 @@
 import { apiFetch } from '../../shared/api/http.ts'
+import { collectPages, type Page } from '../../shared/api/pagination.ts'
 
 export type StaffRole = 'waiter' | 'kitchen'
 
@@ -69,8 +70,7 @@ async function send(path: string, init: RequestInit): Promise<Response> {
 }
 
 export async function listStaff(): Promise<StaffMember[]> {
-  const response = await send('/staff', {})
-  return (await response.json()) as StaffMember[]
+  return collectPages(async (query) => (await (await send(`/staff${query}`, {})).json()) as Page<StaffMember>)
 }
 
 /** The server generates the member's code and PIN. */

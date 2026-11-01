@@ -38,7 +38,7 @@ describe('admins API', () => {
   })
 
   it('lists the admins', async () => {
-    stubFetch(new Response(JSON.stringify([admin]), { status: 200 }))
+    stubFetch(new Response(JSON.stringify({ items: [admin], next_cursor: null }), { status: 200 }))
 
     expect(await listAdmins()).toEqual([admin])
   })

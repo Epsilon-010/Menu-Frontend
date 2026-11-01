@@ -1,4 +1,4 @@
-import type { FontId, FontRole, TextElement, TextStyle, Typography } from './api.ts'
+import type { FontId, FontRole, FontStyle, TextAlign, TextElement, TextStyle, TextTransform, Typography } from './api.ts'
 
 export interface Font {
   family: string
@@ -67,8 +67,13 @@ export const DEFAULT_TYPOGRAPHY: Typography = {
   },
 }
 
+/** The font of an id; an id outside the curated list (the server never sends one) draws with Geist. */
+function fontOf(id: FontId): Font {
+  return FONTS[id] ?? FONTS.geist
+}
+
 function fontStack(id: FontId): string {
-  const font = FONTS[id]
+  const font = fontOf(id)
   return `"${font.family}", ${font.fallback}`
 }
 
@@ -118,7 +123,7 @@ export function googleFontsUrl(typography: Typography): string | null {
   const families = [...faces.entries()]
     .sort(([first], [second]) => first.localeCompare(second))
     .map(([id, used]) => {
-      const font = FONTS[id]
+      const font = fontOf(id)
       const pairs = [...used]
         .map((face) => {
           const [style, weight] = face.split(' ')
@@ -136,9 +141,66 @@ export function googleFontsUrl(typography: Typography): string | null {
 
 /** The style moved to what that font has: the closest weight (ties go lighter) and upright without italics. */
 export function fitToFont(style: TextStyle, id: FontId): TextStyle {
-  const font = FONTS[id]
+  const font = fontOf(id)
   const weight = font.weights.reduce((best, candidate) =>
     Math.abs(candidate - style.weight) < Math.abs(best - style.weight) ? candidate : best,
   )
   return { ...style, weight, style: font.italic ? style.style : 'normal' }
+}
+
+const FONT_IDS = Object.keys(FONTS) as FontId[]
+const FONT_STYLES: FontStyle[] = ['normal', 'italic']
+const TEXT_TRANSFORMS: TextTransform[] = ['none', 'uppercase', 'lowercase', 'capitalize']
+const TEXT_ALIGNS: TextAlign[] = ['left', 'center', 'right']
+
+function record(value: unknown): Record<string, unknown> {
+  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {}
+}
+
+function oneOf<T extends string>(value: unknown, options: T[], fallback: T): T {
+  return options.includes(value as T) ? (value as T) : fallback
+}
+
+function whole(value: unknown, range: { min: number; max: number }, fallback: number): number {
+  return Number.isInteger(value) && (value as number) >= range.min && (value as number) <= range.max
+    ? (value as number)
+    : fallback
+}
+
+/** One element's style; anything missing or unknown takes the default element's value, fitted to the font. */
+function normalizeTextStyle(raw: unknown, fallback: TextStyle, fonts: Record<FontRole, FontId>): TextStyle {
+  const value = record(raw)
+  const role = oneOf(value.font, FONT_ROLES, fallback.font)
+  const font = fontOf(fonts[role])
+  const fitted = fitToFont({ ...fallback, font: role }, fonts[role])
+  const weight = typeof value.weight === 'number' && font.weights.includes(value.weight) ? value.weight : fitted.weight
+  const style = oneOf(value.style, FONT_STYLES, fallback.style)
+  return {
+    font: role,
+    size: whole(value.size, SIZE_RANGE, fallback.size),
+    weight,
+    style: font.italic ? style : 'normal',
+    line_height: whole(value.line_height, LINE_HEIGHT_RANGE, fallback.line_height),
+    letter_spacing: whole(value.letter_spacing, LETTER_SPACING_RANGE, fallback.letter_spacing),
+    transform: oneOf(value.transform, TEXT_TRANSFORMS, fallback.transform),
+    align: oneOf(value.align, TEXT_ALIGNS, fallback.align),
+  }
+}
+
+/**
+ * The typography as the menu can draw it: an unknown font id draws with Geist, and any missing or unknown element,
+ * weight, style or out of range number takes the default typography's value instead of breaking the page.
+ */
+export function normalizeTypography(raw: unknown): Typography {
+  const value = record(raw)
+  const rawFonts = record(value.fonts)
+  const rawElements = record(value.elements)
+  const d = DEFAULT_TYPOGRAPHY
+  const fonts = Object.fromEntries(
+    FONT_ROLES.map((role) => [role, oneOf(rawFonts[role], FONT_IDS, 'geist')]),
+  ) as Record<FontRole, FontId>
+  const elements = Object.fromEntries(
+    TEXT_ELEMENTS.map((element) => [element, normalizeTextStyle(rawElements[element], d.elements[element], fonts)]),
+  ) as Record<TextElement, TextStyle>
+  return { scale: whole(value.scale, SCALE_RANGE, d.scale), fonts, elements }
 }

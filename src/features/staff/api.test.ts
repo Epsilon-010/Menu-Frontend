@@ -40,7 +40,7 @@ describe('staff API', () => {
 
   it('lists members with their code', async () => {
     const listed = { id: 'm1', code: 'K7QX2M', full_name: 'Cook 1', role: 'kitchen', is_active: true }
-    stubFetch(new Response(JSON.stringify([listed]), { status: 200 }))
+    stubFetch(new Response(JSON.stringify({ items: [listed], next_cursor: null }), { status: 200 }))
 
     expect(await listStaff()).toEqual([listed])
   })

@@ -3,6 +3,7 @@ import type { TableOverview } from '../bills/api.ts'
 import type { StaffOrder, StaffOrderItem } from '../kitchen/api.ts'
 import type { OrderItem } from '../ordering/api.ts'
 import {
+  deliveredNotes,
   deliveryCounter,
   deliveryTables,
   filterByTable,
@@ -188,5 +189,25 @@ describe('visibleSections', () => {
   it('shows only the dishes to take, or the whole order', () => {
     expect(visibleSections('ready')).toEqual(['ready'])
     expect(visibleSections('all')).toEqual(['ready', 'inKitchen', 'delivered', 'rejected'])
+  })
+})
+
+describe('deliveredNotes', () => {
+  it('keeps every order with a delivered dish, completed ones included, newest first', () => {
+    const board = tables([tableItem('a', 'delivered'), tableItem('b', 'ready'), tableItem('c', 'cancelled')])
+    const bill = board[0].bill!
+    const done = { ...bill.orders[0], id: 'o9', number: 9, status: 'completed' as const, created_at: '2026-10-28T12:30:00Z', items: [tableItem('d', 'delivered')] }
+    const untouched = { ...bill.orders[0], id: 'o10', number: 10, created_at: '2026-10-28T12:40:00Z', items: [tableItem('e', 'queued')] }
+    board[0] = { ...board[0], bill: { ...bill, orders: [bill.orders[0], done, untouched] } }
+
+    expect(deliveredNotes(board)).toEqual([
+      { order_id: 'o9', table_name: 'Table 1', order_number: 9, sent_at: '2026-10-28T12:30:00Z', delivered: ['1 × Dish d'], pending: 0 },
+      { order_id: 'o7', table_name: 'Table 1', order_number: 7, sent_at: '2026-10-28T12:00:00Z', delivered: ['1 × Dish a'], pending: 1 },
+    ])
+  })
+
+  it('names the options of each delivered dish', () => {
+    const large = { ...tableItem('a', 'delivered'), quantity: 2, modifiers: [{ group: 'Size', name: 'Large', price_cents: 0 }] }
+    expect(deliveredNotes(tables([large]))[0].delivered).toEqual(['2 × Dish a (Size: Large)'])
   })
 })

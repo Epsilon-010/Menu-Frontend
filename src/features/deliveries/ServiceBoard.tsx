@@ -12,7 +12,8 @@ import { clockTime } from '../ordering/logic.ts'
 import { useLateOrderMinutes } from '../settings/useLateOrderMinutes.ts'
 import { fetchDeliveries } from './api.ts'
 import { DeliveryQueue } from './DeliveryQueue.tsx'
-import { hasReady, newRejections, readyIds, type Rejection } from './logic.ts'
+import { DeliveredNotes } from './DeliveredNotes.tsx'
+import { deliveredNotes, hasReady, newRejections, readyIds, type DeliveredNote, type Rejection } from './logic.ts'
 
 /** The waiter's screen: the live delivery queue on top, the tables and their bills below. */
 export function ServiceBoard() {
@@ -25,6 +26,7 @@ export function ServiceBoard() {
   const [requests, setRequests] = useState<BillRequest[]>([])
   const seenRequests = useRef<Set<string> | null>(null)
   const [openedAt] = useState(() => Date.now())
+  const [delivered, setDelivered] = useState<DeliveredNote[]>([])
 
   const queue = useStaffQueue({
     load: fetchDeliveries,
@@ -56,6 +58,7 @@ export function ServiceBoard() {
       const asked = newBillRequests(seenRequests.current, tables, openedAt)
       seenRequests.current = asked.seen
       setRequests(billRequests(tables))
+      setDelivered(deliveredNotes(tables))
       if (asked.fresh > 0) alert()
     },
     [alert, openedAt],
@@ -123,6 +126,8 @@ export function ServiceBoard() {
         onDeliver={(orderId, itemIds) => queue.act(orderId, itemIds, 'delivered')}
         sound={sound}
       />
+
+      <DeliveredNotes notes={delivered} />
 
       <TablesBoard refreshSignal={tablesSignal} onLoaded={onTablesLoaded} />
     </div>

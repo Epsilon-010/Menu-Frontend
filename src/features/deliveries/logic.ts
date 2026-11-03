@@ -105,3 +105,35 @@ export function newRejections(
   }
   return { seen, rejections }
 }
+
+/** A delivered order as the waiter's note: what already reached the table and how many dishes are still owed. */
+export interface DeliveredNote {
+  order_id: string
+  table_name: string
+  order_number: number
+  sent_at: string
+  /** Like "2 × Tacos (Meat: Pastor)". */
+  delivered: string[]
+  /** Dishes not delivered yet; rejected ones are not owed. */
+  pending: number
+}
+
+/** Orders of the open tables with at least one delivered dish, completed ones included, newest first. */
+export function deliveredNotes(tables: TableOverview[]): DeliveredNote[] {
+  const notes: DeliveredNote[] = []
+  for (const table of tables) {
+    for (const order of table.bill?.orders ?? []) {
+      const delivered = order.items.filter((item) => item.status === 'delivered')
+      if (delivered.length === 0) continue
+      notes.push({
+        order_id: order.id,
+        table_name: table.table_name,
+        order_number: order.number,
+        sent_at: order.created_at,
+        delivered: delivered.map((item) => `${item.quantity} × ${dishLabel(item.name, item.modifiers)}`),
+        pending: order.items.filter((item) => item.status !== 'delivered' && item.status !== 'cancelled').length,
+      })
+    }
+  }
+  return notes.sort((a, b) => b.sent_at.localeCompare(a.sent_at))
+}

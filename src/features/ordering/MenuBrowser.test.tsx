@@ -44,8 +44,15 @@ describe('the menu by its layout', () => {
     expect(html).toContain('href="#category-drinks"')
     expect(sections(html)).toEqual(['tacos', 'drinks'])
     expect(html).toContain('grid gap-4 @[39rem]:grid-cols-2')
-    expect(html).toContain('sticky top-20')
+    expect(html).toContain('sticky top-0 pt-20')
     expect(html).not.toContain('Coming soon')
+  })
+
+  it('pins the chips on a solid bar so the cards never show through them while scrolling', () => {
+    const nav = /<nav aria-label="Categorías del menú" class="([^"]*)"/.exec(render())?.[1] ?? ''
+    expect(nav).toContain('sticky')
+    expect(nav).toContain('bg-canvas')
+    expect(nav).not.toContain('sm:mx-0')
   })
 
   it('with sections shows the whole page under a bar of links', () => {

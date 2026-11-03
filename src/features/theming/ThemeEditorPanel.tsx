@@ -359,7 +359,7 @@ export function ThemeEditorPanel() {
       )}
 
       {/* Wide screens: sections | preview | options, the last two pinned so nothing needs scrolling back. */}
-      <div className="grid gap-4 lg:grid-cols-[10rem_minmax(0,1fr)_24rem] lg:items-start lg:gap-6">
+      <div className="grid gap-4 lg:grid-cols-[10rem_minmax(0,1fr)_25rem] lg:items-start lg:gap-6">
         <nav aria-label="Design sections" className="min-w-0 lg:sticky lg:top-24">
           <ul role="tablist" aria-orientation="vertical" className="flex gap-1 overflow-x-auto pb-1 lg:flex-col lg:pb-0">
             {SECTIONS.map((option) => (

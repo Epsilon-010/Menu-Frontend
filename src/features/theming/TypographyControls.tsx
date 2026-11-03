@@ -97,7 +97,7 @@ function ElementControls({ theme, element, onChange }: { theme: Theme; element: 
           {font.family} · {style.size}px · {style.weight}
         </span>
       </summary>
-      <div className="grid gap-4 border-t border-line p-3 @xs:grid-cols-2">
+      <div className="grid gap-4 border-t border-line p-3 @sm:grid-cols-2">
         <Field label="Font">
           <Select value={style.font} onChange={(event) => change({ font: event.target.value as FontRole })}>
             {FONT_ROLES.map((role) => (
@@ -186,7 +186,7 @@ export function TypographyControls({ theme, onChange }: TypographyControlsProps)
   const { typography } = theme
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 @xs:grid-cols-2">
+      <div className="grid gap-4 @sm:grid-cols-2">
         {FONT_ROLES.map((role) => (
           <Field key={role} label={`${ROLE_LABELS[role]} font`}>
             <FontSelect value={typography.fonts[role]} onChange={(font) => onChange(withRoleFont(theme, role, font))} />

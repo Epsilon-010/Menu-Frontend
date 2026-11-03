@@ -29,9 +29,10 @@ function useFitScale(width: number, height: number) {
   useEffect(() => {
     const element = ref.current
     if (!element) return
-    const wide = window.matchMedia('(min-width: 64rem)')
+    // Some embedded browsers and test environments have no matchMedia; they get the width fit only.
+    const wide = window.matchMedia?.('(min-width: 64rem)')
     const update = () => {
-      const byHeight = wide.matches ? Math.max(0.3, (window.innerHeight - PINNED_CHROME_PX) / height) : 1
+      const byHeight = wide?.matches ? Math.max(0.3, (window.innerHeight - PINNED_CHROME_PX) / height) : 1
       setScale(Math.min(1, element.clientWidth / width, byHeight))
     }
     update()

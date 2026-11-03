@@ -109,7 +109,7 @@ export function CardControls({ theme, onChange }: CardControlsProps) {
         }
       />
 
-      <fieldset className="grid gap-4 sm:grid-cols-3">
+      <fieldset className="grid gap-4 @xs:grid-cols-2 @md:grid-cols-3">
         <legend className="mb-2 text-sm font-semibold text-ink">Image</legend>
         <Choice
           label="Shape"
@@ -149,7 +149,7 @@ export function CardControls({ theme, onChange }: CardControlsProps) {
         </Field>
       )}
 
-      <fieldset className="grid gap-4 sm:grid-cols-2">
+      <fieldset className="grid gap-4 @xs:grid-cols-2">
         <legend className="mb-2 text-sm font-semibold text-ink">Card</legend>
         <Choice
           label="Corners"
@@ -215,7 +215,7 @@ export function CardControls({ theme, onChange }: CardControlsProps) {
         />
       </fieldset>
 
-      <fieldset className="grid gap-4 sm:grid-cols-2">
+      <fieldset className="grid gap-4 @xs:grid-cols-2">
         <legend className="mb-2 text-sm font-semibold text-ink">Add button</legend>
         <Choice
           label="Content"
@@ -233,7 +233,7 @@ export function CardControls({ theme, onChange }: CardControlsProps) {
         />
       </fieldset>
 
-      <fieldset className="grid gap-4 sm:grid-cols-2">
+      <fieldset className="grid gap-4 @xs:grid-cols-2">
         <legend className="mb-2 text-sm font-semibold text-ink">Motion</legend>
         <Choice
           label="On hover"

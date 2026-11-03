@@ -133,7 +133,7 @@ export function ColorControls({ theme, defaults, onChange }: ColorControlsProps)
       {COLOR_GROUPS.map((group) => (
         <fieldset key={group.title} className="space-y-3">
           <legend className="text-sm font-semibold text-ink">{group.title}</legend>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 @xs:grid-cols-2">
             {group.fields.map(([field, label]) => (
               <ColorInput
                 key={field}
@@ -158,7 +158,7 @@ export function ColorControls({ theme, defaults, onChange }: ColorControlsProps)
           Paint the menu header with a gradient when there is no banner image
         </label>
         {colors.gradient.enabled && (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 @xs:grid-cols-2">
             <ColorInput label="From" value={colors.gradient.from} onChange={(from) => onChange(withGradient(theme, { from }))} />
             <ColorInput label="To" value={colors.gradient.to} onChange={(to) => onChange(withGradient(theme, { to }))} />
             <Field label={`Angle: ${colors.gradient.angle}°`}>

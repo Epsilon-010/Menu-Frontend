@@ -63,7 +63,7 @@ export function LayoutControls({ theme, onChange }: LayoutControlsProps) {
         onChange={(navigation) => set({ navigation })}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 @xs:grid-cols-2">
         <Choice
           label="Products"
           value={layout.product_view}

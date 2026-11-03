@@ -1,5 +1,15 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import {
+  CardsIcon,
+  ClockCounterClockwiseIcon,
+  LayoutIcon,
+  PaletteIcon,
+  SquaresFourIcon,
+  StorefrontIcon,
+  TextAaIcon,
+} from '@phosphor-icons/react'
+import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { Button } from '../../shared/ui/Button.tsx'
+import { MOTION } from '../../shared/ui/classes.ts'
 import { ErrorText, ListSkeleton, LoadError, SuccessText } from '../../shared/ui/Feedback.tsx'
 import { Card, SectionHeader } from '../../shared/ui/Section.tsx'
 import { useAuth } from '../auth/useAuth.ts'
@@ -37,7 +47,49 @@ import { LayoutControls } from './LayoutControls.tsx'
 import { ThemeHistory } from './ThemeHistory.tsx'
 import { TypographyControls } from './TypographyControls.tsx'
 
-type LoadState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded'; saved: ThemeDraftState }
+type EditorSection = 'templates' | 'colors' | 'brand' | 'typography' | 'layout' | 'cards' | 'versions'
+
+const SECTIONS: { id: EditorSection; label: string; description: string; icon: ReactNode }[] = [
+  {
+    id: 'templates',
+    label: 'Templates',
+    description: 'Sets the colors, fonts, layout and cards at once; your name, logo and images stay.',
+    icon: <SquaresFourIcon size={16} aria-hidden />,
+  },
+  { id: 'colors', label: 'Colors', description: 'The palette of the menu, in light or dark mode.', icon: <PaletteIcon size={16} aria-hidden /> },
+  {
+    id: 'brand',
+    label: 'Brand',
+    description: 'Name, texts, logo, banner and background.',
+    icon: <StorefrontIcon size={16} aria-hidden />,
+  },
+  {
+    id: 'typography',
+    label: 'Typography',
+    description: 'Fonts and how each text of the menu looks.',
+    icon: <TextAaIcon size={16} aria-hidden />,
+  },
+  {
+    id: 'layout',
+    label: 'Layout',
+    description: 'Category navigation, product view, columns and the order bar.',
+    icon: <LayoutIcon size={16} aria-hidden />,
+  },
+  {
+    id: 'cards',
+    label: 'Product cards',
+    description: 'Shape, image, badges and the add button of each product.',
+    icon: <CardsIcon size={16} aria-hidden />,
+  },
+  {
+    id: 'versions',
+    label: 'Versions',
+    description: 'Go back to a published design, start over from the defaults, or move a design between businesses.',
+    icon: <ClockCounterClockwiseIcon size={16} aria-hidden />,
+  },
+]
+
+type LoadState ={ status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded'; saved: ThemeDraftState }
 
 type HistoryState = { versions: ThemeVersion[] | null; error: string | null }
 
@@ -93,6 +145,7 @@ export function ThemeEditorPanel() {
   const importInput = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [section, setSection] = useState<EditorSection>('templates')
 
   useEffect(() => {
     let active = true
@@ -153,7 +206,7 @@ export function ThemeEditorPanel() {
 
   function applyPreset(preset: ThemePreset) {
     setDraft(withPreset(theme, preset))
-    setNotice(`${preset.name} applied to the draft. Adjust anything below, then save or publish.`)
+    setNotice(`${preset.name} applied to the draft. Adjust anything in the other sections, then save or publish.`)
   }
 
   function restore(version: ThemeVersion) {
@@ -233,11 +286,55 @@ export function ThemeEditorPanel() {
     setBusy(null)
   }
 
+  const panels: Record<EditorSection, ReactNode> = {
+    templates: (
+      <PresetGallery presets={saved.presets} selected={matchingPreset(theme, saved.presets)} onApply={applyPreset} />
+    ),
+    colors: <ColorControls theme={theme} defaults={saved.defaults} onChange={edit} />,
+    brand: (
+      <BrandControls theme={theme} imageUrls={imageUrls} businessName={businessName} onChange={edit} onUpload={upload} />
+    ),
+    typography: <TypographyControls theme={theme} onChange={edit} />,
+    layout: <LayoutControls theme={theme} onChange={edit} />,
+    cards: <CardControls theme={theme} onChange={edit} />,
+    versions: (
+      <div className="space-y-4">
+        <div className="flex flex-wrap gap-2">
+          <Button disabled={busy !== null} onClick={reset}>
+            Reset to defaults
+          </Button>
+          <Button onClick={() => download(theme, themeFileName(businessName, new Date()))}>Export design</Button>
+          <Button disabled={busy !== null} onClick={() => importInput.current?.click()}>
+            {busy === 'importing' ? 'Importing…' : 'Import design'}
+          </Button>
+          <input
+            ref={importInput}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            aria-label="Design file to import"
+            onChange={(event) => void handleImport(event)}
+          />
+        </div>
+        <ThemeHistory
+          versions={history.versions}
+          error={history.error}
+          onRestore={restore}
+          onRetry={() => {
+            setHistory({ versions: null, error: null })
+            setHistoryKey((key) => key + 1)
+          }}
+        />
+      </div>
+    ),
+  }
+  const current = SECTIONS.find((option) => option.id === section) ?? SECTIONS[0]
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <SectionHeader
         title="Design"
-        description="Start from a template or choose the colors, logo and banner of your table menu. Changes stay in a draft with a live preview until you publish them."
+        description={<span role="status">{statusText(saved, dirty)}</span>}
         action={
           <div className="flex flex-wrap gap-2">
             <Button disabled={busy !== null || !dirty} onClick={() => void handleSave()}>
@@ -254,97 +351,56 @@ export function ThemeEditorPanel() {
         }
       />
 
-      <div className="space-y-2">
-        <p role="status" className="text-sm text-muted">
-          {statusText(saved, dirty)}
-        </p>
-        {error && <ErrorText>{error}</ErrorText>}
-        {notice && <SuccessText>{notice}</SuccessText>}
-      </div>
-
-      <Card className="space-y-4 p-4">
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold tracking-tight text-ink">Templates</h2>
-          <p className="text-sm text-muted">
-            Want something quick? Pick a template: it sets the colors, fonts and layout, and keeps your name, logo and images.
-          </p>
+      {(error || notice) && (
+        <div className="space-y-2">
+          {error && <ErrorText>{error}</ErrorText>}
+          {notice && <SuccessText>{notice}</SuccessText>}
         </div>
-        <PresetGallery presets={saved.presets} selected={matchingPreset(theme, saved.presets)} onApply={applyPreset} />
-      </Card>
+      )}
 
-      <Card className="space-y-4 p-4">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold tracking-tight text-ink">Versions and backups</h2>
-            <p className="text-sm text-muted">
-              Go back to a design you published, start over from the defaults, or move a design between businesses.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button disabled={busy !== null} onClick={reset}>
-              Reset to defaults
-            </Button>
-            <Button onClick={() => download(theme, themeFileName(businessName, new Date()))}>Export design</Button>
-            <Button disabled={busy !== null} onClick={() => importInput.current?.click()}>
-              {busy === 'importing' ? 'Importing…' : 'Import design'}
-            </Button>
-            <input
-              ref={importInput}
-              type="file"
-              accept="application/json,.json"
-              className="hidden"
-              aria-label="Design file to import"
-              onChange={(event) => void handleImport(event)}
-            />
-          </div>
-        </div>
-        <ThemeHistory
-          versions={history.versions}
-          error={history.error}
-          onRestore={restore}
-          onRetry={() => {
-            setHistory({ versions: null, error: null })
-            setHistoryKey((key) => key + 1)
-          }}
-        />
-      </Card>
+      {/* Wide screens: sections | preview | options, the last two pinned so nothing needs scrolling back. */}
+      <div className="grid gap-4 lg:grid-cols-[10rem_minmax(0,1fr)_24rem] lg:items-start lg:gap-6">
+        <nav aria-label="Design sections" className="min-w-0 lg:sticky lg:top-24">
+          <ul role="tablist" aria-orientation="vertical" className="flex gap-1 overflow-x-auto pb-1 lg:flex-col lg:pb-0">
+            {SECTIONS.map((option) => (
+              <li key={option.id} role="presentation" className="shrink-0">
+                <button
+                  type="button"
+                  role="tab"
+                  id={`design-tab-${option.id}`}
+                  aria-selected={section === option.id}
+                  aria-controls="design-options"
+                  onClick={() => setSection(option.id)}
+                  className={`inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap active:scale-[0.98] ${MOTION} ${
+                    section === option.id ? 'bg-action text-action-ink' : 'text-ink-soft hover:bg-subtle hover:text-ink'
+                  }`}
+                >
+                  {option.icon}
+                  {option.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        <div className="min-w-0 space-y-8">
-          <Card className="space-y-4 p-4">
-            <h2 className="text-lg font-semibold tracking-tight text-ink">Colors</h2>
-            <ColorControls theme={theme} defaults={saved.defaults} onChange={edit} />
-          </Card>
-          <Card className="space-y-4 p-4">
-            <h2 className="text-lg font-semibold tracking-tight text-ink">Brand</h2>
-            <BrandControls
-              theme={theme}
-              imageUrls={imageUrls}
-              businessName={businessName}
-              onChange={edit}
-              onUpload={upload}
-            />
-          </Card>
-          <Card className="space-y-4 p-4">
-            <h2 className="text-lg font-semibold tracking-tight text-ink">Typography</h2>
-            <TypographyControls theme={theme} onChange={edit} />
-          </Card>
-          <Card className="space-y-4 p-4">
-            <h2 className="text-lg font-semibold tracking-tight text-ink">Layout</h2>
-            <LayoutControls theme={theme} onChange={edit} />
-          </Card>
-          <Card className="space-y-4 p-4">
-            <h2 className="text-lg font-semibold tracking-tight text-ink">Product cards</h2>
-            <CardControls theme={theme} onChange={edit} />
-          </Card>
-        </div>
-
-        <aside aria-label="Preview" className="min-w-0">
-          <div className="sticky top-24 space-y-3">
-            <h2 className="text-lg font-semibold tracking-tight text-ink">Preview</h2>
-            <ThemePreview theme={theme} imageUrls={imageUrls} businessName={businessName} />
-          </div>
+        <aside aria-label="Preview" className="order-last min-w-0 lg:sticky lg:top-24 lg:order-none">
+          <ThemePreview theme={theme} imageUrls={imageUrls} businessName={businessName} />
         </aside>
+
+        <Card className="@container min-w-0 lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto">
+          <section
+            id="design-options"
+            role="tabpanel"
+            aria-labelledby={`design-tab-${current.id}`}
+            className="space-y-4 p-4"
+          >
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold tracking-tight text-ink">{current.label}</h2>
+              <p className="text-sm text-pretty text-muted">{current.description}</p>
+            </div>
+            {panels[current.id]}
+          </section>
+        </Card>
       </div>
     </div>
   )

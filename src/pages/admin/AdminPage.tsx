@@ -1,6 +1,6 @@
 import { BowlFoodIcon, CallBellIcon, ChairIcon, ChartBarIcon, CookingPotIcon, PaletteIcon, ShieldCheckIcon, SlidersHorizontalIcon, TimerIcon, UserCircleIcon, UsersThreeIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
-import { Outlet, useNavigate } from 'react-router'
+import { Outlet, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../../features/auth/useAuth.ts'
 import { AppShell, type NavItem } from '../../shared/ui/AppShell.tsx'
 
@@ -23,6 +23,7 @@ const ADMIN_NAV: NavItem[] = [
 export function AdminPage() {
   const { state, signOut } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const [signingOut, setSigningOut] = useState(false)
 
   if (state.status !== 'authenticated' || state.account.user === null) return null
@@ -41,6 +42,8 @@ export function AdminPage() {
       nav={ADMIN_NAV}
       onSignOut={() => void handleSignOut()}
       signingOut={signingOut}
+      // The design editor puts its sections, preview and options side by side.
+      width={pathname === '/admin/design' ? 'max-w-7xl' : undefined}
     >
       <Outlet />
     </AppShell>

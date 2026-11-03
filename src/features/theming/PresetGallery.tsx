@@ -82,7 +82,7 @@ interface PresetGalleryProps {
 /** Ready-made designs: one click sets colors and typography; the brand stays as it is. */
 export function PresetGallery({ presets, selected, onApply }: PresetGalleryProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+    <div className="grid grid-cols-2 gap-3">
       {presets.map((preset) => (
         <PresetCard key={preset.id} preset={preset} selected={preset.id === selected} onApply={() => onApply(preset)} />
       ))}

@@ -15,17 +15,34 @@ const DEVICES: Record<Device, { width: number; height: number; label: string }> 
   phone: { width: 390, height: 780, label: 'Phone' },
 }
 
-/** Scale that fits a frame of `width` pixels into its container (never above 1). */
-function useFitScale(width: number) {
+// Space above and below the frame on wide screens before scrolling: the page title, the size toggle and a
+// bottom margin. Pinned after scrolling, the frame keeps that size and just has some room left.
+const PINNED_CHROME_PX = 232
+
+/**
+ * Scale that fits a `width` x `height` frame into its container (never above 1). On wide screens the
+ * preview stays pinned beside the options, so the whole frame also fits the window height.
+ */
+function useFitScale(width: number, height: number) {
   const ref = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
   useEffect(() => {
     const element = ref.current
     if (!element) return
-    const observer = new ResizeObserver(([entry]) => setScale(Math.min(1, entry.contentRect.width / width)))
+    const wide = window.matchMedia('(min-width: 64rem)')
+    const update = () => {
+      const byHeight = wide.matches ? Math.max(0.3, (window.innerHeight - PINNED_CHROME_PX) / height) : 1
+      setScale(Math.min(1, element.clientWidth / width, byHeight))
+    }
+    update()
+    const observer = new ResizeObserver(update)
     observer.observe(element)
-    return () => observer.disconnect()
-  }, [width])
+    window.addEventListener('resize', update)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', update)
+    }
+  }, [width, height])
   return { ref, scale }
 }
 
@@ -41,7 +58,7 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
   const [menu, setMenu] = useState<MenuCategory[] | null>(null)
   const [menuFailed, setMenuFailed] = useState(false)
   const frame = DEVICES[device]
-  const { ref, scale } = useFitScale(frame.width)
+  const { ref, scale } = useFitScale(frame.width, frame.height)
   const logoUrl = theme.brand.logo.image_id ? imageUrls[theme.brand.logo.image_id] : undefined
   const { layout, cards } = theme
   // The real menu shows the side panel from tablets (panel) or large screens (bar); the tablet frame is below large.
@@ -70,7 +87,7 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
   }, [])
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col items-center gap-3">
       <div role="radiogroup" aria-label="Preview size" className="inline-flex gap-1 rounded-xl border border-line bg-surface p-1">
         {(Object.keys(DEVICES) as Device[]).map((option) => (
           <button
@@ -90,7 +107,7 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
       </div>
 
       <div ref={ref} className="w-full">
-        <div style={{ height: frame.height * scale }} className="mx-auto" aria-label={`Menu preview, ${frame.label}`}>
+        <div style={{ width: frame.width * scale, height: frame.height * scale }} className="mx-auto" aria-label={`Menu preview, ${frame.label}`}>
           <div
             style={{ width: frame.width, height: frame.height, transform: `scale(${scale})`, transformOrigin: 'top left' }}
             className="overflow-hidden rounded-3xl border-8 border-zinc-900 shadow-lg"

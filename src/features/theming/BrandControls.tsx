@@ -156,7 +156,7 @@ export function BrandControls({ theme, imageUrls, businessName, onChange, onUplo
           onUpload={onUpload}
           onRemove={() => onChange(withBrand(theme, { logo: { ...brand.logo, image_id: null } }))}
         />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 @xs:grid-cols-2">
           <Field label="Size">
             <Select
               value={brand.logo.size}
@@ -193,7 +193,7 @@ export function BrandControls({ theme, imageUrls, businessName, onChange, onUplo
           onUpload={onUpload}
           onRemove={() => onChange(withBrand(theme, { banner: { ...brand.banner, image_id: null } }))}
         />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 @xs:grid-cols-2">
           <Field label="Height">
             <Select
               value={brand.banner.height}
@@ -247,7 +247,7 @@ export function BrandControls({ theme, imageUrls, businessName, onChange, onUplo
           onUpload={onUpload}
           onRemove={() => onChange(withBrand(theme, { background: { ...brand.background, image_id: null, kind: 'none' } }))}
         />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 @xs:grid-cols-2">
           <Field label="Pattern">
             <Select
               value={brand.background.pattern}

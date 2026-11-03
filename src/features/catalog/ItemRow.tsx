@@ -11,7 +11,7 @@ import {
 } from '@phosphor-icons/react'
 import { useState, type ChangeEvent } from 'react'
 import { Button, IconButton } from '../../shared/ui/Button.tsx'
-import { MOTION } from '../../shared/ui/classes.ts'
+import { buttonClass, MOTION } from '../../shared/ui/classes.ts'
 import { Field, Select } from '../../shared/ui/Field.tsx'
 import { Badge, ErrorText } from '../../shared/ui/Feedback.tsx'
 import type { ModifierGroup } from '../modifiers/api.ts'
@@ -91,14 +91,14 @@ export function ItemRow({ item, categories, modifierGroups, isFirst, isLast, act
             disabled={busy}
             onClick={() => void run(() => actions.update({ is_available: !item.is_available }))}
           />
+          {/* A labeled button, not just an icon: admins could not find where to upload a photo. */}
           <label
-            title={item.image ? 'Cambiar imagen' : 'Agregar imagen'}
-            className={`inline-flex cursor-pointer items-center justify-center rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-zinc-950 ${MOTION} ${
+            className={`cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-zinc-950 ${buttonClass('secondary')} ${
               busy ? 'pointer-events-none opacity-40' : ''
             }`}
           >
             <UploadSimpleIcon size={16} aria-hidden />
-            <span className="sr-only">{item.image ? 'Cambiar imagen' : 'Agregar imagen'}</span>
+            {item.image ? 'Cambiar imagen' : 'Subir imagen'}
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"

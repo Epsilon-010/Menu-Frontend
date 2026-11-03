@@ -63,7 +63,7 @@ describe('splitDelivery', () => {
 
 describe('deliveryCounter', () => {
   it('counts delivered dishes against the ones still owed, leaving rejected dishes out', () => {
-    expect(deliveryCounter(ORDER_12)).toBe('Table 1 · Order #12 · 2 of 5 delivered')
+    expect(deliveryCounter(ORDER_12)).toBe('Table 1 · Orden #12 · 2 de 5 entregados')
   })
 
   it('reads the done when scenario: 2 ready and 2 still cooking', () => {
@@ -73,7 +73,7 @@ describe('deliveryCounter', () => {
       item('c', 'queued'),
       item('d', 'queued'),
     ])
-    expect(deliveryCounter(second)).toBe('Table 5 · Order #2 · 0 of 4 delivered')
+    expect(deliveryCounter(second)).toBe('Table 5 · Orden #2 · 0 de 4 entregados')
     expect(splitDelivery(second).ready).toHaveLength(2)
     expect(splitDelivery(second).inKitchen).toHaveLength(2)
   })
@@ -165,7 +165,7 @@ describe('newRejections', () => {
 
     const second = newRejections(first.seen, tables([tableItem('a', 'cancelled', 'Old'), tableItem('b', 'cancelled', 'Out of avocado')]))
     expect(second.rejections).toEqual([
-      { id: 'b', table_name: 'Table 1', order_number: 7, name: 'Dish b', note: 'Rejected: Out of avocado' },
+      { id: 'b', table_name: 'Table 1', order_number: 7, name: 'Dish b', note: 'Rechazado: Out of avocado' },
     ])
 
     const third = newRejections(second.seen, tables([tableItem('a', 'cancelled', 'Old'), tableItem('b', 'cancelled', 'Out of avocado')]))

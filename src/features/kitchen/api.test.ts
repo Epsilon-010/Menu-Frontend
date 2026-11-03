@@ -87,11 +87,11 @@ describe('kitchen API', () => {
     stubFetch(new TypeError('Failed to fetch'), problem(500, 'boom'), problem(422))
 
     expect(((await failure(fetchKitchenOrders())) as OrdersError).message).toBe(
-      'Could not reach the server. Check your connection and try again.',
+      'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.',
     )
     expect(((await failure(fetchKitchenOrders())) as OrdersError).message).toBe(
-      'The server could not complete that. Please try again in a moment.',
+      'El servidor no pudo completar la acción. Inténtalo de nuevo en un momento.',
     )
-    expect(((await failure(fetchKitchenOrders())) as OrdersError).message).toBe('Please check the fields and try again.')
+    expect(((await failure(fetchKitchenOrders())) as OrdersError).message).toBe('Revisa los campos e inténtalo de nuevo.')
   })
 })

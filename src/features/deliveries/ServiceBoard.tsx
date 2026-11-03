@@ -76,7 +76,7 @@ export function ServiceBoard() {
         >
           <p className="flex items-center gap-2 font-semibold text-amber-900">
             <BellRingingIcon size={18} aria-hidden />
-            {requests.length === 1 ? 'A table is asking for the bill' : `${requests.length} tables are asking for the bill`}
+            {requests.length === 1 ? 'Una mesa pide la cuenta' : `${requests.length} mesas piden la cuenta`}
           </p>
           <ul className="flex flex-wrap gap-2">
             {requests.map((request) => (
@@ -99,14 +99,14 @@ export function ServiceBoard() {
           <div className="flex items-start justify-between gap-4">
             <p className="flex items-center gap-2 font-semibold text-red-900">
               <ProhibitIcon size={18} aria-hidden />
-              The kitchen rejected {rejections.length === 1 ? 'a dish' : `${rejections.length} dishes`}. Let the table know.
+              La cocina rechazó {rejections.length === 1 ? 'un platillo' : `${rejections.length} platillos`}. Avísale a la mesa.
             </p>
-            <IconButton label="Dismiss" icon={<XIcon size={16} aria-hidden />} onClick={() => setRejections([])} />
+            <IconButton label="Descartar" icon={<XIcon size={16} aria-hidden />} onClick={() => setRejections([])} />
           </div>
           <ul className="space-y-1 text-sm text-red-900">
             {rejections.map((rejection) => (
               <li key={rejection.id}>
-                {rejection.table_name} · Order #{rejection.order_number} · {rejection.name} — {rejection.note}
+                {rejection.table_name} · Orden #{rejection.order_number} · {rejection.name} — {rejection.note}
               </li>
             ))}
           </ul>

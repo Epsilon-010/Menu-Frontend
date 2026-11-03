@@ -4,9 +4,9 @@ import { withItemModifiers, type Order } from '../ordering/api.ts'
 export type PaymentMethod = 'cash' | 'card' | 'other'
 
 export const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
-  { value: 'cash', label: 'Cash' },
-  { value: 'card', label: 'Card' },
-  { value: 'other', label: 'Other' },
+  { value: 'cash', label: 'Efectivo' },
+  { value: 'card', label: 'Tarjeta' },
+  { value: 'other', label: 'Otro' },
 ]
 
 /** A table's visit, from opening the table until its payment. */
@@ -43,15 +43,15 @@ export class BillError extends Error {
 }
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
-const OFFLINE = 'Could not reach the server. Check your connection and try again.'
-const SERVER_FAILED = 'The server could not complete that. Please try again in a moment.'
+const OFFLINE = 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.'
+const SERVER_FAILED = 'El servidor no pudo completar la acción. Inténtalo de nuevo en un momento.'
 
 async function errorFrom(response: Response): Promise<BillError> {
   const body = (await response.json().catch(() => null)) as { detail?: unknown } | null
   if (typeof body?.detail === 'string' && response.status < 500) {
     return new BillError(body.detail.endsWith('.') ? body.detail : `${body.detail}.`, response.status)
   }
-  if (response.status === 422) return new BillError('Please check the fields and try again.', 422)
+  if (response.status === 422) return new BillError('Revisa los campos e inténtalo de nuevo.', 422)
   return new BillError(SERVER_FAILED, response.status)
 }
 

@@ -41,9 +41,9 @@ describe('rangeError', () => {
   })
 
   it('uses the same messages as the API', () => {
-    expect(rangeError({ from: '2026-10-21', to: '2026-10-20' })).toBe('The end date must be on or after the start date.')
-    expect(rangeError({ from: '2026-01-01', to: '2027-01-02' })).toBe('The range can be at most 366 days.')
-    expect(rangeError({ from: '', to: '2026-10-20' })).toBe('Pick both dates.')
+    expect(rangeError({ from: '2026-10-21', to: '2026-10-20' })).toBe('La fecha final debe ser igual o posterior a la inicial.')
+    expect(rangeError({ from: '2026-01-01', to: '2027-01-02' })).toBe('El rango puede ser de 366 días como máximo.')
+    expect(rangeError({ from: '', to: '2026-10-20' })).toBe('Elige ambas fechas.')
   })
 })
 
@@ -65,7 +65,7 @@ describe('formatDuration', () => {
 
 describe('shortDay', () => {
   it('labels a day without shifting it by the browser time zone', () => {
-    expect(shortDay('2026-10-01')).toBe('Oct 1')
+    expect(shortDay('2026-10-01')).toBe('1 oct')
   })
 })
 

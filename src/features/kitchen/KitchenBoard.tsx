@@ -36,19 +36,19 @@ export function KitchenBoard() {
   return (
     <div className="space-y-8">
       <SectionHeader
-        title="Kitchen"
-        description={`Orders arrive as soon as a table sends them, oldest first. Work on any of them: select dishes to start them, mark them ready or reject the ones you cannot make. Tickets waiting over ${lateMinutes} min are highlighted.`}
-        action={<SoundToggle enabled={sound.enabled} onToggle={sound.toggle} announces="new orders" />}
+        title="Cocina"
+        description={`Las órdenes llegan en cuanto una mesa las envía, de la más antigua a la más reciente. Trabaja en cualquiera: selecciona platillos para empezarlos, márcalos como listos o rechaza los que no puedas preparar. Se resaltan las comandas que esperan más de ${lateMinutes} min.`}
+        action={<SoundToggle enabled={sound.enabled} onToggle={sound.toggle} announces="órdenes nuevas" />}
       />
 
       {queue.notice && <QueueNotice message={queue.notice} onDismiss={queue.dismissNotice} />}
 
-      {queue.list.status === 'loading' && <ListSkeleton label="Loading the kitchen queue" />}
+      {queue.list.status === 'loading' && <ListSkeleton label="Cargando la cola de cocina" />}
       {queue.list.status === 'error' && <LoadError message={queue.list.message} onRetry={queue.retry} />}
       {queue.list.status === 'loaded' &&
         (orders.length === 0 ? (
-          <EmptyState icon={<CookingPotIcon size={24} aria-hidden />} title="The queue is empty">
-            New orders arrive here as soon as a table sends them, oldest first. You choose which dishes to start.
+          <EmptyState icon={<CookingPotIcon size={24} aria-hidden />} title="La cola está vacía">
+            Las órdenes nuevas llegan aquí en cuanto una mesa las envía, de la más antigua a la más reciente. Tú eliges qué platillos empezar.
           </EmptyState>
         ) : (
           <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">

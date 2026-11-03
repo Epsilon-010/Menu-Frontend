@@ -20,10 +20,10 @@ interface DeliveryOrderCardProps {
 }
 
 const SECTION_TITLES: Record<DeliverySection, string> = {
-  ready: 'Ready to take',
-  inKitchen: 'In the kitchen',
-  delivered: 'Delivered',
-  rejected: 'Rejected',
+  ready: 'Listos para llevar',
+  inKitchen: 'En cocina',
+  delivered: 'Entregados',
+  rejected: 'Rechazados',
 }
 
 function DishLine({ item, children }: { item: StaffOrderItem; children?: ReactNode }) {
@@ -36,7 +36,7 @@ function DishLine({ item, children }: { item: StaffOrderItem; children?: ReactNo
           <span className="text-zinc-500"> · {item.added_by}</span>
         </p>
         {item.modifiers.length > 0 && <p className="text-zinc-600">{modifierSummary(item.modifiers)}</p>}
-        {item.note && <p className="text-amber-800">Note: {item.note}</p>}
+        {item.note && <p className="text-amber-800">Nota: {item.note}</p>}
         {note && <p className="font-medium text-red-700">{note}</p>}
       </div>
       {children ?? (item.status !== 'cancelled' && <Badge tone={staffItemTone(item.status)}>{staffItemLabel(item.status)}</Badge>)}
@@ -67,7 +67,7 @@ export function DeliveryOrderCard({ order, now, late, view, onDeliver }: Deliver
           // Each half stays on one line; the counter only drops below the table when both cannot fit.
           <>
             <span className="whitespace-nowrap">
-              {order.table_name} · Order #{order.number}
+              {order.table_name} · Orden #{order.number}
             </span>{' '}
             <span className="whitespace-nowrap font-normal text-zinc-500">· {deliveryProgress(order)}</span>
           </>
@@ -92,7 +92,7 @@ export function DeliveryOrderCard({ order, now, late, view, onDeliver }: Deliver
                       disabled={busy}
                       onClick={() => deliver([item.id])}
                     >
-                      Deliver
+                      Entregar
                     </Button>
                   </DishLine>
                 ) : (
@@ -112,7 +112,7 @@ export function DeliveryOrderCard({ order, now, late, view, onDeliver }: Deliver
           disabled={busy}
           onClick={() => deliver(groups.ready.map((item) => item.id))}
         >
-          {busy ? 'Delivering…' : `Deliver all ready (${groups.ready.length})`}
+          {busy ? 'Entregando…' : `Entregar todos los listos (${groups.ready.length})`}
         </Button>
       )}
 

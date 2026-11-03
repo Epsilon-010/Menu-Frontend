@@ -19,14 +19,14 @@ import { tablesForWaiter } from './logic.ts'
 import { TableBillCard } from './TableBillCard.tsx'
 
 const REFRESH_MS = 10_000
-const STALE = 'Saved, but the list could not refresh. It updates again in a few seconds.'
+const STALE = 'Se guardó, pero la lista no se pudo actualizar. Se actualiza de nuevo en unos segundos.'
 
 type ListState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded'; tables: TableOverview[] }
 
 function messageOf(error: unknown): string {
   return error instanceof BillError || error instanceof OrdersError
     ? error.message
-    : 'Something went wrong. Please try again.'
+    : 'Algo salió mal. Inténtalo de nuevo.'
 }
 
 interface TablesBoardProps {
@@ -106,7 +106,7 @@ export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = 
     return {
       onOpen: () => act(() => openTable(table.table_id)),
       onPay: (method: PaymentMethod) =>
-        bill ? act(() => registerPayment(bill.id, method)) : Promise.resolve('This table is not open.'),
+        bill ? act(() => registerPayment(bill.id, method)) : Promise.resolve('Esta mesa no está abierta.'),
       onClose: () => (bill ? act(() => closeTable(bill.id)) : Promise.resolve(null)),
       onDismissRequest: () => (bill ? act(() => dismissBillRequest(bill.id)) : Promise.resolve(null)),
       onCancelDish: (orderId: string, itemId: string, reason: string) =>
@@ -118,8 +118,8 @@ export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = 
   return (
     <div className="space-y-8">
       <SectionHeader
-        title="Tables"
-        description="Open a table so guests can join with its QR and order from their phones. Registering the payment closes the bill and signs every guest out."
+        title="Mesas"
+        description="Abre una mesa para que los comensales entren con su QR y pidan desde su celular. Al registrar el pago se cierra la cuenta y se cierra la sesión de todos los comensales."
       />
 
       {stale && (
@@ -128,12 +128,12 @@ export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = 
         </p>
       )}
 
-      {list.status === 'loading' && <ListSkeleton label="Loading tables" />}
+      {list.status === 'loading' && <ListSkeleton label="Cargando mesas" />}
       {list.status === 'error' && <LoadError message={list.message} onRetry={retry} />}
       {list.status === 'loaded' &&
         (list.tables.length === 0 ? (
-          <EmptyState icon={<ChairIcon size={24} aria-hidden />} title="No tables yet">
-            The manager adds the tables in the admin panel. They show up here right after.
+          <EmptyState icon={<ChairIcon size={24} aria-hidden />} title="Aún no hay mesas">
+            El administrador agrega las mesas en el panel de administración. Aparecen aquí en cuanto las agrega.
           </EmptyState>
         ) : (
           <div className="space-y-4">

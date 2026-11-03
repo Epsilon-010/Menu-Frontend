@@ -33,29 +33,29 @@ export function DeliveryQueue({ list, now, lateMinutes, notice, onDismissNotice,
   return (
     <div className="space-y-6">
       <SectionHeader
-        title="Ready to deliver"
-        description={`Dishes appear here as soon as the kitchen marks them ready, inside their order. Orders waiting over ${lateMinutes} min are highlighted.`}
-        action={<SoundToggle enabled={sound.enabled} onToggle={sound.toggle} announces="dishes ready to take" />}
+        title="Listos para entregar"
+        description={`Los platillos aparecen aquí, dentro de su orden, en cuanto la cocina los marca como listos. Se resaltan las órdenes que esperan más de ${lateMinutes} min.`}
+        action={<SoundToggle enabled={sound.enabled} onToggle={sound.toggle} announces="platillos listos para llevar" />}
       />
 
       <div className="flex flex-wrap gap-4">
         <label className="flex items-center gap-2 text-sm text-zinc-700">
-          Show
+          Mostrar
           <Select value={view} onChange={(event) => setView(event.target.value as DeliveryView)} className="w-auto">
-            <option value="all">Whole order</option>
-            <option value="ready">Only ready dishes</option>
+            <option value="all">Toda la orden</option>
+            <option value="ready">Solo platillos listos</option>
           </Select>
         </label>
         <label className="flex items-center gap-2 text-sm text-zinc-700">
-          Table
+          Mesa
           <Select
             value={tableId ?? ''}
             onChange={(event) => setTableId(event.target.value === '' ? null : event.target.value)}
             className="w-auto"
           >
-            <option value="">All tables</option>
+            <option value="">Todas las mesas</option>
             {tableId !== null && !tables.some((table) => table.id === tableId) && (
-              <option value={tableId}>Selected table</option>
+              <option value={tableId}>Mesa seleccionada</option>
             )}
             {tables.map((table) => (
               <option key={table.id} value={table.id}>
@@ -68,14 +68,14 @@ export function DeliveryQueue({ list, now, lateMinutes, notice, onDismissNotice,
 
       {notice && <QueueNotice message={notice} onDismiss={onDismissNotice} />}
 
-      {list.status === 'loading' && <ListSkeleton rows={2} label="Loading dishes ready to deliver" />}
+      {list.status === 'loading' && <ListSkeleton rows={2} label="Cargando platillos listos para entregar" />}
       {list.status === 'error' && <LoadError message={list.message} onRetry={onRetry} />}
       {list.status === 'loaded' &&
         (shown.length === 0 ? (
-          <EmptyState icon={<CallBellIcon size={24} aria-hidden />} title="Nothing to deliver right now">
+          <EmptyState icon={<CallBellIcon size={24} aria-hidden />} title="Nada que entregar por ahora">
             {tableId === null
-              ? 'When the kitchen marks a dish ready, its order shows up here.'
-              : 'This table has no dishes ready. Choose All tables to see the rest.'}
+              ? 'Cuando la cocina marca un platillo como listo, su orden aparece aquí.'
+              : 'Esta mesa no tiene platillos listos. Elige Todas las mesas para ver el resto.'}
           </EmptyState>
         ) : (
           <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">

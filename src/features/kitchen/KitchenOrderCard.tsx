@@ -71,7 +71,7 @@ export function KitchenOrderCard({ order, now, late, onAct }: KitchenOrderCardPr
   return (
     <article
       aria-busy={busy}
-      aria-label={`Order ${order.number}, ${order.table_name}`}
+      aria-label={`Orden ${order.number}, ${order.table_name}`}
       className={`flex flex-col gap-4 rounded-2xl border bg-white p-4 ${late ? 'border-red-300 ring-2 ring-red-200' : 'border-zinc-200'}`}
     >
       <OrderTicketHeader order={order} now={now} late={late} />
@@ -99,9 +99,9 @@ export function KitchenOrderCard({ order, now, late, onAct }: KitchenOrderCardPr
                   {item.modifiers.length > 0 && (
                     <span className="block text-sm text-zinc-700">{modifierSummary(item.modifiers)}</span>
                   )}
-                  {item.note && <span className="block text-sm text-amber-800">Note: {item.note}</span>}
+                  {item.note && <span className="block text-sm text-amber-800">Nota: {item.note}</span>}
                   {item.status === 'cancelled' && item.cancel_reason && (
-                    <span className="block text-sm text-zinc-500">Rejected: {item.cancel_reason}</span>
+                    <span className="block text-sm text-zinc-500">Rechazado: {item.cancel_reason}</span>
                   )}
                 </span>
                 <Badge tone={staffItemTone(item.status)}>{staffItemLabel(item.status)}</Badge>
@@ -118,7 +118,7 @@ export function KitchenOrderCard({ order, now, late, onAct }: KitchenOrderCardPr
             disabled={busy || pending.length === 0}
             onClick={() => setSelected(allChosen ? new Set() : new Set(pending.map((item) => item.id)))}
           >
-            {allChosen ? 'Clear' : 'Select all'}
+            {allChosen ? 'Quitar selección' : 'Seleccionar todo'}
           </Button>
           <Button
             variant="secondary"
@@ -126,7 +126,7 @@ export function KitchenOrderCard({ order, now, late, onAct }: KitchenOrderCardPr
             disabled={busy || !actions.start}
             onClick={() => move('preparing')}
           >
-            Start{count}
+            Empezar{count}
           </Button>
           <Button
             variant="primary"
@@ -134,38 +134,38 @@ export function KitchenOrderCard({ order, now, late, onAct }: KitchenOrderCardPr
             disabled={busy || !actions.ready}
             onClick={() => move('ready')}
           >
-            Ready{count}
+            Listo{count}
           </Button>
           <Button
             variant="danger"
             icon={<ProhibitIcon size={16} aria-hidden />}
             disabled={busy || !actions.reject}
-            title="Only dishes not started yet can be rejected"
+            title="Solo se pueden rechazar los platillos que aún no empiezan"
             onClick={() => setRejecting(true)}
           >
-            Reject{count}
+            Rechazar{count}
           </Button>
         </div>
       ) : (
         <form onSubmit={submitReject} className="mt-auto space-y-2 rounded-xl bg-red-50 p-4">
           <p className="text-sm text-red-900">
-            Reject {chosen.length} {chosen.length === 1 ? 'dish' : 'dishes'}? The waiters and the table see the reason.
+            ¿Rechazar {chosen.length} {chosen.length === 1 ? 'platillo' : 'platillos'}? Los meseros y la mesa ven el motivo.
           </p>
           <TextInput
-            aria-label="Reason"
+            aria-label="Motivo"
             autoFocus
             maxLength={MAX_REASON_LENGTH}
-            placeholder="Reason, like Out of avocado"
+            placeholder="Motivo, por ejemplo: Sin aguacate"
             value={reason}
             onChange={(event) => setReason(event.target.value)}
           />
           {reasonError && <ErrorText>{reasonError}</ErrorText>}
           <div className="flex flex-wrap gap-2">
             <Button type="submit" variant="danger" disabled={busy || !actions.reject}>
-              {busy ? 'Rejecting…' : 'Reject'}
+              {busy ? 'Rechazando…' : 'Rechazar'}
             </Button>
             <Button variant="ghost" disabled={busy} onClick={() => setRejecting(false)}>
-              Cancel
+              Cancelar
             </Button>
           </div>
         </form>

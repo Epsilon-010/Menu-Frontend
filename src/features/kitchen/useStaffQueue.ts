@@ -8,7 +8,7 @@ export type QueueState =
   | { status: 'loaded'; orders: StaffOrder[] }
 
 export function messageOf(error: unknown): string {
-  return error instanceof OrdersError ? error.message : 'Something went wrong. Please try again.'
+  return error instanceof OrdersError ? error.message : 'Algo salió mal. Inténtalo de nuevo.'
 }
 
 interface StaffQueueOptions {

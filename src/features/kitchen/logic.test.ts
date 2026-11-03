@@ -106,7 +106,7 @@ describe('waiting time', () => {
   const at = (minutes: number) => Date.parse(sent) + minutes * 60_000
 
   it('reads like a clock a cook glances at', () => {
-    expect(waitingLabel(sent, at(0.5))).toBe('Just now')
+    expect(waitingLabel(sent, at(0.5))).toBe('Justo ahora')
     expect(waitingLabel(sent, at(12))).toBe('12 min')
     expect(waitingLabel(sent, at(65))).toBe('1 h 5 min')
     expect(waitingLabel('not a date', at(1))).toBe('')
@@ -128,8 +128,8 @@ describe('newIds', () => {
 
 describe('rejectReasonError', () => {
   it('asks for a reason between 1 and 200 characters', () => {
-    expect(rejectReasonError('   ')).toBe('Write why the dish is rejected.')
-    expect(rejectReasonError('x'.repeat(201))).toBe('Keep the reason under 200 characters.')
+    expect(rejectReasonError('   ')).toBe('Escribe por qué se rechaza el platillo.')
+    expect(rejectReasonError('x'.repeat(201))).toBe('El motivo debe tener menos de 200 caracteres.')
     expect(rejectReasonError(' Out of avocado ')).toBeNull()
   })
 })
@@ -143,7 +143,7 @@ describe('chunk', () => {
 
 describe('staff item labels', () => {
   it('names each dish status and colors the ones that need attention', () => {
-    expect(staffItemLabel('cancelled')).toBe('Rejected')
+    expect(staffItemLabel('cancelled')).toBe('Rechazado')
     expect(staffItemTone('preparing')).toBe('warning')
     expect(staffItemTone('ready')).toBe('success')
     expect(staffItemTone('queued')).toBe('neutral')

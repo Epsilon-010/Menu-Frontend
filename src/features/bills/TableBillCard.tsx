@@ -63,13 +63,13 @@ export function TableBillCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="font-semibold text-zinc-950">{table.table_name}</h2>
-            {bill ? <Badge tone="success">Open</Badge> : <Badge>Closed</Badge>}
-            {requestedAt && <Badge tone="warning">Bill requested</Badge>}
+            {bill ? <Badge tone="success">Abierta</Badge> : <Badge>Cerrada</Badge>}
+            {requestedAt && <Badge tone="warning">Pidió la cuenta</Badge>}
           </div>
           <p className="text-sm text-zinc-500">
             {bill
-              ? `Opened at ${clockTime(bill.opened_at)} · ${bill.orders.length} ${bill.orders.length === 1 ? 'order' : 'orders'}`
-              : 'Guests cannot join with the QR until you open it.'}
+              ? `Abierta a las ${clockTime(bill.opened_at)} · ${bill.orders.length} ${bill.orders.length === 1 ? 'orden' : 'órdenes'}`
+              : 'Los comensales no pueden entrar con el QR hasta que la abras.'}
           </p>
         </div>
         {bill && <p className="text-lg font-semibold text-zinc-950 tabular-nums">{formatMoney(bill.total_cents)}</p>}
@@ -79,7 +79,7 @@ export function TableBillCard({
         <div className="flex flex-wrap items-center gap-4 rounded-xl bg-amber-50 p-3">
           <p className="flex flex-1 items-center gap-2 text-sm text-amber-900">
             <BellRingingIcon size={16} aria-hidden />
-            Asked for the bill at {clockTime(requestedAt)}.
+            Pidió la cuenta a las {clockTime(requestedAt)}.
           </p>
           <Button
             variant="secondary"
@@ -87,7 +87,7 @@ export function TableBillCard({
             disabled={busy}
             onClick={() => void run(onDismissRequest)}
           >
-            Attended
+            Atendida
           </Button>
         </div>
       )}
@@ -95,9 +95,9 @@ export function TableBillCard({
       {!bill && (
         <div className="space-y-2">
           <Button variant="primary" icon={<DoorOpenIcon size={16} aria-hidden />} disabled={busy} onClick={() => void run(onOpen)}>
-            {busy ? 'Opening…' : 'Open table'}
+            {busy ? 'Abriendo…' : 'Abrir mesa'}
           </Button>
-          <p className="text-xs text-zinc-500">Once open, the table QR lets guests in until the bill is paid.</p>
+          <p className="text-xs text-zinc-500">Una vez abierta, el QR de la mesa deja entrar a los comensales hasta que se pague la cuenta.</p>
         </div>
       )}
 
@@ -127,7 +127,7 @@ export function TableBillCard({
               disabled={busy}
               onClick={() => setMode({ kind: 'pay', method: 'cash' })}
             >
-              Register payment
+              Registrar pago
             </Button>
           ) : (
             <Button
@@ -136,7 +136,7 @@ export function TableBillCard({
               disabled={busy}
               onClick={() => setMode({ kind: 'confirm-close' })}
             >
-              Close table
+              Cerrar mesa
             </Button>
           )}
         </div>
@@ -145,11 +145,11 @@ export function TableBillCard({
       {bill && mode.kind === 'pay' && (
         <div className="space-y-4 rounded-xl bg-amber-50 p-4">
           <p className="text-sm text-amber-900">
-            Charge <span className="font-semibold tabular-nums">{formatMoney(bill.total_cents)}</span> for{' '}
-            {table.table_name}. Registering it closes the bill and signs every guest at the table out.
+            Cobra <span className="font-semibold tabular-nums">{formatMoney(bill.total_cents)}</span> a{' '}
+            {table.table_name}. Al registrar el pago se cierra la cuenta y se cierra la sesión de todos los comensales de la mesa.
           </p>
           <fieldset className="space-y-2">
-            <legend className="text-sm font-medium text-zinc-700">Payment method</legend>
+            <legend className="text-sm font-medium text-zinc-700">Método de pago</legend>
             <div className="flex flex-wrap gap-2">
               {PAYMENT_METHODS.map((option) => {
                 const selected = mode.method === option.value
@@ -176,10 +176,10 @@ export function TableBillCard({
           </fieldset>
           <div className="flex flex-wrap gap-2">
             <Button variant="primary" disabled={busy} onClick={() => void run(() => onPay(mode.method))}>
-              {busy ? 'Registering…' : `Register ${formatMoney(bill.total_cents)} paid`}
+              {busy ? 'Registrando…' : `Registrar pago de ${formatMoney(bill.total_cents)}`}
             </Button>
             <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-              Cancel
+              Cancelar
             </Button>
           </div>
         </div>
@@ -188,14 +188,14 @@ export function TableBillCard({
       {bill && mode.kind === 'confirm-close' && (
         <div className="flex flex-wrap items-center gap-4 rounded-xl bg-amber-50 p-4">
           <p className="flex-1 text-sm text-amber-900">
-            Close {table.table_name}? Its QR stops letting guests in and anyone who joined is signed out.
+            ¿Cerrar {table.table_name}? Su QR ya no deja entrar a nadie y se cierra la sesión de quien haya entrado.
           </p>
           <div className="flex gap-2">
             <Button variant="primary" disabled={busy} onClick={() => void run(onClose)}>
-              {busy ? 'Closing…' : 'Close table'}
+              {busy ? 'Cerrando…' : 'Cerrar mesa'}
             </Button>
             <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-              Cancel
+              Cancelar
             </Button>
           </div>
         </div>

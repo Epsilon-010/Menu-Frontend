@@ -20,13 +20,13 @@ export function OrderTicketHeader({ order, now, late, title }: OrderTicketHeader
         <h2 className="text-lg font-semibold text-zinc-950">
           {title ?? (
             <>
-              Order #{order.number} <span className="font-normal text-zinc-500">· {order.table_name}</span>
+              Orden #{order.number} <span className="font-normal text-zinc-500">· {order.table_name}</span>
             </>
           )}
         </h2>
         <p className="text-xs text-zinc-500">
-          Sent by {order.sent_by}
-          {clockTime(order.created_at) && ` at ${clockTime(order.created_at)}`}
+          Enviada por {order.sent_by}
+          {clockTime(order.created_at) && ` a las ${clockTime(order.created_at)}`}
         </p>
       </div>
       <span
@@ -34,7 +34,7 @@ export function OrderTicketHeader({ order, now, late, title }: OrderTicketHeader
       >
         <TimerIcon size={16} aria-hidden />
         {waitingLabel(order.created_at, now)}
-        {late && <span className="sr-only"> (late)</span>}
+        {late && <span className="sr-only"> (retrasada)</span>}
       </span>
     </header>
   )

@@ -29,12 +29,12 @@ export function splitDelivery(order: StaffOrder): DeliveryGroups {
 export function deliveryProgress(order: StaffOrder): string {
   const owed = order.items.filter((item) => item.status !== 'cancelled')
   const delivered = owed.filter((item) => item.status === 'delivered').length
-  return `${delivered} of ${owed.length} delivered`
+  return `${delivered} de ${owed.length} entregados`
 }
 
 /** Like "Table 1 · Order #12 · 2 of 5 delivered". */
 export function deliveryCounter(order: StaffOrder): string {
-  return `${order.table_name} · Order #${order.number} · ${deliveryProgress(order)}`
+  return `${order.table_name} · Orden #${order.number} · ${deliveryProgress(order)}`
 }
 
 export function hasReady(order: StaffOrder): boolean {
@@ -97,7 +97,7 @@ export function newRejections(
             table_name: table.table_name,
             order_number: order.number,
             name: dishLabel(item.name, item.modifiers),
-            note: rejectionNote(item) ?? 'Rejected',
+            note: rejectionNote(item) ?? 'Rechazado',
           })
         }
       }

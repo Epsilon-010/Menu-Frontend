@@ -72,11 +72,11 @@ describe('acceptsNewDishes', () => {
 
 describe('dishDraftError', () => {
   it('needs a dish, 1 to 50 of them and a note up to 200 characters', () => {
-    expect(dishDraftError('', 1, '')).toBe('Choose a dish.')
-    expect(dishDraftError('m1', 0, '')).toBe('Choose a quantity from 1 to 50.')
-    expect(dishDraftError('m1', 51, '')).toBe('Choose a quantity from 1 to 50.')
-    expect(dishDraftError('m1', 1.5, '')).toBe('Choose a quantity from 1 to 50.')
-    expect(dishDraftError('m1', 2, 'x'.repeat(201))).toBe('Keep the note under 200 characters.')
+    expect(dishDraftError('', 1, '')).toBe('Elige un platillo.')
+    expect(dishDraftError('m1', 0, '')).toBe('Elige una cantidad de 1 a 50.')
+    expect(dishDraftError('m1', 51, '')).toBe('Elige una cantidad de 1 a 50.')
+    expect(dishDraftError('m1', 1.5, '')).toBe('Elige una cantidad de 1 a 50.')
+    expect(dishDraftError('m1', 2, 'x'.repeat(201))).toBe('La nota debe tener menos de 200 caracteres.')
     expect(dishDraftError('m1', 2, 'No onion')).toBeNull()
   })
 
@@ -88,9 +88,9 @@ describe('dishDraftError', () => {
       max_select: 1,
       options: [{ id: 'x1', name: 'Large', price_cents: 1500, available: true }],
     }
-    expect(dishDraftError('m1', 1, '', [size], [])).toBe('Choose 1 option for Size.')
+    expect(dishDraftError('m1', 1, '', [size], [])).toBe('Elige 1 opción de Size.')
     expect(dishDraftError('m1', 1, '', [size], ['x1'])).toBeNull()
-    expect(dishDraftError('', 1, '', [size], [])).toBe('Choose a dish.')
+    expect(dishDraftError('', 1, '', [size], [])).toBe('Elige un platillo.')
   })
 })
 

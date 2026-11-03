@@ -52,10 +52,10 @@ const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/
 
 /** A message for an invalid custom range, or null. Mirrors the API's own checks. */
 export function rangeError(range: DateRange): string | null {
-  if (!ISO_DAY.test(range.from) || !ISO_DAY.test(range.to)) return 'Pick both dates.'
-  if (range.to < range.from) return 'The end date must be on or after the start date.'
+  if (!ISO_DAY.test(range.from) || !ISO_DAY.test(range.to)) return 'Elige ambas fechas.'
+  if (range.to < range.from) return 'La fecha final debe ser igual o posterior a la inicial.'
   const days = (Date.parse(`${range.to}T00:00:00Z`) - Date.parse(`${range.from}T00:00:00Z`)) / 86_400_000 + 1
-  if (days > MAX_RANGE_DAYS) return `The range can be at most ${MAX_RANGE_DAYS} days.`
+  if (days > MAX_RANGE_DAYS) return `El rango puede ser de ${MAX_RANGE_DAYS} días como máximo.`
   return null
 }
 
@@ -83,10 +83,10 @@ export function formatDuration(seconds: number | null): string {
   return `${hours} h ${String(minutes).padStart(2, '0')} min`
 }
 
-/** Short day label for the chart axis ("Oct 20"). */
+/** Short day label for the chart axis ("20 oct"). */
 export function shortDay(day: string): string {
   const [year, month, date] = day.split('-').map(Number)
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(
+  return new Intl.DateTimeFormat('es-MX', { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(
     new Date(Date.UTC(year, month - 1, date)),
   )
 }

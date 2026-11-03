@@ -38,7 +38,7 @@ export function CancelDishControl({ onCancel }: { onCancel: (reason: string) => 
   if (!open) {
     return (
       <Button variant="ghost" icon={<XCircleIcon size={16} aria-hidden />} onClick={() => setOpen(true)}>
-        Cancel dish
+        Cancelar platillo
       </Button>
     )
   }
@@ -46,20 +46,20 @@ export function CancelDishControl({ onCancel }: { onCancel: (reason: string) => 
   return (
     <form onSubmit={submit} className="space-y-2 rounded-lg bg-red-50 p-3">
       <TextInput
-        aria-label="Why is the dish cancelled"
+        aria-label="Motivo de la cancelación"
         autoFocus
         maxLength={MAX_REASON_LENGTH}
-        placeholder="Reason, like The table changed its mind"
+        placeholder="Motivo, por ejemplo: La mesa cambió de opinión"
         value={reason}
         onChange={(event) => setReason(event.target.value)}
       />
       {(problem ?? error) && <ErrorText>{problem ?? error}</ErrorText>}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" variant="danger" disabled={busy}>
-          {busy ? 'Cancelling…' : 'Cancel dish'}
+          {busy ? 'Cancelando…' : 'Cancelar platillo'}
         </Button>
         <Button variant="ghost" disabled={busy} onClick={() => setOpen(false)}>
-          Keep it
+          Conservarlo
         </Button>
       </div>
     </form>
@@ -74,7 +74,7 @@ export function AddDishControl({ onAdd }: { onAdd: (dish: NewOrderDish) => Promi
   if (!open) {
     return (
       <Button variant="secondary" icon={<PlusIcon size={16} aria-hidden />} onClick={() => setOpen(true)}>
-        Add dish
+        Agregar platillo
       </Button>
     )
   }
@@ -101,7 +101,7 @@ function AddDishForm({ onAdd, onClose }: { onAdd: (dish: NewOrderDish) => Promis
       })
       .catch((caught: unknown) => {
         if (!active) return
-        const message = caught instanceof OrderingError ? caught.message : 'Could not load the menu. Please try again.'
+        const message = caught instanceof OrderingError ? caught.message : 'No se pudo cargar el menú. Inténtalo de nuevo.'
         setMenu({ status: 'error', message })
       })
     return () => {
@@ -139,13 +139,13 @@ function AddDishForm({ onAdd, onClose }: { onAdd: (dish: NewOrderDish) => Promis
 
   return (
     <form onSubmit={submit} className="space-y-3 rounded-xl bg-zinc-50 p-3">
-      {menu.status === 'loading' && <p className="text-sm text-zinc-500">Loading the menu…</p>}
+      {menu.status === 'loading' && <p className="text-sm text-zinc-500">Cargando el menú…</p>}
       {menu.status === 'error' && <ErrorText>{menu.message}</ErrorText>}
       {menu.status === 'loaded' && (
         <>
-          <Field label="Dish">
+          <Field label="Platillo">
             <Select value={itemId} onChange={(event) => chooseDish(event.target.value)}>
-              <option value="">Choose a dish</option>
+              <option value="">Elige un platillo</option>
               {menu.categories.map((category) => (
                 <optgroup key={category.id} label={category.name}>
                   {category.items.map((item) => (
@@ -159,7 +159,7 @@ function AddDishForm({ onAdd, onClose }: { onAdd: (dish: NewOrderDish) => Promis
           </Field>
           {groups.length > 0 && <ModifierPicker groups={groups} selected={selected} onChange={setSelected} disabled={busy} />}
           <div className="flex flex-wrap gap-3">
-            <Field label="Quantity" className="w-24">
+            <Field label="Cantidad" className="w-24">
               <TextInput
                 type="number"
                 min={MIN_QUANTITY}
@@ -168,10 +168,10 @@ function AddDishForm({ onAdd, onClose }: { onAdd: (dish: NewOrderDish) => Promis
                 onChange={(event) => setQuantity(event.target.value)}
               />
             </Field>
-            <Field label="Note (optional)" className="min-w-0 flex-1">
+            <Field label="Nota (opcional)" className="min-w-0 flex-1">
               <TextInput
                 maxLength={MAX_NOTE_LENGTH}
-                placeholder="Like No onion"
+                placeholder="Por ejemplo: Sin cebolla"
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
               />
@@ -182,10 +182,10 @@ function AddDishForm({ onAdd, onClose }: { onAdd: (dish: NewOrderDish) => Promis
       {(problem ?? error) && <ErrorText>{problem ?? error}</ErrorText>}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" variant="primary" disabled={busy || menu.status !== 'loaded'}>
-          {busy ? 'Adding…' : 'Add to order'}
+          {busy ? 'Agregando…' : 'Agregar a la orden'}
         </Button>
         <Button variant="ghost" disabled={busy} onClick={onClose}>
-          Cancel
+          Cancelar
         </Button>
       </div>
     </form>

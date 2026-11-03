@@ -57,7 +57,7 @@ describe('the kitchen ticket', () => {
 
     expect(html).toContain('Dish a')
     expect(html).not.toContain('Size:')
-    expect(html).toContain('Start')
+    expect(html).toContain('Empezar')
   })
 })
 

@@ -61,7 +61,7 @@ function minutesSince(iso: string, now: number): number | null {
 export function waitingLabel(since: string, now: number): string {
   const minutes = minutesSince(since, now)
   if (minutes === null) return ''
-  if (minutes < 1) return 'Just now'
+  if (minutes < 1) return 'Justo ahora'
   const whole = Math.floor(minutes)
   if (whole < 60) return `${whole} min`
   return `${Math.floor(whole / 60)} h ${whole % 60} min`
@@ -81,8 +81,8 @@ export function newIds(previous: ReadonlySet<string> | null, ids: string[]): str
 
 export function rejectReasonError(reason: string): string | null {
   const trimmed = reason.trim()
-  if (trimmed.length === 0) return 'Write why the dish is rejected.'
-  if (trimmed.length > MAX_REASON_LENGTH) return `Keep the reason under ${MAX_REASON_LENGTH} characters.`
+  if (trimmed.length === 0) return 'Escribe por qué se rechaza el platillo.'
+  if (trimmed.length > MAX_REASON_LENGTH) return `El motivo debe tener menos de ${MAX_REASON_LENGTH} caracteres.`
   return null
 }
 
@@ -93,11 +93,11 @@ export function chunk<T>(values: T[], size: number): T[][] {
 }
 
 const KITCHEN_LABELS: Record<OrderItemStatus, string> = {
-  queued: 'Queued',
-  preparing: 'Preparing',
-  ready: 'Ready',
-  delivered: 'Delivered',
-  cancelled: 'Rejected',
+  queued: 'En cola',
+  preparing: 'En preparación',
+  ready: 'Listo',
+  delivered: 'Entregado',
+  cancelled: 'Rechazado',
 }
 
 export function staffItemLabel(status: OrderItemStatus): string {

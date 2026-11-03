@@ -30,16 +30,16 @@ export function HomePage() {
       </span>
       <div className="max-w-[680px] space-y-6">
         <h1 className="bg-gradient-to-r from-black to-[#666666] bg-clip-text text-5xl font-semibold tracking-tight text-transparent">
-          Your menu on every table,
+          Tu menú en cada mesa,
           <br />
-          your orders straight to the kitchen
+          tus órdenes directo a la cocina
         </h1>
         <p className="mx-auto max-w-[680px] text-lg text-zinc-500">
-          Guests order from a tablet at their table, the kitchen releases each dish when it is ready, and nobody waits
-          for a waiter to take the order.
+          Los comensales piden desde una tablet en su mesa, la cocina libera cada platillo en cuanto está listo y nadie
+          espera a que un mesero tome la orden.
         </p>
         <Link to="/login" className={buttonClass('primary', 'md')}>
-          Sign in to your restaurant
+          Inicia sesión en tu restaurante
           <ArrowRightIcon size={16} aria-hidden />
         </Link>
       </div>
@@ -53,7 +53,7 @@ function ApiStatus({ state }: { state: HealthState }) {
     return <Skeleton className="h-8 w-64 rounded-full" />
   }
   if (state.kind === 'error') {
-    return <p className="rounded-full bg-red-50 px-4 py-2 text-sm text-red-700">The server is not answering right now.</p>
+    return <p className="rounded-full bg-red-50 px-4 py-2 text-sm text-red-700">El servidor no responde en este momento.</p>
   }
   return (
     <ul className="flex flex-wrap justify-center gap-2 text-sm">
@@ -61,7 +61,7 @@ function ApiStatus({ state }: { state: HealthState }) {
         <li key={name} className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-zinc-600">
           <span aria-hidden className={`h-2 w-2 rounded-full ${status === 'ok' ? 'bg-emerald-500' : 'bg-red-500'}`} />
           <span className="capitalize">{name}</span>
-          <span className="sr-only">{status}</span>
+          <span className="sr-only">{status === 'ok' ? 'disponible' : 'no disponible'}</span>
         </li>
       ))}
     </ul>

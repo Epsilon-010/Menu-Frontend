@@ -26,7 +26,7 @@ const NOTICE_MS = 6_000
 
 function MenuSkeleton() {
   return (
-    <div role="status" aria-label="Loading the menu" className="space-y-6">
+    <div role="status" aria-label="Cargando el menú" className="space-y-6">
       <div className="flex gap-2">
         <Skeleton className="h-9 w-24" />
         <Skeleton className="h-9 w-28" />
@@ -48,7 +48,7 @@ interface CartAreaProps {
 }
 
 function CartArea({ cart, ordering, onSend }: CartAreaProps) {
-  if (cart.status === 'loading') return <ListSkeleton rows={2} label="Loading the table order" />
+  if (cart.status === 'loading') return <ListSkeleton rows={2} label="Cargando el pedido de la mesa" />
   if (cart.status === 'error') return <LoadError message={cart.message} onRetry={ordering.retryCart} />
   return (
     <CartContents
@@ -62,12 +62,12 @@ function CartArea({ cart, ordering, onSend }: CartAreaProps) {
 }
 
 function OrdersArea({ orders }: { orders: Loadable<Order[]> }) {
-  if (orders.status === 'loading') return <ListSkeleton rows={2} label="Loading the orders" />
+  if (orders.status === 'loading') return <ListSkeleton rows={2} label="Cargando las órdenes" />
   if (orders.status === 'error') return null
   if (orders.data.length === 0) {
     return (
-      <EmptyState icon={<ReceiptIcon size={24} aria-hidden />} title="No orders sent yet">
-        Orders sent from this table show up here with the status of every dish.
+      <EmptyState icon={<ReceiptIcon size={24} aria-hidden />} title="Aún no hay órdenes enviadas">
+        Las órdenes enviadas desde esta mesa aparecen aquí con el estado de cada platillo.
       </EmptyState>
     )
   }
@@ -114,7 +114,7 @@ export function MenuPage() {
 
   function handleSent(order: Order) {
     setConfirming(false)
-    setNotice(`Order #${order.number} sent`)
+    setNotice(`Orden #${order.number} enviada`)
   }
 
   async function handleLeave() {
@@ -147,7 +147,7 @@ export function MenuPage() {
       identity={guest ? `${table.name} · ${guest.name}` : table.name}
       onSignOut={guest ? () => void handleLeave() : undefined}
       signingOut={leaving}
-      signOutLabel="Leave"
+      signOutLabel="Salir"
       fixedBar={layout.sticky_header}
       width={menuWidthClass(layout)}
     >
@@ -162,7 +162,7 @@ export function MenuPage() {
 
           <section aria-labelledby="orders-title" className="space-y-4">
             <h2 id="orders-title" className="text-xl font-semibold tracking-tight text-ink">
-              Orders from this table
+              Órdenes de esta mesa
             </h2>
             <OrdersArea orders={orders} />
             {/* Shown while there is something to pay, or to cancel a request already made. */}
@@ -174,11 +174,11 @@ export function MenuPage() {
           </section>
         </div>
 
-        <aside aria-label="Table order" className={placement.aside}>
+        <aside aria-label="Pedido de la mesa" className={placement.aside}>
           <Card
             className={`sticky max-h-[calc(100vh-8rem)] space-y-4 overflow-y-auto p-4 ${layout.sticky_header ? 'top-24' : 'top-4'}`}
           >
-            <h2 className="text-lg font-semibold tracking-tight text-ink">Table order</h2>
+            <h2 className="text-lg font-semibold tracking-tight text-ink">Pedido de la mesa</h2>
             <CartArea cart={cart} ordering={ordering} onSend={openConfirmation} />
           </Card>
         </aside>
@@ -200,7 +200,7 @@ export function MenuPage() {
         >
           <span className="flex items-center gap-2 text-base font-semibold">
             <ShoppingBagIcon size={20} aria-hidden />
-            Table order
+            Pedido de la mesa
             {count > 0 && <span className="rounded-md bg-badge px-2 text-sm text-badge-ink tabular-nums">{count}</span>}
           </span>
           <span className="text-base font-semibold tabular-nums">{formatMoney(loadedCart?.total_cents ?? 0)}</span>
@@ -211,7 +211,7 @@ export function MenuPage() {
         id="cart-sheet"
         role="dialog"
         aria-modal="true"
-        aria-label="Table order"
+        aria-label="Pedido de la mesa"
         inert={!sheetOpen}
         className={`fixed inset-0 z-30 overflow-y-auto bg-canvas/95 px-4 pt-24 pb-8 backdrop-blur-xl transition-opacity duration-500 ease-smooth ${placement.compact} ${
           sheetOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
@@ -219,8 +219,8 @@ export function MenuPage() {
       >
         <div className="mx-auto max-w-lg space-y-4">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-xl font-semibold tracking-tight text-ink">Table order</h2>
-            <IconButton label="Close the order" icon={<XIcon size={20} />} onClick={() => setSheetOpen(false)} />
+            <h2 className="text-xl font-semibold tracking-tight text-ink">Pedido de la mesa</h2>
+            <IconButton label="Cerrar el pedido" icon={<XIcon size={20} />} onClick={() => setSheetOpen(false)} />
           </div>
           <Card className="p-4">
             <CartArea cart={cart} ordering={ordering} onSend={openConfirmation} />

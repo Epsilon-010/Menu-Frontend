@@ -35,8 +35,8 @@ export class RegisterError extends Error {
   }
 }
 
-const OFFLINE = 'Could not reach the server. Check your connection and try again.'
-const SERVER_FAILED = 'The server could not complete that. Please try again in a moment.'
+const OFFLINE = 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.'
+const SERVER_FAILED = 'El servidor no pudo completar la acción. Inténtalo de nuevo en un momento.'
 const EMAIL_TAKEN = 'Email already in use'
 
 function sentence(text: string): string {
@@ -44,14 +44,14 @@ function sentence(text: string): string {
 }
 
 async function errorFrom(response: Response): Promise<RegisterError> {
-  if (response.status === 429) return new RegisterError('Too many attempts. Wait a few minutes and try again.', 'form', 429)
+  if (response.status === 429) return new RegisterError('Demasiados intentos. Espera unos minutos e inténtalo de nuevo.', 'form', 429)
   const body = (await response.json().catch(() => null)) as { detail?: unknown } | null
   const detail = typeof body?.detail === 'string' ? body.detail : null
   if (response.status === 409 && detail?.startsWith(EMAIL_TAKEN)) {
-    return new RegisterError('That email already has an account. Sign in, or use another email.', 'email', 409)
+    return new RegisterError('Ese correo ya tiene una cuenta. Inicia sesión o usa otro correo.', 'email', 409)
   }
   if (response.status === 409) {
-    return new RegisterError(`${sentence(detail ?? 'That sign-up clashed with another one')} Try again.`, 'form', 409)
+    return new RegisterError(`${sentence(detail ?? 'Ese registro coincidió con otro')} Inténtalo de nuevo.`, 'form', 409)
   }
   if (detail !== null && response.status < 500) return new RegisterError(sentence(detail), 'form', response.status)
   return new RegisterError(SERVER_FAILED, 'form', response.status)
@@ -79,10 +79,10 @@ export function credentialsError(
   password: string,
 ): { field: 'email' | 'password'; message: string } | null {
   const trimmed = email.trim()
-  if (trimmed === '') return { field: 'email', message: 'Enter your email.' }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return { field: 'email', message: 'Enter a valid email.' }
+  if (trimmed === '') return { field: 'email', message: 'Escribe tu correo.' }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return { field: 'email', message: 'Escribe un correo válido.' }
   if (password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
-    return { field: 'password', message: `Use ${PASSWORD_MIN_LENGTH} to ${PASSWORD_MAX_LENGTH} characters.` }
+    return { field: 'password', message: `Usa de ${PASSWORD_MIN_LENGTH} a ${PASSWORD_MAX_LENGTH} caracteres.` }
   }
   return null
 }
@@ -90,8 +90,8 @@ export function credentialsError(
 /** Step 2 check: an error for the business name, or null when it is fine. */
 export function businessNameError(name: string): string | null {
   const trimmed = name.trim()
-  if (trimmed === '') return 'Enter the name of your business.'
-  if (trimmed.length > BUSINESS_NAME_MAX_LENGTH) return `Use at most ${BUSINESS_NAME_MAX_LENGTH} characters.`
+  if (trimmed === '') return 'Escribe el nombre de tu negocio.'
+  if (trimmed.length > BUSINESS_NAME_MAX_LENGTH) return `Usa como máximo ${BUSINESS_NAME_MAX_LENGTH} caracteres.`
   return null
 }
 

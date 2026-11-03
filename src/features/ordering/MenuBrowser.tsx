@@ -25,7 +25,7 @@ import type { MenuCategory, MenuItem } from './api.ts'
 function Badges({ badges, shape }: { badges: Badge[]; shape: BadgeShape }) {
   if (badges.length === 0) return null
   return (
-    <ul aria-label="Badges" className="flex flex-wrap gap-1">
+    <ul aria-label="Etiquetas" className="flex flex-wrap gap-1">
       {badges.map((badge) => (
         <li key={badge} className={`${badgeShapeClass(shape)} bg-badge px-2 py-0.5 text-xs font-semibold text-badge-ink`}>
           {BADGE_LABELS[badge]}
@@ -47,11 +47,11 @@ function AddButton({ name, cards, onClick }: AddButtonProps) {
     <Button
       variant="secondary"
       icon={style === 'text' ? undefined : <PlusIcon size={16} aria-hidden />}
-      aria-label={style === 'icon' ? `Add ${name}` : undefined}
+      aria-label={style === 'icon' ? `Agregar ${name}` : undefined}
       onClick={onClick}
       className={`type-button ${buttonShapeClass(shape)}`}
     >
-      {style === 'icon' ? null : 'Add'}
+      {style === 'icon' ? null : 'Agregar'}
     </Button>
   )
 }
@@ -219,7 +219,7 @@ function Products({ category, layout, cards, onAdd }: ProductsProps) {
     return (
       <div
         role="region"
-        aria-label={`${category.name}, swipe for more`}
+        aria-label={`${category.name}, desliza para ver más`}
         tabIndex={0}
         className={`-mx-4 flex snap-x snap-mandatory scroll-px-4 overflow-x-auto px-4 pb-2 ${gap}`}
       >
@@ -244,7 +244,7 @@ interface CategoryNavProps {
 /** Rounded chips that jump to each section of the page. */
 function ChipsNav({ categories, stickyTop }: CategoryNavProps) {
   return (
-    <nav aria-label="Menu categories" className={`sticky ${stickyTop} z-20 -mx-4 overflow-x-auto px-4 py-2 sm:mx-0 sm:px-0`}>
+    <nav aria-label="Categorías del menú" className={`sticky ${stickyTop} z-20 -mx-4 overflow-x-auto px-4 py-2 sm:mx-0 sm:px-0`}>
       <ul className="flex w-max gap-2">
         {categories.map((category) => (
           <li key={category.id}>
@@ -271,7 +271,7 @@ function underlined(active: boolean): string {
 /** A text bar over the long page that underlines the section in view. */
 function SectionsNav({ categories, current, stickyTop }: CategoryNavProps) {
   return (
-    <nav aria-label="Menu categories" className={`${BAR} ${stickyTop}`}>
+    <nav aria-label="Categorías del menú" className={`${BAR} ${stickyTop}`}>
       <ul className="flex w-max gap-1">
         {categories.map((category) => {
           const active = sectionId(category.id) === current
@@ -291,7 +291,7 @@ function SectionsNav({ categories, current, stickyTop }: CategoryNavProps) {
 /** Tabs over the products: one category at a time. */
 function TabsNav({ categories, current, onPick, stickyTop }: CategoryNavProps) {
   return (
-    <nav aria-label="Menu categories" className={`${BAR} ${stickyTop}`}>
+    <nav aria-label="Categorías del menú" className={`${BAR} ${stickyTop}`}>
       <ul className="flex w-max gap-1">
         {categories.map((category) => (
           <li key={category.id}>
@@ -314,7 +314,7 @@ function TabsNav({ categories, current, onPick, stickyTop }: CategoryNavProps) {
 function SidebarNav({ categories, current, onPick, stickyTop }: CategoryNavProps) {
   return (
     <nav
-      aria-label="Menu categories"
+      aria-label="Categorías del menú"
       className={`sticky ${stickyTop} z-20 -mx-4 overflow-x-auto bg-canvas/90 px-4 py-2 backdrop-blur-md @xl:mx-0 @xl:overflow-visible @xl:bg-transparent @xl:px-0 @xl:backdrop-blur-none`}
     >
       <ul className="flex w-max gap-2 @xl:w-auto @xl:flex-col @xl:gap-1">
@@ -355,8 +355,8 @@ export function MenuBrowser({
 
   if (withItems.length === 0) {
     return (
-      <EmptyState icon={<BowlFoodIcon size={24} aria-hidden />} title="The menu is being prepared">
-        There is nothing to order yet. Ask your waiter for help in the meantime.
+      <EmptyState icon={<BowlFoodIcon size={24} aria-hidden />} title="El menú se está preparando">
+        Aún no hay nada para pedir. Mientras tanto, pide ayuda a tu mesero.
       </EmptyState>
     )
   }

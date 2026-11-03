@@ -23,7 +23,7 @@ export function BillRequestControl({ requestedAt, onChange }: BillRequestControl
         <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <p role="status" className="flex flex-1 items-center gap-2 text-sm font-medium text-amber-900">
             <BellRingingIcon size={18} aria-hidden />
-            Bill requested at {clockTime(asked)}. Your waiter is on the way.
+            Cuenta pedida a las {clockTime(asked)}. Tu mesero va en camino.
           </p>
           <Button
             variant="ghost"
@@ -32,7 +32,7 @@ export function BillRequestControl({ requestedAt, onChange }: BillRequestControl
             className="type-button"
             onClick={() => void run(() => onChange(false))}
           >
-            {busy ? 'Cancelling…' : 'Cancel request'}
+            {busy ? 'Cancelando…' : 'Cancelar solicitud'}
           </Button>
         </div>
       ) : (
@@ -43,7 +43,7 @@ export function BillRequestControl({ requestedAt, onChange }: BillRequestControl
           className="type-button"
           onClick={() => void run(() => onChange(true))}
         >
-          {busy ? 'Asking…' : 'Ask for the bill'}
+          {busy ? 'Pidiendo…' : 'Pedir la cuenta'}
         </Button>
       )}
       {error && <ErrorText>{error}</ErrorText>}

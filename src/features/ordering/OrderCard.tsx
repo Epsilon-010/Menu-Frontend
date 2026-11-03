@@ -21,10 +21,10 @@ export function OrderCard({ order, showPrices = true, itemActions, footer }: Ord
     <article className="space-y-3 rounded-xl border border-line bg-surface p-4">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="font-semibold text-ink">Order #{order.number}</h3>
+          <h3 className="font-semibold text-ink">Orden #{order.number}</h3>
           <p className="text-xs text-muted">
-            Sent by {order.sent_by}
-            {clockTime(order.created_at) && ` at ${clockTime(order.created_at)}`}
+            Enviada por {order.sent_by}
+            {clockTime(order.created_at) && ` a las ${clockTime(order.created_at)}`}
           </p>
         </div>
         <Badge tone={order.status === 'completed' ? 'success' : 'neutral'}>{orderStatusLabel(order.status)}</Badge>

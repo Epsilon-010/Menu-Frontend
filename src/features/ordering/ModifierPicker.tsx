@@ -52,7 +52,7 @@ export function ModifierPicker({ groups, selected, onChange, disabled = false }:
                       />
                       <span className={`flex-1 ${option.available ? 'text-ink' : 'text-faint line-through'}`}>{option.name}</span>
                       {!option.available ? (
-                        <span className="text-xs font-medium text-muted">Sold out</span>
+                        <span className="text-xs font-medium text-muted">Agotado</span>
                       ) : (
                         option.price_cents > 0 && (
                           <span className="text-price tabular-nums">+{formatMoney(option.price_cents)}</span>

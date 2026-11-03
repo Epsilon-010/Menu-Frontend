@@ -15,7 +15,7 @@ interface RequireRoleProps {
 /** Shaped like the signed-in layout (floating bar and a section) while the session loads. */
 function SessionSkeleton() {
   return (
-    <div role="status" aria-label="Loading your session" className="mx-auto max-w-5xl space-y-8 px-4 pt-4 sm:px-6">
+    <div role="status" aria-label="Cargando tu sesión" className="mx-auto max-w-5xl space-y-8 px-4 pt-4 sm:px-6">
       <Skeleton className="mx-auto h-12 w-72 rounded-2xl" />
       <div className="space-y-4 pt-8">
         <Skeleton className="h-8 w-48" />

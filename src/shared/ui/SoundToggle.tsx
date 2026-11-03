@@ -13,11 +13,11 @@ export function SoundToggle({ enabled, onToggle, announces }: SoundToggleProps) 
     <Button
       variant={enabled ? 'primary' : 'secondary'}
       aria-pressed={enabled}
-      title={`Play a sound for ${announces}`}
+      title={`Avisar con un sonido cuando haya ${announces}`}
       icon={enabled ? <SpeakerHighIcon size={16} aria-hidden /> : <SpeakerSlashIcon size={16} aria-hidden />}
       onClick={onToggle}
     >
-      {enabled ? 'Sound on' : 'Sound off'}
+      {enabled ? 'Sonido activado' : 'Sonido desactivado'}
     </Button>
   )
 }

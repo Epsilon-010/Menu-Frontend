@@ -68,7 +68,7 @@ export function tableLogin(code: string, pin: string): Promise<SessionInfo> {
 /** Longest guest name the API accepts (shown next to what the guest adds to the cart). */
 export const GUEST_NAME_MAX_LENGTH = 30
 
-const OFFLINE = 'Could not reach the server. Check your connection and try again.'
+const OFFLINE = 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.'
 
 /** A failed QR join, with a message ready to show to the guest. */
 export class QrJoinError extends Error {
@@ -102,12 +102,12 @@ export async function qrLogin(token: string, name?: string): Promise<SessionInfo
   }
   if (response.ok) return (await response.json()) as SessionInfo
 
-  if (response.status === 429) throw new QrJoinError('Too many attempts. Wait a few minutes and try again.', 429)
+  if (response.status === 429) throw new QrJoinError('Demasiados intentos. Espera unos minutos e inténtalo de nuevo.', 429)
   const body = (await response.json().catch(() => null)) as { detail?: unknown } | null
   if (typeof body?.detail === 'string' && response.status < 500) {
     throw new QrJoinError(sentence(body.detail), response.status)
   }
-  throw new QrJoinError('The server could not complete that. Please try again in a moment.', response.status)
+  throw new QrJoinError('El servidor no pudo completar la acción. Inténtalo de nuevo en un momento.', response.status)
 }
 
 export async function fetchAccount(): Promise<Account | null> {

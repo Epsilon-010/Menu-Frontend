@@ -48,8 +48,8 @@ describe('RequireRole with a temporary password', () => {
   it('shows only the change-password screen to an admin on a temporary password', () => {
     const html = render(admin(true))
 
-    expect(html).toContain('Choose your password')
-    expect(html).toContain('Temporary password')
+    expect(html).toContain('Elige tu contraseña')
+    expect(html).toContain('Contraseña temporal')
     expect(html).not.toContain('Admin panel')
   })
 
@@ -57,6 +57,6 @@ describe('RequireRole with a temporary password', () => {
     const html = render(admin(false))
 
     expect(html).toContain('Admin panel')
-    expect(html).not.toContain('Choose your password')
+    expect(html).not.toContain('Elige tu contraseña')
   })
 })

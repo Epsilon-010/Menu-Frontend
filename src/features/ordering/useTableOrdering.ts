@@ -29,7 +29,7 @@ export type SendResult =
   | { kind: 'failed'; message: string }
 
 export function messageOf(error: unknown): string {
-  return error instanceof OrderingError ? error.message : 'Something went wrong. Please try again.'
+  return error instanceof OrderingError ? error.message : 'Algo salió mal. Inténtalo de nuevo.'
 }
 
 /**
@@ -201,8 +201,8 @@ export function useTableOrdering() {
       const names = unavailableNames(lines, error.unavailableItemIds)
       void reloadCart()
       return names.length > 0
-        ? `${names.join(', ')} ${names.length === 1 ? 'is' : 'are'} no longer available. Remove ${names.length === 1 ? 'it' : 'them'} and try again.`
-        : 'That item is no longer available.'
+        ? `${names.join(', ')} ya no ${names.length === 1 ? 'está disponible' : 'están disponibles'}. ${names.length === 1 ? 'Quítalo' : 'Quítalos'} e inténtalo de nuevo.`
+        : 'Ese producto ya no está disponible.'
     }
     return messageOf(error)
   }

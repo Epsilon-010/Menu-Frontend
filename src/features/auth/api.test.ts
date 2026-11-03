@@ -64,7 +64,7 @@ describe('qrLogin', () => {
     const failure = await failureOf(qrLogin('tok'))
 
     expect(failure.status).toBe(429)
-    expect(failure.message).toBe('Too many attempts. Wait a few minutes and try again.')
+    expect(failure.message).toBe('Demasiados intentos. Espera unos minutos e inténtalo de nuevo.')
   })
 })
 

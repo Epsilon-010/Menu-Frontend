@@ -3,23 +3,23 @@ import { formatMoney } from '../catalog/price.ts'
 import type { MenuItem, ModifierGroup, ModifierOption } from './api.ts'
 
 function options(count: number): string {
-  return count === 1 ? 'option' : 'options'
+  return count === 1 ? 'opción' : 'opciones'
 }
 
 /** The rule of a group in the server's words: "Choose 1 option for Size", "Choose up to 3 options for Extras". */
 export function ruleMessage(group: Pick<ModifierGroup, 'name' | 'min_select' | 'max_select'>): string {
   const { name, min_select: min, max_select: max } = group
-  if (min === max) return `Choose ${min} ${options(min)} for ${name}`
-  if (min === 0) return `Choose up to ${max} ${options(max)} for ${name}`
-  return `Choose between ${min} and ${max} options for ${name}`
+  if (min === max) return `Elige ${min} ${options(min)} de ${name}`
+  if (min === 0) return `Elige hasta ${max} ${options(max)} de ${name}`
+  return `Elige entre ${min} y ${max} opciones de ${name}`
 }
 
 /** Short hint beside the group name in the picker. */
 export function groupHint(group: Pick<ModifierGroup, 'min_select' | 'max_select'>): string {
   const { min_select: min, max_select: max } = group
-  if (min === max) return `Choose ${min}`
-  if (min === 0) return `Optional, up to ${max}`
-  return `Choose ${min} to ${max}`
+  if (min === max) return `Elige ${min}`
+  if (min === 0) return `Opcional, hasta ${max}`
+  return `Elige de ${min} a ${max}`
 }
 
 /** A group of one is a radio group: picking an option replaces the previous one. */

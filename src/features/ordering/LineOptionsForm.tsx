@@ -38,16 +38,16 @@ export function LineOptionsForm({ item, line, onSave, onClose }: LineOptionsForm
   }
 
   return (
-    <form onSubmit={handleSubmit} aria-label={`Options of ${line.name}`} className="space-y-4 rounded-xl bg-canvas p-3">
+    <form onSubmit={handleSubmit} aria-label={`Opciones de ${line.name}`} className="space-y-4 rounded-xl bg-canvas p-3">
       <ModifierPicker groups={groups} selected={selected} onChange={setSelected} disabled={busy} />
       {unmet && <p className="text-sm text-muted">{unmet}</p>}
       {error && <ErrorText>{error}</ErrorText>}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" variant="primary" disabled={busy || unmet !== null} className="type-button flex-1">
-          {busy ? 'Saving…' : `Save · ${formatMoney(unitPrice(item, selected) * line.quantity)}`}
+          {busy ? 'Guardando…' : `Guardar · ${formatMoney(unitPrice(item, selected) * line.quantity)}`}
         </Button>
         <Button variant="ghost" disabled={busy} onClick={onClose} className="type-button">
-          Cancel
+          Cancelar
         </Button>
       </div>
     </form>

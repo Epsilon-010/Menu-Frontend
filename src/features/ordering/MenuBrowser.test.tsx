@@ -68,7 +68,7 @@ describe('the menu by its layout', () => {
     expect(render({ columns: 1 })).toContain('class="grid gap-4 "')
     expect(render({ product_view: 'list' })).toContain('flex-row')
     const carousel = render({ product_view: 'carousel' })
-    expect(carousel).toContain('role="region" aria-label="Tacos, swipe for more"')
+    expect(carousel).toContain('role="region" aria-label="Tacos, desliza para ver más"')
     expect(carousel).toContain('snap-x')
   })
 
@@ -87,7 +87,7 @@ describe('the menu by its layout', () => {
   })
 
   it('says the menu is being prepared when no category has items', () => {
-    expect(render({}, [CATEGORIES[2]])).toContain('The menu is being prepared')
+    expect(render({}, [CATEGORIES[2]])).toContain('El menú se está preparando')
   })
 })
 
@@ -116,17 +116,17 @@ describe('the product cards by the theme', () => {
     expect(card(html, 'Pastor')).toContain('rounded-2xl border border-line')
     expect(card(html, 'Pastor')).toContain('line-clamp-3')
     expect(card(html, 'Suadero')).toMatch(/<img src="https:\/\/img.test\/s.jpg"[^>]*class="[^"]*aspect-\[4\/3\] object-cover/)
-    expect(card(html, 'Pastor')).toMatch(/<svg[^>]*>.*<\/svg>Add<\/button>/)
+    expect(card(html, 'Pastor')).toMatch(/<svg[^>]*>.*<\/svg>Agregar<\/button>/)
     expect(card(html, 'Pastor')).not.toContain('<img')
   })
 
   it('shows each product badges with their names in the theme shape', () => {
     const pastor = card(renderCards(), 'Pastor')
-    expect(pastor).toContain('aria-label="Badges"')
-    expect(pastor).toMatch(/rounded-full[^"]*bg-badge[^"]*text-badge-ink[^"]*">Vegan<\/li>/)
-    expect(pastor).toContain('>Gluten-free</li>')
+    expect(pastor).toContain('aria-label="Etiquetas"')
+    expect(pastor).toMatch(/rounded-full[^"]*bg-badge[^"]*text-badge-ink[^"]*">Vegano<\/li>/)
+    expect(pastor).toContain('>Sin gluten</li>')
     expect(card(renderCards({ badge_shape: 'rounded' }), 'Pastor')).toMatch(/rounded-lg[^"]*bg-badge/)
-    expect(card(renderCards(), 'Suadero')).not.toContain('aria-label="Badges"')
+    expect(card(renderCards(), 'Suadero')).not.toContain('aria-label="Etiquetas"')
   })
 
   it('draws the overlay template with the text over a scrim on the image, and a plain card without image', () => {
@@ -164,11 +164,11 @@ describe('the product cards by the theme', () => {
 
   it('draws the add button as text, icon or both, in the theme shape', () => {
     const icon = card(renderCards({ add_button: { style: 'icon', shape: 'pill' } }), 'Pastor')
-    expect(icon).toContain('aria-label="Add Pastor"')
-    expect(icon).not.toContain('Add</button>')
+    expect(icon).toContain('aria-label="Agregar Pastor"')
+    expect(icon).not.toContain('Agregar</button>')
     expect(icon).toContain('rounded-full')
     const text = card(renderCards({ add_button: { style: 'text', shape: 'square' } }), 'Pastor')
-    expect(text).toMatch(/rounded-none[^"]*">Add<\/button>/)
+    expect(text).toMatch(/rounded-none[^"]*">Agregar<\/button>/)
     expect(text).not.toContain('<svg')
   })
 

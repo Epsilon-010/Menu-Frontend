@@ -6,8 +6,8 @@ export function AccountPanel() {
   return (
     <div className="space-y-8">
       <SectionHeader
-        title="Account"
-        description="Change the password you sign in with. Every other device where you are signed in is signed out right away."
+        title="Cuenta"
+        description="Cambia la contraseña con la que inicias sesión. La sesión se cierra de inmediato en todos tus otros dispositivos."
       />
       <Card className="max-w-md p-6">
         <ChangePasswordForm />

@@ -14,7 +14,7 @@ export function QuantityStepper({ value, onChange, disabled = false, label }: Qu
   return (
     <div className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface p-1">
       <IconButton
-        label={`One less ${label}`}
+        label={`Uno menos: ${label}`}
         icon={<MinusIcon size={16} />}
         disabled={disabled || value <= MIN_QUANTITY}
         onClick={() => onChange(value - 1)}
@@ -24,7 +24,7 @@ export function QuantityStepper({ value, onChange, disabled = false, label }: Qu
         {value}
       </span>
       <IconButton
-        label={`One more ${label}`}
+        label={`Uno más: ${label}`}
         icon={<PlusIcon size={16} />}
         disabled={disabled || value >= MAX_QUANTITY}
         onClick={() => onChange(value + 1)}

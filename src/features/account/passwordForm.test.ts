@@ -8,20 +8,20 @@ describe('passwordProblem', () => {
   })
 
   it('rejects a new password that is too short or too long', () => {
-    const message = 'The new password must have 8 to 128 characters.'
+    const message = 'La nueva contraseña debe tener de 8 a 128 caracteres.'
     expect(passwordProblem({ current: 'old-pass-1', next: 'short', repeat: 'short' })).toBe(message)
     expect(passwordProblem({ current: 'old-pass-1', next: 'x'.repeat(129), repeat: 'x'.repeat(129) })).toBe(message)
   })
 
   it('rejects a repeat that does not match', () => {
     expect(passwordProblem({ current: 'old-pass-1', next: 'my-own-pass', repeat: 'my-own-pas' })).toBe(
-      'The new passwords do not match.',
+      'Las nuevas contraseñas no coinciden.',
     )
   })
 
   it('rejects the current password as the new one', () => {
     expect(passwordProblem({ current: 'same-pass-1', next: 'same-pass-1', repeat: 'same-pass-1' })).toBe(
-      'The new password must be different from the current one.',
+      'La nueva contraseña debe ser distinta de la actual.',
     )
   })
 })

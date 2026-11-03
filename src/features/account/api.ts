@@ -24,18 +24,18 @@ export async function changePassword(currentPassword: string, newPassword: strin
       body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
     })
   } catch {
-    throw new PasswordChangeError('Could not reach the server. Check your connection and try again.')
+    throw new PasswordChangeError('No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.')
   }
   if (response.ok) return (await response.json()) as SessionInfo
   if (response.status === 429) {
-    throw new PasswordChangeError('Too many attempts. Wait a few minutes and try again.', 429)
+    throw new PasswordChangeError('Demasiados intentos. Espera unos minutos e inténtalo de nuevo.', 429)
   }
   const body = (await response.json().catch(() => null)) as { detail?: unknown } | null
   if (typeof body?.detail === 'string' && (response.status === 400 || response.status === 422)) {
     throw new PasswordChangeError(body.detail.endsWith('.') ? body.detail : `${body.detail}.`, response.status)
   }
   if (response.status === 401) {
-    throw new PasswordChangeError('Your session ended. Sign in again to change your password.', 401)
+    throw new PasswordChangeError('Tu sesión terminó. Inicia sesión de nuevo para cambiar tu contraseña.', 401)
   }
-  throw new PasswordChangeError('The server could not complete that. Please try again in a moment.', response.status)
+  throw new PasswordChangeError('El servidor no pudo completar la acción. Inténtalo de nuevo en un momento.', response.status)
 }

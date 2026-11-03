@@ -61,19 +61,19 @@ export function lineDraftKey(itemId: string, quantity: number, note: string, opt
 }
 
 const ITEM_STATUS_LABELS: Record<OrderItemStatus, string> = {
-  queued: 'Waiting for the kitchen',
-  preparing: 'Being prepared',
-  ready: 'Ready, on its way',
-  delivered: 'Delivered',
-  cancelled: 'Cancelled',
+  queued: 'Esperando a la cocina',
+  preparing: 'En preparación',
+  ready: 'Listo, va en camino',
+  delivered: 'Entregado',
+  cancelled: 'Cancelado',
 }
 
 const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  queued: 'Sent to the kitchen',
-  in_progress: 'In the kitchen',
-  partially_delivered: 'Partly delivered',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
+  queued: 'Enviada a la cocina',
+  in_progress: 'En la cocina',
+  partially_delivered: 'Entregada en parte',
+  completed: 'Completada',
+  cancelled: 'Cancelada',
 }
 
 /** The table can ask for the bill only when something is left to pay (not every dish cancelled). */
@@ -93,7 +93,7 @@ export function orderStatusLabel(status: OrderStatus): string {
 export function rejectionNote(item: { status: OrderItemStatus; cancel_reason: string | null }): string | null {
   if (item.status !== 'cancelled') return null
   const reason = item.cancel_reason?.trim()
-  return reason ? `Rejected: ${reason}` : 'Rejected'
+  return reason ? `Rechazado: ${reason}` : 'Rechazado'
 }
 
 export type StatusTone = 'neutral' | 'warning' | 'success'

@@ -69,7 +69,7 @@ describe('register', () => {
     const failure = await failureOf(register(SIGN_UP))
 
     expect(failure.field).toBe('email')
-    expect(failure.message).toBe('That email already has an account. Sign in, or use another email.')
+    expect(failure.message).toBe('Ese correo ya tiene una cuenta. Inicia sesión o usa otro correo.')
   })
 
   it('asks for a fresh id when the id belongs to something else', async () => {
@@ -79,14 +79,14 @@ describe('register', () => {
 
     expect(failure.field).toBe('form')
     expect(failure.newIdNeeded).toBe(true)
-    expect(failure.message).toBe('That id is already used by something else. Try again.')
+    expect(failure.message).toBe('That id is already used by something else. Inténtalo de nuevo.')
   })
 
   it('shows the validation detail and asks to wait after too many attempts', async () => {
     stubFetch(problem(422, 'Invalid fields: email'), problem(429, 'Too many sign-up attempts'))
 
     expect((await failureOf(register(SIGN_UP))).message).toBe('Invalid fields: email.')
-    expect((await failureOf(register(SIGN_UP))).message).toBe('Too many attempts. Wait a few minutes and try again.')
+    expect((await failureOf(register(SIGN_UP))).message).toBe('Demasiados intentos. Espera unos minutos e inténtalo de nuevo.')
   })
 
   it('reports an unreachable server', async () => {
@@ -98,7 +98,7 @@ describe('register', () => {
     )
 
     expect((await failureOf(register(SIGN_UP))).message).toBe(
-      'Could not reach the server. Check your connection and try again.',
+      'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.',
     )
   })
 })
@@ -107,20 +107,20 @@ describe('sign-up steps', () => {
   it('checks the email and the password length of step 1', () => {
     expect(credentialsError('owner@example.com', 'x'.repeat(PASSWORD_MIN_LENGTH))).toBeNull()
     expect(credentialsError('owner@example.com', 'x'.repeat(PASSWORD_MAX_LENGTH))).toBeNull()
-    expect(credentialsError('  ', 'long-enough')).toEqual({ field: 'email', message: 'Enter your email.' })
-    expect(credentialsError('owner', 'long-enough')).toEqual({ field: 'email', message: 'Enter a valid email.' })
+    expect(credentialsError('  ', 'long-enough')).toEqual({ field: 'email', message: 'Escribe tu correo.' })
+    expect(credentialsError('owner', 'long-enough')).toEqual({ field: 'email', message: 'Escribe un correo válido.' })
     expect(credentialsError('owner@example.com', 'short')).toEqual({
       field: 'password',
-      message: `Use ${PASSWORD_MIN_LENGTH} to ${PASSWORD_MAX_LENGTH} characters.`,
+      message: `Usa de ${PASSWORD_MIN_LENGTH} a ${PASSWORD_MAX_LENGTH} caracteres.`,
     })
     expect(credentialsError('owner@example.com', 'x'.repeat(PASSWORD_MAX_LENGTH + 1))?.field).toBe('password')
   })
 
   it('checks the business name of step 2', () => {
     expect(businessNameError(' Taqueria 1 ')).toBeNull()
-    expect(businessNameError('   ')).toBe('Enter the name of your business.')
+    expect(businessNameError('   ')).toBe('Escribe el nombre de tu negocio.')
     expect(businessNameError('x'.repeat(BUSINESS_NAME_MAX_LENGTH + 1))).toBe(
-      `Use at most ${BUSINESS_NAME_MAX_LENGTH} characters.`,
+      `Usa como máximo ${BUSINESS_NAME_MAX_LENGTH} caracteres.`,
     )
   })
 

@@ -56,12 +56,12 @@ describe('needsCartReload', () => {
 
 describe('labels', () => {
   it('turns item and order statuses into readable labels', () => {
-    expect(itemStatusLabel('queued')).toBe('Waiting for the kitchen')
-    expect(itemStatusLabel('preparing')).toBe('Being prepared')
-    expect(itemStatusLabel('ready')).toBe('Ready, on its way')
-    expect(itemStatusLabel('delivered')).toBe('Delivered')
-    expect(itemStatusLabel('cancelled')).toBe('Cancelled')
-    expect(orderStatusLabel('partially_delivered')).toBe('Partly delivered')
+    expect(itemStatusLabel('queued')).toBe('Esperando a la cocina')
+    expect(itemStatusLabel('preparing')).toBe('En preparación')
+    expect(itemStatusLabel('ready')).toBe('Listo, va en camino')
+    expect(itemStatusLabel('delivered')).toBe('Entregado')
+    expect(itemStatusLabel('cancelled')).toBe('Cancelado')
+    expect(orderStatusLabel('partially_delivered')).toBe('Entregada en parte')
   })
 })
 
@@ -112,13 +112,13 @@ describe('createOrderSender', () => {
 
 describe('rejectionNote', () => {
   it('shows why the kitchen rejected a dish', () => {
-    expect(rejectionNote({ status: 'cancelled', cancel_reason: 'Out of avocado' })).toBe('Rejected: Out of avocado')
+    expect(rejectionNote({ status: 'cancelled', cancel_reason: 'Out of avocado' })).toBe('Rechazado: Out of avocado')
   })
 
   it('says nothing for dishes that were not rejected or carry no reason', () => {
     expect(rejectionNote({ status: 'ready', cancel_reason: null })).toBeNull()
-    expect(rejectionNote({ status: 'cancelled', cancel_reason: null })).toBe('Rejected')
-    expect(rejectionNote({ status: 'cancelled', cancel_reason: '  ' })).toBe('Rejected')
+    expect(rejectionNote({ status: 'cancelled', cancel_reason: null })).toBe('Rechazado')
+    expect(rejectionNote({ status: 'cancelled', cancel_reason: '  ' })).toBe('Rechazado')
   })
 })
 

@@ -31,7 +31,7 @@ function LineRow({ line, item, onChange, onRemove }: LineRowProps) {
           <p className={`font-medium text-pretty ${line.available ? 'text-ink' : 'text-faint'}`}>{line.name}</p>
           {options && <p className="text-sm text-muted">{options}</p>}
           {line.note && <p className="text-sm text-muted">{line.note}</p>}
-          {!line.available && <Badge tone="warning">No longer available</Badge>}
+          {!line.available && <Badge tone="warning">Ya no está disponible</Badge>}
         </div>
         <p
           className={`shrink-0 text-sm font-semibold tabular-nums ${line.available ? 'text-ink' : 'text-faint line-through'}`}
@@ -55,11 +55,11 @@ function LineRow({ line, item, onChange, onRemove }: LineRowProps) {
               onClick={() => setEditing(true)}
               className="type-button"
             >
-              Edit options
+              Editar opciones
             </Button>
           )}
           <IconButton
-            label={`Remove ${line.name}`}
+            label={`Quitar ${line.name}`}
             tone="danger"
             icon={<TrashIcon size={16} />}
             disabled={busy}
@@ -93,8 +93,8 @@ interface CartContentsProps {
 export function CartContents({ cart, menu = [], onChange, onRemove, onSend }: CartContentsProps) {
   if (cart.lines.length === 0) {
     return (
-      <EmptyState icon={<ShoppingBagIcon size={24} aria-hidden />} title="Nothing in the order yet">
-        Everyone at the table adds to the same order. Tap Add on a dish to start.
+      <EmptyState icon={<ShoppingBagIcon size={24} aria-hidden />} title="Aún no hay nada en el pedido">
+        Todos en la mesa agregan al mismo pedido. Toca Agregar en un platillo para empezar.
       </EmptyState>
     )
   }
@@ -104,7 +104,7 @@ export function CartContents({ cart, menu = [], onChange, onRemove, onSend }: Ca
   return (
     <div className="space-y-4">
       {groupByPerson(cart.lines).map((group) => (
-        <section key={group.person} aria-label={`Added by ${group.person}`}>
+        <section key={group.person} aria-label={`Agregado por ${group.person}`}>
           <h3 className="text-xs font-semibold tracking-wide text-muted uppercase">{group.person}</h3>
           <ul className="divide-y divide-subtle">
             {group.lines.map((line) => (
@@ -122,7 +122,7 @@ export function CartContents({ cart, menu = [], onChange, onRemove, onSend }: Ca
 
       <div className="flex items-center justify-between border-t border-line pt-4">
         <span className="text-sm text-muted">
-          Total · {count} {count === 1 ? 'dish' : 'dishes'}
+          Total · {count} {count === 1 ? 'platillo' : 'platillos'}
         </span>
         <span className="text-lg font-semibold text-ink tabular-nums">{formatMoney(cart.total_cents)}</span>
       </div>
@@ -134,7 +134,7 @@ export function CartContents({ cart, menu = [], onChange, onRemove, onSend }: Ca
         disabled={count === 0}
         onClick={onSend}
       >
-        Send order
+        Enviar orden
       </Button>
     </div>
   )

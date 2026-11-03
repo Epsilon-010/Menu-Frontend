@@ -94,7 +94,7 @@ export function LoadError({ message, onRetry }: LoadErrorProps) {
         onClick={onRetry}
         className="rounded-lg px-3 py-2 text-sm font-semibold text-red-800 transition duration-300 ease-smooth hover:bg-red-100 active:scale-[0.98]"
       >
-        Try again
+        Reintentar
       </button>
     </div>
   )

@@ -35,7 +35,7 @@ export function onSessionEnded(listener: () => void): () => void {
  */
 export class SessionUnavailableError extends Error {
   constructor() {
-    super('Could not reach the server. Check the connection and try again.')
+    super('No se pudo conectar con el servidor. Revisa la conexión e inténtalo de nuevo.')
     this.name = 'SessionUnavailableError'
   }
 }

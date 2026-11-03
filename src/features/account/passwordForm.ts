@@ -11,9 +11,9 @@ export interface PasswordDraft {
 /** What is wrong with the form, or null when it can be sent. */
 export function passwordProblem(draft: PasswordDraft): string | null {
   if (draft.next.length < MIN_PASSWORD_LENGTH || draft.next.length > MAX_PASSWORD_LENGTH) {
-    return `The new password must have ${MIN_PASSWORD_LENGTH} to ${MAX_PASSWORD_LENGTH} characters.`
+    return `La nueva contraseña debe tener de ${MIN_PASSWORD_LENGTH} a ${MAX_PASSWORD_LENGTH} caracteres.`
   }
-  if (draft.next !== draft.repeat) return 'The new passwords do not match.'
-  if (draft.next === draft.current) return 'The new password must be different from the current one.'
+  if (draft.next !== draft.repeat) return 'Las nuevas contraseñas no coinciden.'
+  if (draft.next === draft.current) return 'La nueva contraseña debe ser distinta de la actual.'
   return null
 }

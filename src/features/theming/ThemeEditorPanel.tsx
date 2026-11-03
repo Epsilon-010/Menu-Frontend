@@ -52,39 +52,39 @@ type EditorSection = 'templates' | 'colors' | 'brand' | 'typography' | 'layout' 
 const SECTIONS: { id: EditorSection; label: string; description: string; icon: ReactNode }[] = [
   {
     id: 'templates',
-    label: 'Templates',
-    description: 'Sets the colors, fonts, layout and cards at once; your name, logo and images stay.',
+    label: 'Plantillas',
+    description: 'Cambia colores, fuentes, distribución y tarjetas a la vez; tu nombre, logo e imágenes se conservan.',
     icon: <SquaresFourIcon size={16} aria-hidden />,
   },
-  { id: 'colors', label: 'Colors', description: 'The palette of the menu, in light or dark mode.', icon: <PaletteIcon size={16} aria-hidden /> },
+  { id: 'colors', label: 'Colores', description: 'La paleta del menú, en modo claro u oscuro.', icon: <PaletteIcon size={16} aria-hidden /> },
   {
     id: 'brand',
-    label: 'Brand',
-    description: 'Name, texts, logo, banner and background.',
+    label: 'Marca',
+    description: 'Nombre, textos, logo, banner y fondo.',
     icon: <StorefrontIcon size={16} aria-hidden />,
   },
   {
     id: 'typography',
-    label: 'Typography',
-    description: 'Fonts and how each text of the menu looks.',
+    label: 'Tipografía',
+    description: 'Fuentes y cómo se ve cada texto del menú.',
     icon: <TextAaIcon size={16} aria-hidden />,
   },
   {
     id: 'layout',
-    label: 'Layout',
-    description: 'Category navigation, product view, columns and the order bar.',
+    label: 'Distribución',
+    description: 'Navegación de categorías, vista de productos, columnas y barra del pedido.',
     icon: <LayoutIcon size={16} aria-hidden />,
   },
   {
     id: 'cards',
-    label: 'Product cards',
-    description: 'Shape, image, badges and the add button of each product.',
+    label: 'Tarjetas de producto',
+    description: 'Forma, imagen, etiquetas y botón de agregar de cada producto.',
     icon: <CardsIcon size={16} aria-hidden />,
   },
   {
     id: 'versions',
-    label: 'Versions',
-    description: 'Go back to a published design, start over from the defaults, or move a design between businesses.',
+    label: 'Versiones',
+    description: 'Vuelve a un diseño publicado, empieza de nuevo con los valores por defecto o pasa un diseño a otro negocio.',
     icon: <ClockCounterClockwiseIcon size={16} aria-hidden />,
   },
 ]
@@ -94,7 +94,7 @@ type LoadState ={ status: 'loading' } | { status: 'error'; message: string } | {
 type HistoryState = { versions: ThemeVersion[] | null; error: string | null }
 
 function messageOf(error: unknown): string {
-  return error instanceof ThemeError ? error.message : 'Something went wrong. Please try again.'
+  return error instanceof ThemeError ? error.message : 'Algo salió mal. Inténtalo de nuevo.'
 }
 
 /** Saves the design as a JSON file the admin can import here or in another business. */
@@ -121,10 +121,10 @@ function withImage(theme: Theme, slot: ImageSlot, publicId: string): Theme {
 }
 
 function statusText(saved: ThemeDraftState, dirty: boolean): string {
-  if (dirty) return 'Unsaved changes.'
-  if (saved.has_unpublished_changes) return 'Draft saved. Publish it to show it on the tables.'
-  if (saved.published_at) return `Published on ${new Date(saved.published_at).toLocaleString()}. The tables show this design.`
-  return 'The tables show the default design.'
+  if (dirty) return 'Cambios sin guardar.'
+  if (saved.has_unpublished_changes) return 'Borrador guardado. Publícalo para mostrarlo en las mesas.'
+  if (saved.published_at) return `Publicado el ${new Date(saved.published_at).toLocaleString()}. Las mesas muestran este diseño.`
+  return 'Las mesas muestran el diseño por defecto.'
 }
 
 /**
@@ -181,7 +181,7 @@ export function ThemeEditorPanel() {
   }, [historyKey])
 
   if (load.status === 'loading' || (load.status === 'loaded' && draft === null)) {
-    return <ListSkeleton rows={3} label="Loading the menu design" />
+    return <ListSkeleton rows={3} label="Cargando el diseño del menú" />
   }
   if (load.status === 'error') {
     return (
@@ -206,17 +206,17 @@ export function ThemeEditorPanel() {
 
   function applyPreset(preset: ThemePreset) {
     setDraft(withPreset(theme, preset))
-    setNotice(`${preset.name} applied to the draft. Adjust anything in the other sections, then save or publish.`)
+    setNotice(`${preset.name} se aplicó al borrador. Ajusta lo que quieras en las otras secciones y luego guarda o publica.`)
   }
 
   function restore(version: ThemeVersion) {
     setDraft(version.theme)
-    setNotice(`Version ${version.number} is in the draft. Publish it to show it on the tables again.`)
+    setNotice(`La versión ${version.number} está en el borrador. Publícala para mostrarla de nuevo en las mesas.`)
   }
 
   function reset() {
     setDraft(withDefaults(theme, saved.presets))
-    setNotice('Colors, fonts, layout and cards are back to the defaults; your name, texts and images stay. Save or publish to keep it.')
+    setNotice('Los colores, fuentes, distribución y tarjetas volvieron a los valores por defecto; tu nombre, textos e imágenes se conservan. Guarda o publica para mantenerlo.')
   }
 
   async function handleImport(event: ChangeEvent<HTMLInputElement>) {
@@ -230,7 +230,7 @@ export function ThemeEditorPanel() {
       setDraft(imported.theme)
       setError(null)
       const warning = removedImagesText(imported.removed_images)
-      setNotice(`Design imported into the draft. Adjust it, then save or publish.${warning ? ` ${warning}` : ''}`)
+      setNotice(`Diseño importado al borrador. Ajústalo y luego guarda o publica.${warning ? ` ${warning}` : ''}`)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : messageOf(caught))
     }
@@ -265,7 +265,7 @@ export function ThemeEditorPanel() {
 
   async function handleSave() {
     setBusy('saving')
-    if (await save()) setNotice('Draft saved. The tables still show the published design.')
+    if (await save()) setNotice('Borrador guardado. Las mesas siguen mostrando el diseño publicado.')
     setBusy(null)
   }
 
@@ -277,7 +277,7 @@ export function ThemeEditorPanel() {
         setDraft((current) => (current ? keepNewerEdits(current, theme, result.draft) : result.draft))
         setLoad({ status: 'loaded', saved: result })
         setError(null)
-        setNotice('Published. The tables show the new design within a minute.')
+        setNotice('Publicado. Las mesas mostrarán el nuevo diseño en menos de un minuto.')
         setHistoryKey((key) => key + 1)
       } catch (caught) {
         setError(messageOf(caught))
@@ -301,18 +301,18 @@ export function ThemeEditorPanel() {
       <div className="space-y-4">
         <div className="flex flex-wrap gap-2">
           <Button disabled={busy !== null} onClick={reset}>
-            Reset to defaults
+            Restablecer valores por defecto
           </Button>
-          <Button onClick={() => download(theme, themeFileName(businessName, new Date()))}>Export design</Button>
+          <Button onClick={() => download(theme, themeFileName(businessName, new Date()))}>Exportar diseño</Button>
           <Button disabled={busy !== null} onClick={() => importInput.current?.click()}>
-            {busy === 'importing' ? 'Importing…' : 'Import design'}
+            {busy === 'importing' ? 'Importando…' : 'Importar diseño'}
           </Button>
           <input
             ref={importInput}
             type="file"
             accept="application/json,.json"
             className="hidden"
-            aria-label="Design file to import"
+            aria-label="Archivo de diseño para importar"
             onChange={(event) => void handleImport(event)}
           />
         </div>
@@ -333,19 +333,19 @@ export function ThemeEditorPanel() {
   return (
     <div className="space-y-4">
       <SectionHeader
-        title="Design"
+        title="Diseño"
         description={<span role="status">{statusText(saved, dirty)}</span>}
         action={
           <div className="flex flex-wrap gap-2">
             <Button disabled={busy !== null || !dirty} onClick={() => void handleSave()}>
-              {busy === 'saving' ? 'Saving…' : 'Save draft'}
+              {busy === 'saving' ? 'Guardando…' : 'Guardar borrador'}
             </Button>
             <Button
               variant="primary"
               disabled={busy !== null || (!dirty && !saved.has_unpublished_changes && saved.published_at !== null)}
               onClick={() => void handlePublish()}
             >
-              {busy === 'publishing' ? 'Publishing…' : 'Publish'}
+              {busy === 'publishing' ? 'Publicando…' : 'Publicar'}
             </Button>
           </div>
         }
@@ -359,8 +359,8 @@ export function ThemeEditorPanel() {
       )}
 
       {/* Wide screens: sections | preview | options, the last two pinned so nothing needs scrolling back. */}
-      <div className="grid gap-4 lg:grid-cols-[10rem_minmax(0,1fr)_25rem] lg:items-start lg:gap-6">
-        <nav aria-label="Design sections" className="min-w-0 lg:sticky lg:top-24">
+      <div className="grid gap-4 lg:grid-cols-[12rem_minmax(0,1fr)_25rem] lg:items-start lg:gap-6">
+        <nav aria-label="Secciones del diseño" className="min-w-0 lg:sticky lg:top-24">
           <ul role="tablist" aria-orientation="vertical" className="flex gap-1 overflow-x-auto pb-1 lg:flex-col lg:pb-0">
             {SECTIONS.map((option) => (
               <li key={option.id} role="presentation" className="shrink-0">
@@ -383,7 +383,7 @@ export function ThemeEditorPanel() {
           </ul>
         </nav>
 
-        <aside aria-label="Preview" className="order-last min-w-0 lg:sticky lg:top-24 lg:order-none">
+        <aside aria-label="Vista previa" className="order-last min-w-0 lg:sticky lg:top-24 lg:order-none">
           <ThemePreview theme={theme} imageUrls={imageUrls} businessName={businessName} />
         </aside>
 

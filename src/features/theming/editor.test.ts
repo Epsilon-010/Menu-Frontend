@@ -229,8 +229,8 @@ describe('reset, export and import', () => {
 
   it('reads an exported file as JSON, or says it is not a design', () => {
     expect(readThemeFile('{"schema_version": 3}')).toEqual({ schema_version: 3 })
-    expect(() => readThemeFile('not json')).toThrow('That file is not a menu design. Choose a .json file exported from this editor.')
-    expect(() => readThemeFile('[1, 2]')).toThrow('That file is not a menu design. Choose a .json file exported from this editor.')
+    expect(() => readThemeFile('not json')).toThrow('Ese archivo no es un diseño de menú. Elige un archivo .json exportado desde este editor.')
+    expect(() => readThemeFile('[1, 2]')).toThrow('Ese archivo no es un diseño de menú. Elige un archivo .json exportado desde este editor.')
   })
 
   it('names the file with the business and the day', () => {
@@ -241,10 +241,10 @@ describe('reset, export and import', () => {
   it('tells which images were left out of an import', () => {
     expect(removedImagesText([])).toBeNull()
     expect(removedImagesText(['logo'])).toBe(
-      'The logo was left out: it belongs to another business or is no longer in your designs. Upload it again.',
+      'El logo quedó fuera: pertenece a otro negocio o ya no está en tus diseños. Sube la imagen de nuevo.',
     )
     expect(removedImagesText(['logo', 'banner', 'background'])).toBe(
-      'The logo, banner and background image were left out: they belong to another business or are no longer in your designs. Upload them again.',
+      'El logo, el banner y la imagen de fondo quedaron fuera: pertenecen a otro negocio o ya no están en tus diseños. Sube las imágenes de nuevo.',
     )
   })
 })

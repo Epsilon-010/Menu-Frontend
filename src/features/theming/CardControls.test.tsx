@@ -21,29 +21,29 @@ function select(html: string, label: string): string {
 describe('card controls', () => {
   it('offer every option group, with the three templates', () => {
     const html = render()
-    const labels = ['Card template', 'Fit', 'Corners', 'Shadow', 'Border', 'Inner spacing', 'Description lines', 'Price']
-    for (const label of [...labels, 'Content', 'Button shape', 'On hover', 'When cards appear']) {
+    const labels = ['Plantilla de tarjeta', 'Ajuste', 'Esquinas', 'Sombra', 'Borde', 'Espacio interior', 'Líneas de descripción', 'Precio']
+    for (const label of [...labels, 'Contenido', 'Forma del botón', 'Al pasar el cursor', 'Al aparecer las tarjetas']) {
       expect(html).toContain(`>${label}</`)
     }
-    expect(html).toContain('>Vertical: image on top</option>')
-    expect(html).toContain('>Full image with the text over it</option>')
-    expect(html).toContain('>Hide the description</option>')
+    expect(html).toContain('>Vertical: imagen arriba</option>')
+    expect(html).toContain('>Imagen completa con el texto encima</option>')
+    expect(html).toContain('>Ocultar la descripción</option>')
   })
 
   it('enable the image side only for horizontal cards and the darkening only for the overlay', () => {
-    expect(select(render(), 'Side')).toContain(' disabled=""')
-    expect(select(render({ template: 'horizontal' }), 'Side')).not.toContain(' disabled=""')
-    expect(select(render({ template: 'horizontal' }), 'Shape')).toContain(' disabled=""')
-    expect(select(render({}, { product_view: 'list' }), 'Side')).not.toContain(' disabled=""')
-    expect(render()).not.toContain('Darkening under the text')
-    expect(render({ template: 'overlay', overlay_opacity: 45 })).toContain('Darkening under the text: 45%')
+    expect(select(render(), 'Lado')).toContain(' disabled=""')
+    expect(select(render({ template: 'horizontal' }), 'Lado')).not.toContain(' disabled=""')
+    expect(select(render({ template: 'horizontal' }), 'Forma')).toContain(' disabled=""')
+    expect(select(render({}, { product_view: 'list' }), 'Lado')).not.toContain(' disabled=""')
+    expect(render()).not.toContain('Oscurecer bajo el texto')
+    expect(render({ template: 'overlay', overlay_opacity: 45 })).toContain('Oscurecer bajo el texto: 45%')
     // List rows are never overlays, so the darkening would change nothing there.
-    expect(render({ template: 'overlay' }, { product_view: 'list' })).not.toContain('Darkening under the text')
+    expect(render({ template: 'overlay' }, { product_view: 'list' })).not.toContain('Oscurecer bajo el texto')
   })
 
   it('say the list view always draws rows, and disable the border color without a border', () => {
-    expect(render({}, { product_view: 'list' })).toContain('The list view always draws horizontal rows')
-    expect(select(render({ border: { width: 'none', color: 'border' } }), 'Border color')).toContain(' disabled=""')
-    expect(select(render(), 'Border color')).not.toContain(' disabled=""')
+    expect(render({}, { product_view: 'list' })).toContain('La vista de lista siempre dibuja filas horizontales')
+    expect(select(render({ border: { width: 'none', color: 'border' } }), 'Color del borde')).toContain(' disabled=""')
+    expect(select(render(), 'Color del borde')).not.toContain(' disabled=""')
   })
 })

@@ -8,44 +8,44 @@ import { contrastWarnings, MIN_CONTRAST } from './style.ts'
 
 const COLOR_GROUPS: { title: string; fields: [ColorField, string][] }[] = [
   {
-    title: 'Brand',
+    title: 'Marca',
     fields: [
-      ['primary', 'Primary'],
-      ['secondary', 'Secondary'],
-      ['accent', 'Accent'],
+      ['primary', 'Primario'],
+      ['secondary', 'Secundario'],
+      ['accent', 'Acento'],
     ],
   },
   {
-    title: 'Page and cards',
+    title: 'Página y tarjetas',
     fields: [
-      ['background', 'Background'],
-      ['surface', 'Cards'],
-      ['border', 'Borders'],
+      ['background', 'Fondo'],
+      ['surface', 'Tarjetas'],
+      ['border', 'Bordes'],
     ],
   },
   {
-    title: 'Text',
+    title: 'Texto',
     fields: [
-      ['text', 'Main text'],
-      ['text_muted', 'Secondary text'],
-      ['price', 'Prices'],
+      ['text', 'Texto principal'],
+      ['text_muted', 'Texto secundario'],
+      ['price', 'Precios'],
     ],
   },
   {
-    title: 'Buttons',
+    title: 'Botones',
     fields: [
-      ['button_bg', 'Button'],
-      ['button_text', 'Button text'],
-      ['button_hover', 'Button hover'],
+      ['button_bg', 'Botón'],
+      ['button_text', 'Texto del botón'],
+      ['button_hover', 'Botón al pasar el cursor'],
     ],
   },
   {
-    title: 'Badges and order bar',
+    title: 'Etiquetas y barra del pedido',
     fields: [
-      ['badge_bg', 'Badge'],
-      ['badge_text', 'Badge text'],
-      ['cart_bg', 'Order bar'],
-      ['cart_text', 'Order bar text'],
+      ['badge_bg', 'Etiqueta'],
+      ['badge_text', 'Texto de la etiqueta'],
+      ['cart_bg', 'Barra del pedido'],
+      ['cart_text', 'Texto de la barra del pedido'],
     ],
   },
 ]
@@ -70,7 +70,7 @@ export function ColorInput({ label, value, onChange }: ColorInputProps) {
       <div className="flex items-center gap-2">
         <input
           type="color"
-          aria-label={`${label} color`}
+          aria-label={`${label}, selector de color`}
           value={value}
           onChange={(event) => {
             setTyped(null)
@@ -79,7 +79,7 @@ export function ColorInput({ label, value, onChange }: ColorInputProps) {
           className={`h-9 w-9 shrink-0 cursor-pointer rounded-lg border border-line bg-surface p-1 ${MOTION}`}
         />
         <TextInput
-          aria-label={`${label} hex code`}
+          aria-label={`${label}, código hexadecimal`}
           aria-invalid={invalid}
           value={typed ?? value}
           maxLength={7}
@@ -110,8 +110,8 @@ export function ColorControls({ theme, defaults, onChange }: ColorControlsProps)
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <span className="block text-sm font-medium text-ink-soft">Mode</span>
-        <div role="radiogroup" aria-label="Mode" className="inline-flex gap-1 rounded-xl border border-line bg-surface p-1">
+        <span className="block text-sm font-medium text-ink-soft">Modo</span>
+        <div role="radiogroup" aria-label="Modo" className="inline-flex gap-1 rounded-xl border border-line bg-surface p-1">
           {(['light', 'dark'] as ThemeMode[]).map((mode) => (
             <button
               key={mode}
@@ -123,11 +123,11 @@ export function ColorControls({ theme, defaults, onChange }: ColorControlsProps)
                 colors.mode === mode ? 'bg-action text-action-ink' : 'text-ink-soft hover:bg-subtle'
               }`}
             >
-              {mode === 'light' ? 'Light' : 'Dark'}
+              {mode === 'light' ? 'Claro' : 'Oscuro'}
             </button>
           ))}
         </div>
-        <p className="text-xs text-muted">Changing the mode starts again from that mode's palette.</p>
+        <p className="text-xs text-muted">Al cambiar de modo se vuelve a la paleta de ese modo.</p>
       </div>
 
       {COLOR_GROUPS.map((group) => (
@@ -147,7 +147,7 @@ export function ColorControls({ theme, defaults, onChange }: ColorControlsProps)
       ))}
 
       <fieldset className="space-y-3">
-        <legend className="text-sm font-semibold text-ink">Header gradient</legend>
+        <legend className="text-sm font-semibold text-ink">Degradado del encabezado</legend>
         <label className="flex items-center gap-2 text-sm text-ink-soft">
           <input
             type="checkbox"
@@ -155,13 +155,13 @@ export function ColorControls({ theme, defaults, onChange }: ColorControlsProps)
             onChange={(event) => onChange(withGradient(theme, { enabled: event.target.checked }))}
             className="h-4 w-4 accent-zinc-950"
           />
-          Paint the menu header with a gradient when there is no banner image
+          Pintar el encabezado del menú con un degradado cuando no hay imagen de banner
         </label>
         {colors.gradient.enabled && (
           <div className="grid gap-4 @sm:grid-cols-2">
-            <ColorInput label="From" value={colors.gradient.from} onChange={(from) => onChange(withGradient(theme, { from }))} />
-            <ColorInput label="To" value={colors.gradient.to} onChange={(to) => onChange(withGradient(theme, { to }))} />
-            <Field label={`Angle: ${colors.gradient.angle}°`}>
+            <ColorInput label="Desde" value={colors.gradient.from} onChange={(from) => onChange(withGradient(theme, { from }))} />
+            <ColorInput label="Hasta" value={colors.gradient.to} onChange={(to) => onChange(withGradient(theme, { to }))} />
+            <Field label={`Ángulo: ${colors.gradient.angle}°`}>
               <input
                 type="range"
                 min={0}
@@ -180,17 +180,17 @@ export function ColorControls({ theme, defaults, onChange }: ColorControlsProps)
         <div role="status" className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           <p className="flex items-center gap-2 font-semibold">
             <WarningIcon size={16} aria-hidden />
-            Some text may be hard to read
+            Algunos textos pueden ser difíciles de leer
           </p>
           <ul className="space-y-1">
             {warnings.map((warning) => (
               <li key={`${warning.foreground}-${warning.background}`}>
-                {LABELS[warning.foreground]} on {LABELS[warning.background]}: contrast {warning.ratio.toFixed(2)}:1 (needs{' '}
-                {MIN_CONTRAST}:1 for WCAG AA)
+                {LABELS[warning.foreground]} sobre {LABELS[warning.background]}: contraste {warning.ratio.toFixed(2)}:1 (necesita{' '}
+                {MIN_CONTRAST}:1 para WCAG AA)
               </li>
             ))}
           </ul>
-          <p className="text-xs">You can still save and publish; this is only a warning.</p>
+          <p className="text-xs">Puedes guardar y publicar de todos modos; esto es solo un aviso.</p>
         </div>
       )}
     </div>

@@ -45,7 +45,7 @@ export function MenuHero({ theme, imageUrls, businessName }: MenuHeroProps) {
 
       <div className={`flex flex-col gap-3 ${centered ? 'items-center text-center' : 'items-start text-left'}`}>
         {logoUrl && (
-          <img src={logoUrl} alt={`${brand.name || businessName} logo`} className={`w-auto object-contain ${LOGO_SIZES[brand.logo.size]}`} />
+          <img src={logoUrl} alt={`Logo de ${brand.name || businessName}`} className={`w-auto object-contain ${LOGO_SIZES[brand.logo.size]}`} />
         )}
         {/* The tagline follows the name's alignment. */}
         <div className="w-full space-y-1 [text-align:var(--type-business-name-align,center)]">

@@ -118,7 +118,7 @@ describe('theme api', () => {
     const calls = stubFetch(jsonResponse(200, { ...SIGNATURE, allowed_formats: ['jpg', 'png', 'webp'] }))
     const file = new File(['<svg/>'], 'banner.svg', { type: 'image/svg+xml' })
     const error = await failureOf(uploadThemeImage('banner', file))
-    expect(error.message).toBe('Use a jpg, png, webp image.')
+    expect(error.message).toBe('Usa una imagen jpg, png, webp.')
     expect(calls).toHaveLength(1)
   })
 

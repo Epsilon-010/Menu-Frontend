@@ -14,22 +14,22 @@ import {
 
 // Records keyed by every option: a new option cannot ship without its label.
 const NAVIGATION_LABELS: Record<Navigation, string> = {
-  chips: 'Chips that jump to each section',
-  tabs: 'Tabs, one category at a time',
-  sidebar: 'Side list, one category at a time',
-  sections: 'One long page with a section bar',
+  chips: 'Chips que llevan a cada sección',
+  tabs: 'Pestañas, una categoría a la vez',
+  sidebar: 'Lista lateral, una categoría a la vez',
+  sections: 'Una página larga con barra de secciones',
 }
-const VIEW_LABELS: Record<ProductView, string> = { grid: 'Grid', list: 'List', carousel: 'Carousel (swipe)' }
-const DENSITY_LABELS: Record<Density, string> = { compact: 'Compact', comfortable: 'Comfortable', spacious: 'Spacious' }
+const VIEW_LABELS: Record<ProductView, string> = { grid: 'Cuadrícula', list: 'Lista', carousel: 'Carrusel (deslizar)' }
+const DENSITY_LABELS: Record<Density, string> = { compact: 'Compacto', comfortable: 'Cómodo', spacious: 'Amplio' }
 const HEADER_LABELS: Record<CategoryHeader, string> = {
-  plain: 'Title with a dot',
-  underline: 'Underlined title',
-  band: 'Title on a colored band',
+  plain: 'Título con un punto',
+  underline: 'Título subrayado',
+  band: 'Título sobre una franja de color',
 }
 const CART_LABELS: Record<CartStyle, string> = {
-  bar: 'Bottom bar (side panel on large screens)',
-  panel: 'Side panel from tablets up',
-  floating: 'Floating button in the corner',
+  bar: 'Barra inferior (panel lateral en pantallas grandes)',
+  panel: 'Panel lateral desde tablets',
+  floating: 'Botón flotante en la esquina',
 }
 
 const COLUMNS = Array.from({ length: MAX_COLUMNS - MIN_COLUMNS + 1 }, (_, index) => MIN_COLUMNS + index)
@@ -37,10 +37,10 @@ const COLUMNS = Array.from({ length: MAX_COLUMNS - MIN_COLUMNS + 1 }, (_, index)
 type Flag = 'sticky_header' | 'show_banner' | 'show_tagline' | 'show_welcome'
 
 const FLAGS: { field: Flag; label: string }[] = [
-  { field: 'sticky_header', label: 'Keep the top bar on screen while scrolling' },
-  { field: 'show_banner', label: 'Show the banner' },
-  { field: 'show_tagline', label: 'Show the tagline' },
-  { field: 'show_welcome', label: 'Show the welcome message' },
+  { field: 'sticky_header', label: 'Mantener la barra superior visible al desplazarse' },
+  { field: 'show_banner', label: 'Mostrar el banner' },
+  { field: 'show_tagline', label: 'Mostrar el eslogan' },
+  { field: 'show_welcome', label: 'Mostrar el mensaje de bienvenida' },
 ]
 
 interface LayoutControlsProps {
@@ -56,7 +56,7 @@ export function LayoutControls({ theme, onChange }: LayoutControlsProps) {
   return (
     <div className="space-y-6">
       <Choice
-        label="Category navigation"
+        label="Navegación de categorías"
         value={layout.navigation}
         options={NAVIGATIONS}
         labels={NAVIGATION_LABELS}
@@ -65,13 +65,13 @@ export function LayoutControls({ theme, onChange }: LayoutControlsProps) {
 
       <div className="grid gap-4 @sm:grid-cols-2">
         <Choice
-          label="Products"
+          label="Productos"
           value={layout.product_view}
           options={PRODUCT_VIEWS}
           labels={VIEW_LABELS}
           onChange={(product_view) => set({ product_view })}
         />
-        <Field label="Columns" hint="On wide screens; tablets show up to three and phones one.">
+        <Field label="Columnas" hint="En pantallas anchas; las tablets muestran hasta tres y los celulares una.">
           <Select
             value={layout.columns}
             disabled={layout.product_view !== 'grid'}
@@ -85,14 +85,14 @@ export function LayoutControls({ theme, onChange }: LayoutControlsProps) {
           </Select>
         </Field>
         <Choice
-          label="Spacing"
+          label="Espaciado"
           value={layout.density}
           options={DENSITIES}
           labels={DENSITY_LABELS}
           onChange={(density) => set({ density })}
         />
         <Choice
-          label="Category titles"
+          label="Títulos de categoría"
           value={layout.category_header}
           options={CATEGORY_HEADERS}
           labels={HEADER_LABELS}
@@ -101,7 +101,7 @@ export function LayoutControls({ theme, onChange }: LayoutControlsProps) {
       </div>
 
       <Choice
-        label="Table order"
+        label="Pedido de la mesa"
         value={layout.cart}
         options={CART_STYLES}
         labels={CART_LABELS}
@@ -109,7 +109,7 @@ export function LayoutControls({ theme, onChange }: LayoutControlsProps) {
       />
 
       <fieldset className="space-y-2">
-        <legend className="text-sm font-semibold text-ink">Top of the menu</legend>
+        <legend className="text-sm font-semibold text-ink">Parte superior del menú</legend>
         {FLAGS.map(({ field, label }) => (
           <label key={field} className="flex items-center gap-2 text-sm text-ink-soft">
             <input

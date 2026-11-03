@@ -57,14 +57,14 @@ function PresetCard({ preset, selected, onApply }: PresetCardProps) {
             className="shrink-0 rounded-md px-2 py-1 text-xs"
             style={{ ...face(preset, 'button', colors.button_text), backgroundColor: colors.button_bg }}
           >
-            Add
+            Agregar
           </span>
         </div>
       </div>
       <div className="flex flex-1 flex-col gap-1 border-t border-line bg-surface p-3">
         <span className="flex items-center gap-1.5 text-sm font-semibold text-ink">
           {preset.name}
-          {selected && <CheckCircleIcon weight="fill" aria-label="In use" className="h-4 w-4 text-action" />}
+          {selected && <CheckCircleIcon weight="fill" aria-label="En uso" className="h-4 w-4 text-action" />}
         </span>
         <span className="text-xs text-muted">{preset.description}</span>
       </div>

@@ -12,7 +12,7 @@ type Device = 'tablet' | 'phone'
 
 const DEVICES: Record<Device, { width: number; height: number; label: string }> = {
   tablet: { width: 820, height: 1080, label: 'Tablet' },
-  phone: { width: 390, height: 780, label: 'Phone' },
+  phone: { width: 390, height: 780, label: 'Celular' },
 }
 
 // Space above and below the frame on wide screens before scrolling: the page title, the size toggle and a
@@ -89,7 +89,7 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div role="radiogroup" aria-label="Preview size" className="inline-flex gap-1 rounded-xl border border-line bg-surface p-1">
+      <div role="radiogroup" aria-label="Tamaño de la vista previa" className="inline-flex gap-1 rounded-xl border border-line bg-surface p-1">
         {(Object.keys(DEVICES) as Device[]).map((option) => (
           <button
             key={option}
@@ -108,7 +108,7 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
       </div>
 
       <div ref={ref} className="w-full">
-        <div style={{ width: frame.width * scale, height: frame.height * scale }} className="mx-auto" aria-label={`Menu preview, ${frame.label}`}>
+        <div style={{ width: frame.width * scale, height: frame.height * scale }} className="mx-auto" aria-label={`Vista previa del menú, ${frame.label}`}>
           <div
             style={{ width: frame.width, height: frame.height, transform: `scale(${scale})`, transformOrigin: 'top left' }}
             className="overflow-hidden rounded-3xl border-8 border-zinc-900 shadow-lg"
@@ -121,12 +121,12 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
                   {!layout.sticky_header && header}
                   <MenuHero theme={theme} imageUrls={imageUrls} businessName={businessName} />
                   {menu && <MenuBrowser categories={menu} onAdd={() => Promise.resolve(null)} layout={layout} cards={cards} belowFixedBar={false} />}
-                  {menuFailed && <p className="text-sm text-muted">The menu could not be loaded for the preview.</p>}
+                  {menuFailed && <p className="text-sm text-muted">No se pudo cargar el menú para la vista previa.</p>}
                 </div>
                 {sidePanel && (
-                  <aside aria-label="Table order" className="w-64 shrink-0 border-l border-line bg-surface p-4">
-                    <p className="text-lg font-semibold tracking-tight text-ink">Table order</p>
-                    <p className="mt-2 text-sm text-muted">2 dishes · {formatMoney(4500)}</p>
+                  <aside aria-label="Pedido de la mesa" className="w-64 shrink-0 border-l border-line bg-surface p-4">
+                    <p className="text-lg font-semibold tracking-tight text-ink">Pedido de la mesa</p>
+                    <p className="mt-2 text-sm text-muted">2 platillos · {formatMoney(4500)}</p>
                   </aside>
                 )}
               </div>
@@ -140,7 +140,7 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
                   >
                     <span className="flex items-center gap-2 text-base font-semibold">
                       <ShoppingBagIcon size={20} aria-hidden />
-                      Table order
+                      Pedido de la mesa
                       <span className="rounded-md bg-badge px-2 text-sm text-badge-ink tabular-nums">2</span>
                     </span>
                     <span className="text-base font-semibold tabular-nums">{formatMoney(4500)}</span>

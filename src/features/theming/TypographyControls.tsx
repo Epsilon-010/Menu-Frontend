@@ -11,28 +11,28 @@ import {
   TEXT_ELEMENTS,
 } from './typography.ts'
 
-const ROLE_LABELS: Record<FontRole, string> = { heading: 'Headings', body: 'Body', price: 'Prices', button: 'Buttons' }
+const ROLE_LABELS: Record<FontRole, string> = { heading: 'Títulos', body: 'Cuerpo', price: 'Precios', button: 'Botones' }
 const ELEMENT_LABELS: Record<TextElement, string> = {
-  business_name: 'Business name',
-  category: 'Category heading',
-  product_name: 'Product name',
-  description: 'Description',
-  price: 'Price',
-  button: 'Buttons',
+  business_name: 'Nombre del negocio',
+  category: 'Encabezado de categoría',
+  product_name: 'Nombre del producto',
+  description: 'Descripción',
+  price: 'Precio',
+  button: 'Botones',
 }
 const FONT_GROUPS: { label: string; fonts: FontId[] }[] = [
-  { label: 'Sans serif', fonts: ['geist', 'inter', 'poppins', 'montserrat', 'lato', 'nunito'] },
-  { label: 'Serif', fonts: ['playfair_display', 'lora', 'merriweather'] },
-  { label: 'Display', fonts: ['oswald', 'bebas_neue'] },
-  { label: 'Handwritten', fonts: ['pacifico', 'caveat'] },
+  { label: 'Sin serifa', fonts: ['geist', 'inter', 'poppins', 'montserrat', 'lato', 'nunito'] },
+  { label: 'Con serifa', fonts: ['playfair_display', 'lora', 'merriweather'] },
+  { label: 'Decorativas', fonts: ['oswald', 'bebas_neue'] },
+  { label: 'Manuscritas', fonts: ['pacifico', 'caveat'] },
 ]
 const TRANSFORM_LABELS: Record<TextTransform, string> = {
-  none: 'As written',
-  uppercase: 'UPPERCASE',
-  lowercase: 'lowercase',
-  capitalize: 'Capitalize Each Word',
+  none: 'Como está escrito',
+  uppercase: 'MAYÚSCULAS',
+  lowercase: 'minúsculas',
+  capitalize: 'Mayúscula En Cada Palabra',
 }
-const ALIGN_LABELS: Record<TextAlign, string> = { left: 'Left', center: 'Center', right: 'Right' }
+const ALIGN_LABELS: Record<TextAlign, string> = { left: 'Izquierda', center: 'Centro', right: 'Derecha' }
 // Price and buttons sit in a row, where alignment has no visible effect.
 const ALIGNABLE: TextElement[] = ['business_name', 'category', 'product_name', 'description']
 
@@ -98,7 +98,7 @@ function ElementControls({ theme, element, onChange }: { theme: Theme; element: 
         </span>
       </summary>
       <div className="grid gap-4 border-t border-line p-3 @sm:grid-cols-2">
-        <Field label="Font">
+        <Field label="Fuente">
           <Select value={style.font} onChange={(event) => change({ font: event.target.value as FontRole })}>
             {FONT_ROLES.map((role) => (
               <option key={role} value={role}>
@@ -107,7 +107,7 @@ function ElementControls({ theme, element, onChange }: { theme: Theme; element: 
             ))}
           </Select>
         </Field>
-        <Field label="Weight">
+        <Field label="Grosor">
           <Select value={style.weight} onChange={(event) => change({ weight: Number(event.target.value) })}>
             {font.weights.map((weight) => (
               <option key={weight} value={weight}>
@@ -116,17 +116,17 @@ function ElementControls({ theme, element, onChange }: { theme: Theme; element: 
             ))}
           </Select>
         </Field>
-        <Field label="Style" hint={font.italic ? undefined : `${font.family} has no italics.`}>
+        <Field label="Estilo" hint={font.italic ? undefined : `${font.family} no tiene cursivas.`}>
           <Select
             value={style.style}
             disabled={!font.italic}
             onChange={(event) => change({ style: event.target.value as FontStyle })}
           >
             <option value="normal">Normal</option>
-            <option value="italic">Italic</option>
+            <option value="italic">Cursiva</option>
           </Select>
         </Field>
-        <Field label="Letter case">
+        <Field label="Mayúsculas y minúsculas">
           <Select value={style.transform} onChange={(event) => change({ transform: event.target.value as TextTransform })}>
             {Object.entries(TRANSFORM_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
@@ -136,7 +136,7 @@ function ElementControls({ theme, element, onChange }: { theme: Theme; element: 
           </Select>
         </Field>
         {ALIGNABLE.includes(element) && (
-          <Field label="Alignment">
+          <Field label="Alineación">
             <Select value={style.align} onChange={(event) => change({ align: event.target.value as TextAlign })}>
               {Object.entries(ALIGN_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>
@@ -147,7 +147,7 @@ function ElementControls({ theme, element, onChange }: { theme: Theme; element: 
           </Field>
         )}
         <RangeField
-          label="Size"
+          label="Tamaño"
           value={style.size}
           min={SIZE_RANGE.min}
           max={SIZE_RANGE.max}
@@ -155,7 +155,7 @@ function ElementControls({ theme, element, onChange }: { theme: Theme; element: 
           onChange={(size) => change({ size })}
         />
         <RangeField
-          label="Line height"
+          label="Interlineado"
           value={style.line_height}
           min={LINE_HEIGHT_RANGE.min}
           max={LINE_HEIGHT_RANGE.max}
@@ -163,7 +163,7 @@ function ElementControls({ theme, element, onChange }: { theme: Theme; element: 
           onChange={(line_height) => change({ line_height })}
         />
         <RangeField
-          label="Letter spacing"
+          label="Espaciado entre letras"
           value={style.letter_spacing}
           min={LETTER_SPACING_RANGE.min}
           max={LETTER_SPACING_RANGE.max}
@@ -188,13 +188,13 @@ export function TypographyControls({ theme, onChange }: TypographyControlsProps)
     <div className="space-y-6">
       <div className="grid gap-4 @sm:grid-cols-2">
         {FONT_ROLES.map((role) => (
-          <Field key={role} label={`${ROLE_LABELS[role]} font`}>
+          <Field key={role} label={`Fuente de ${ROLE_LABELS[role].toLowerCase()}`}>
             <FontSelect value={typography.fonts[role]} onChange={(font) => onChange(withRoleFont(theme, role, font))} />
           </Field>
         ))}
       </div>
       <RangeField
-        label="Text scale"
+        label="Escala del texto"
         value={typography.scale}
         min={SCALE_RANGE.min}
         max={SCALE_RANGE.max}
@@ -202,7 +202,7 @@ export function TypographyControls({ theme, onChange }: TypographyControlsProps)
         onChange={(scale) => onChange(withScale(theme, scale))}
       />
       <div className="space-y-2">
-        <span className="block text-sm font-medium text-ink-soft">Each text</span>
+        <span className="block text-sm font-medium text-ink-soft">Cada texto</span>
         {TEXT_ELEMENTS.map((element) => (
           <ElementControls key={element} theme={theme} element={element} onChange={onChange} />
         ))}

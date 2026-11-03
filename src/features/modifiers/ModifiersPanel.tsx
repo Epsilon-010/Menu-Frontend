@@ -23,7 +23,7 @@ type ListState =
   | { status: 'loaded'; groups: ModifierGroup[] }
 
 function messageOf(error: unknown): string {
-  return error instanceof CatalogError ? error.message : 'Something went wrong. Please try again.'
+  return error instanceof CatalogError ? error.message : 'Algo salió mal. Intenta de nuevo.'
 }
 
 /** Admin section for the tenant's library of modifier groups (sizes, extras...) that items use. */
@@ -100,14 +100,14 @@ export function ModifiersPanel() {
 
   const newGroupButton = (
     <Button variant="primary" icon={<PlusIcon size={16} aria-hidden />} disabled={creating} onClick={() => setCreating(true)}>
-      New group
+      Nuevo grupo
     </Button>
   )
 
   const header = (
     <SectionHeader
-      title="Modifiers"
-      description="Choices guests make on an item, like a size or extras. Attach a group to as many items as you like in Menu; editing it here changes it on all of them."
+      title="Grupos de opciones"
+      description="Lo que los comensales eligen en un producto, como el tamaño o los extras. Asigna un grupo a todos los productos que quieras en Menú; al editarlo aquí cambia en todos."
       action={list.status === 'loaded' ? newGroupButton : undefined}
     />
   )
@@ -117,7 +117,7 @@ export function ModifiersPanel() {
       <div className="space-y-8">
         {header}
         {list.status === 'loading' ? (
-          <ListSkeleton label="Loading the modifier groups" rows={3} />
+          <ListSkeleton label="Cargando los grupos de opciones" rows={3} />
         ) : (
           <LoadError
             message={list.message}
@@ -138,14 +138,14 @@ export function ModifiersPanel() {
       {header}
       {creating && (
         <Card className="p-2">
-          <GroupEditor submitLabel="Add group" onSubmit={handleCreate} onCancel={cancelCreate} />
+          <GroupEditor submitLabel="Agregar grupo" onSubmit={handleCreate} onCancel={cancelCreate} />
         </Card>
       )}
       {stale && (
         <div role="status" className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-amber-50 p-4">
-          <p className="text-sm text-amber-900">Your change was saved, but the list could not refresh. {stale}</p>
+          <p className="text-sm text-amber-900">Tu cambio se guardó, pero la lista no se pudo actualizar. {stale}</p>
           <Button variant="secondary" onClick={() => void reload(false).then((failure) => setStale(failure))}>
-            Refresh the list
+            Actualizar la lista
           </Button>
         </div>
       )}
@@ -153,11 +153,11 @@ export function ModifiersPanel() {
         !creating && (
           <EmptyState
             icon={<SlidersHorizontalIcon size={24} aria-hidden />}
-            title="Offer sizes and extras"
+            title="Ofrece tamaños y extras"
             action={newGroupButton}
           >
-            Create a group like Size (choose 1) or Salsas (up to 3), give each option its extra price, then pick the
-            group on your items in Menu.
+            Crea un grupo como Tamaño (elige 1) o Salsas (hasta 3), ponle a cada opción su precio extra y después
+            elige el grupo en tus productos en Menú.
           </EmptyState>
         )
       ) : (

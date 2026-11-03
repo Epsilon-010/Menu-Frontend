@@ -42,21 +42,21 @@ export function NewStaffMemberForm({ onCreate }: NewStaffMemberFormProps) {
     <Card className="p-6">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-1">
-          <h2 className="font-semibold text-zinc-950">Add a staff member</h2>
-          <p className="text-sm text-zinc-500">You get a code and a PIN to hand them. They sign in with those.</p>
+          <h2 className="font-semibold text-zinc-950">Agregar a alguien del personal</h2>
+          <p className="text-sm text-zinc-500">Recibes un código y un PIN para entregárselos. Con ellos inicia sesión.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Full name">
+          <Field label="Nombre completo">
             <TextInput
               required
               maxLength={120}
-              placeholder="Cook 1"
+              placeholder="Cocinero 1"
               autoComplete="off"
               value={draft.full_name}
               onChange={(event) => setDraft({ ...draft, full_name: event.target.value })}
             />
           </Field>
-          <Field label="Role">
+          <Field label="Rol">
             <Select value={draft.role} onChange={(event) => setDraft({ ...draft, role: event.target.value as StaffRole })}>
               {Object.entries(ROLE_LABELS).map(([role, label]) => (
                 <option key={role} value={role}>
@@ -68,7 +68,7 @@ export function NewStaffMemberForm({ onCreate }: NewStaffMemberFormProps) {
         </div>
         {error && <ErrorText>{error}</ErrorText>}
         <Button type="submit" variant="primary" icon={<PlusIcon size={16} aria-hidden />} disabled={saving}>
-          {saving ? 'Adding…' : 'Add staff member'}
+          {saving ? 'Agregando…' : 'Agregar al personal'}
         </Button>
       </form>
     </Card>

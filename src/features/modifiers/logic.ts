@@ -26,9 +26,9 @@ export type GroupPayload = Omit<ModifierGroupDraft, 'id'>
 
 /** The selection rule of a group in plain words. */
 export function selectionRule(min: number, max: number): string {
-  if (min === max) return `Required · choose ${min}`
-  if (min === 0) return `Optional · up to ${max}`
-  return `Choose ${min} to ${max}`
+  if (min === max) return `Obligatorio · elige ${min}`
+  if (min === 0) return `Opcional · hasta ${max}`
+  return `Elige de ${min} a ${max}`
 }
 
 function newKey(): string {
@@ -74,23 +74,23 @@ export function parseLimits(form: GroupForm): { min: number; max: number } | nul
 /** The body to save (create or the full PATCH), or the first rule the form breaks. */
 export function groupPayload(form: GroupForm): { payload: GroupPayload } | { error: string } {
   const name = form.name.trim()
-  if (name === '') return { error: 'Give the group a name, like Size or Extras.' }
-  if (name.length > MAX_NAME_LENGTH) return { error: `The group name can have up to ${MAX_NAME_LENGTH} characters.` }
-  if (form.options.length === 0) return { error: 'Add at least one option.' }
-  if (form.options.length > MAX_OPTIONS) return { error: `A group can have up to ${MAX_OPTIONS} options.` }
+  if (name === '') return { error: 'Ponle un nombre al grupo, como Tamaño o Extras.' }
+  if (name.length > MAX_NAME_LENGTH) return { error: `El nombre del grupo puede tener hasta ${MAX_NAME_LENGTH} caracteres.` }
+  if (form.options.length === 0) return { error: 'Agrega al menos una opción.' }
+  if (form.options.length > MAX_OPTIONS) return { error: `Un grupo puede tener hasta ${MAX_OPTIONS} opciones.` }
 
   const options: ModifierOptionDraft[] = []
   const seen = new Set<string>()
   for (const row of form.options) {
     const optionName = row.name.trim()
-    if (optionName === '') return { error: 'Give every option a name.' }
-    if (optionName.length > MAX_NAME_LENGTH) return { error: `Option names can have up to ${MAX_NAME_LENGTH} characters.` }
+    if (optionName === '') return { error: 'Ponle un nombre a cada opción.' }
+    if (optionName.length > MAX_NAME_LENGTH) return { error: `Los nombres de las opciones pueden tener hasta ${MAX_NAME_LENGTH} caracteres.` }
     const folded = optionName.toLowerCase()
-    if (seen.has(folded)) return { error: 'Option names must be unique in a group.' }
+    if (seen.has(folded)) return { error: 'Los nombres de las opciones no se pueden repetir en un grupo.' }
     seen.add(folded)
     const priceCents = row.price.trim() === '' ? 0 : parsePrice(row.price)
     if (priceCents === null) {
-      return { error: `Enter a price from 0 to ${formatPrice(MAX_PRICE_CENTS)} for ${optionName}, like 5 or 5.50.` }
+      return { error: `Escribe un precio de 0 a ${formatPrice(MAX_PRICE_CENTS)} para ${optionName}, como 5 o 5.50.` }
     }
     options.push({ ...(row.id ? { id: row.id } : {}), name: optionName, price_cents: priceCents, is_available: row.is_available })
   }
@@ -98,7 +98,7 @@ export function groupPayload(form: GroupForm): { payload: GroupPayload } | { err
   const limits = parseLimits(form)
   if (limits === null) {
     return {
-      error: `Invalid selection limits. The minimum goes from 0 to the maximum, and the maximum from 1 to ${options.length} (the number of options).`,
+      error: `Límites de selección no válidos. El mínimo va de 0 al máximo, y el máximo de 1 a ${options.length} (el número de opciones).`,
     }
   }
   return { payload: { name, min_select: limits.min, max_select: limits.max, options } }

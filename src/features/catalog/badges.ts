@@ -4,12 +4,12 @@ export type Badge = 'new' | 'popular' | 'spicy' | 'vegan' | 'vegetarian' | 'glut
 export const BADGES: Badge[] = ['new', 'popular', 'spicy', 'vegan', 'vegetarian', 'gluten_free']
 
 export const BADGE_LABELS: Record<Badge, string> = {
-  new: 'New',
+  new: 'Nuevo',
   popular: 'Popular',
-  spicy: 'Spicy',
-  vegan: 'Vegan',
-  vegetarian: 'Vegetarian',
-  gluten_free: 'Gluten-free',
+  spicy: 'Picante',
+  vegan: 'Vegano',
+  vegetarian: 'Vegetariano',
+  gluten_free: 'Sin gluten',
 }
 
 /** The known badges of a product, once each and in order (an older server sends none). */

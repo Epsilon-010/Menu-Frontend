@@ -66,7 +66,7 @@ export function ItemRow({ item, categories, modifierGroups, isFirst, isLast, act
             <img src={thumbnail} alt={item.name} className="h-full w-full object-cover" />
           ) : (
             <span className="flex h-full items-center justify-center text-zinc-400">
-              <ImageSquareIcon size={24} aria-label={item.image ? 'Image saved' : 'No image'} />
+              <ImageSquareIcon size={24} aria-label={item.image ? 'Imagen guardada' : 'Sin imagen'} />
             </span>
           )}
         </div>
@@ -74,7 +74,7 @@ export function ItemRow({ item, categories, modifierGroups, isFirst, isLast, act
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className={`font-medium ${item.is_available ? 'text-zinc-950' : 'text-zinc-400'}`}>{item.name}</p>
-            {!item.is_available && <Badge tone="warning">Hidden</Badge>}
+            {!item.is_available && <Badge tone="warning">Oculto</Badge>}
           </div>
           {item.description && <p className="line-clamp-1 text-sm text-zinc-500">{item.description}</p>}
         </div>
@@ -82,23 +82,23 @@ export function ItemRow({ item, categories, modifierGroups, isFirst, isLast, act
         <p className="font-mono text-sm font-medium text-zinc-950">{formatMoney(item.price_cents)}</p>
 
         <div className="flex flex-wrap items-center gap-1">
-          <IconButton label="Move up" icon={<CaretUpIcon size={16} />} disabled={busy || isFirst} onClick={() => void run(() => actions.move(-1))} />
-          <IconButton label="Move down" icon={<CaretDownIcon size={16} />} disabled={busy || isLast} onClick={() => void run(() => actions.move(1))} />
-          <IconButton label="Edit" icon={<PencilSimpleIcon size={16} />} disabled={busy} onClick={() => setMode(mode === 'edit' ? 'view' : 'edit')} />
+          <IconButton label="Subir" icon={<CaretUpIcon size={16} />} disabled={busy || isFirst} onClick={() => void run(() => actions.move(-1))} />
+          <IconButton label="Bajar" icon={<CaretDownIcon size={16} />} disabled={busy || isLast} onClick={() => void run(() => actions.move(1))} />
+          <IconButton label="Editar" icon={<PencilSimpleIcon size={16} />} disabled={busy} onClick={() => setMode(mode === 'edit' ? 'view' : 'edit')} />
           <IconButton
-            label={item.is_available ? 'Hide from the tables' : 'Show on the tables'}
+            label={item.is_available ? 'Ocultar en las mesas' : 'Mostrar en las mesas'}
             icon={item.is_available ? <EyeIcon size={16} /> : <EyeSlashIcon size={16} />}
             disabled={busy}
             onClick={() => void run(() => actions.update({ is_available: !item.is_available }))}
           />
           <label
-            title={item.image ? 'Change image' : 'Add image'}
+            title={item.image ? 'Cambiar imagen' : 'Agregar imagen'}
             className={`inline-flex cursor-pointer items-center justify-center rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-zinc-950 ${MOTION} ${
               busy ? 'pointer-events-none opacity-40' : ''
             }`}
           >
             <UploadSimpleIcon size={16} aria-hidden />
-            <span className="sr-only">{item.image ? 'Change image' : 'Add image'}</span>
+            <span className="sr-only">{item.image ? 'Cambiar imagen' : 'Agregar imagen'}</span>
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
@@ -108,15 +108,15 @@ export function ItemRow({ item, categories, modifierGroups, isFirst, isLast, act
             />
           </label>
           {item.image && (
-            <IconButton label="Remove image" icon={<XIcon size={16} />} disabled={busy} onClick={() => void run(actions.removeImage)} />
+            <IconButton label="Quitar imagen" icon={<XIcon size={16} />} disabled={busy} onClick={() => void run(actions.removeImage)} />
           )}
-          <IconButton label="Delete item" tone="danger" icon={<TrashIcon size={16} />} disabled={busy} onClick={() => setMode('confirm-delete')} />
+          <IconButton label="Eliminar producto" tone="danger" icon={<TrashIcon size={16} />} disabled={busy} onClick={() => setMode('confirm-delete')} />
         </div>
       </div>
 
       {mode === 'edit' && (
         <div className="mt-4 space-y-4">
-          <Field label="Category" className="max-w-xs">
+          <Field label="Categoría" className="max-w-xs">
             <Select
               value={item.category_id}
               disabled={busy}
@@ -132,7 +132,7 @@ export function ItemRow({ item, categories, modifierGroups, isFirst, isLast, act
           <ItemForm
             initial={item}
             modifierGroups={modifierGroups}
-            submitLabel="Save changes"
+            submitLabel="Guardar cambios"
             onSubmit={(values) => run(() => actions.update(values), true)}
             onCancel={() => setMode('view')}
           />
@@ -142,14 +142,14 @@ export function ItemRow({ item, categories, modifierGroups, isFirst, isLast, act
       {mode === 'confirm-delete' && (
         <div className="mt-4 flex flex-wrap items-center gap-4 rounded-xl bg-red-50 p-4">
           <p className="flex-1 text-sm text-red-800">
-            Delete {item.name}? Its image is deleted too. This cannot be undone.
+            ¿Eliminar {item.name}? También se elimina su imagen. Esto no se puede deshacer.
           </p>
           <div className="flex gap-2">
             <Button variant="danger" disabled={busy} onClick={() => void run(actions.remove, true)}>
-              Delete item
+              Eliminar producto
             </Button>
             <Button variant="ghost" disabled={busy} onClick={() => setMode('view')}>
-              Keep it
+              Conservarlo
             </Button>
           </div>
         </div>

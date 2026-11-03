@@ -69,7 +69,7 @@ export function CategorySection({ category, categories, modifierGroups, isFirst,
   }
 
   const { items } = category
-  const count = items.length === 1 ? '1 item' : `${items.length} items`
+  const count = items.length === 1 ? '1 producto' : `${items.length} productos`
 
   return (
     <Card className="p-2">
@@ -77,7 +77,7 @@ export function CategorySection({ category, categories, modifierGroups, isFirst,
         {mode.kind === 'rename' ? (
           <form onSubmit={handleRename} className="flex flex-wrap items-center gap-2">
             <TextInput
-              aria-label="Category name"
+              aria-label="Nombre de la categoría"
               required
               maxLength={60}
               autoFocus
@@ -86,10 +86,10 @@ export function CategorySection({ category, categories, modifierGroups, isFirst,
               className="max-w-xs"
             />
             <Button type="submit" variant="primary" disabled={busy}>
-              Save
+              Guardar
             </Button>
             <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-              Cancel
+              Cancelar
             </Button>
           </form>
         ) : (
@@ -99,25 +99,25 @@ export function CategorySection({ category, categories, modifierGroups, isFirst,
                 {category.name}
               </h2>
               <span className="text-sm text-zinc-500">{count}</span>
-              {!category.is_visible && <Badge tone="warning">Hidden</Badge>}
+              {!category.is_visible && <Badge tone="warning">Oculta</Badge>}
             </div>
             <div className="flex items-center gap-1">
-              <IconButton label="Move category up" icon={<CaretUpIcon size={16} />} disabled={busy || isFirst} onClick={() => void run(() => actions.move(-1))} />
-              <IconButton label="Move category down" icon={<CaretDownIcon size={16} />} disabled={busy || isLast} onClick={() => void run(() => actions.move(1))} />
+              <IconButton label="Subir categoría" icon={<CaretUpIcon size={16} />} disabled={busy || isFirst} onClick={() => void run(() => actions.move(-1))} />
+              <IconButton label="Bajar categoría" icon={<CaretDownIcon size={16} />} disabled={busy || isLast} onClick={() => void run(() => actions.move(1))} />
               <IconButton
-                label="Rename category"
+                label="Cambiar nombre de la categoría"
                 icon={<PencilSimpleIcon size={16} />}
                 disabled={busy}
                 onClick={() => setMode({ kind: 'rename', name: category.name })}
               />
               <IconButton
-                label={category.is_visible ? 'Hide category from the tables' : 'Show category on the tables'}
+                label={category.is_visible ? 'Ocultar categoría en las mesas' : 'Mostrar categoría en las mesas'}
                 icon={category.is_visible ? <EyeIcon size={16} /> : <EyeSlashIcon size={16} />}
                 disabled={busy}
                 onClick={() => void run(() => actions.update({ is_visible: !category.is_visible }))}
               />
               <IconButton
-                label="Delete category"
+                label="Eliminar categoría"
                 tone="danger"
                 icon={<TrashIcon size={16} />}
                 disabled={busy}
@@ -131,17 +131,17 @@ export function CategorySection({ category, categories, modifierGroups, isFirst,
           <div className="flex flex-wrap items-center gap-4 rounded-xl bg-red-50 p-4">
             <p className="flex-1 text-sm text-red-800">
               {items.length > 0
-                ? `${category.name} still has ${count}. Move or delete them first.`
-                : `Delete the ${category.name} category? This cannot be undone.`}
+                ? `${category.name} todavía tiene ${count}. Muévelos o elimínalos primero.`
+                : `¿Eliminar la categoría ${category.name}? Esto no se puede deshacer.`}
             </p>
             <div className="flex gap-2">
               {items.length === 0 && (
                 <Button variant="danger" disabled={busy} onClick={() => void run(actions.remove, true)}>
-                  Delete category
+                  Eliminar categoría
                 </Button>
               )}
               <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-                {items.length === 0 ? 'Keep it' : 'Got it'}
+                {items.length === 0 ? 'Conservarla' : 'Entendido'}
               </Button>
             </div>
           </div>
@@ -152,7 +152,7 @@ export function CategorySection({ category, categories, modifierGroups, isFirst,
       {items.length === 0 ? (
         <div className="flex items-center gap-3 rounded-lg bg-zinc-50 p-4 text-sm text-zinc-500">
           <BowlFoodIcon size={20} aria-hidden />
-          No items in this category yet. Add the first one below.
+          Esta categoría aún no tiene productos. Agrega el primero abajo.
         </div>
       ) : (
         <ul className="space-y-1">
@@ -173,7 +173,7 @@ export function CategorySection({ category, categories, modifierGroups, isFirst,
       <div className="p-2">
         {mode.kind === 'add-item' ? (
           <ItemForm
-            submitLabel="Add item"
+            submitLabel="Agregar producto"
             modifierGroups={modifierGroups}
             onSubmit={addItem}
             onCancel={() => {
@@ -183,7 +183,7 @@ export function CategorySection({ category, categories, modifierGroups, isFirst,
           />
         ) : (
           <Button variant="ghost" icon={<PlusIcon size={16} aria-hidden />} disabled={busy} onClick={() => setMode({ kind: 'add-item' })}>
-            Add item
+            Agregar producto
           </Button>
         )}
       </div>

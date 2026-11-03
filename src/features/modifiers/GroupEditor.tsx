@@ -60,16 +60,16 @@ export function GroupEditor({ initial, submitLabel, onSubmit, onCancel }: GroupE
   return (
     <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-zinc-50 p-4">
       <div className="grid gap-4 sm:grid-cols-[1fr_9rem_9rem]">
-        <Field label="Group name">
+        <Field label="Nombre del grupo">
           <TextInput
             required
             maxLength={MAX_NAME_LENGTH}
-            placeholder="Size"
+            placeholder="Tamaño"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
         </Field>
-        <Field label="Choose at least" hint="0 makes it optional.">
+        <Field label="Elegir al menos" hint="Con 0 es opcional.">
           <TextInput
             required
             inputMode="numeric"
@@ -78,7 +78,7 @@ export function GroupEditor({ initial, submitLabel, onSubmit, onCancel }: GroupE
             className="font-mono"
           />
         </Field>
-        <Field label="Choose at most">
+        <Field label="Elegir como máximo">
           <TextInput
             required
             inputMode="numeric"
@@ -90,20 +90,20 @@ export function GroupEditor({ initial, submitLabel, onSubmit, onCancel }: GroupE
       </div>
       {limits && (
         <p className="text-sm text-muted">
-          Guests see: <span className="font-medium text-ink">{selectionRule(limits.min, limits.max)}</span>
+          Los comensales ven: <span className="font-medium text-ink">{selectionRule(limits.min, limits.max)}</span>
         </p>
       )}
 
       <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-ink-soft">Options</legend>
+        <legend className="text-sm font-medium text-ink-soft">Opciones</legend>
         <ul className="space-y-2">
           {options.map((option, index) => (
             <li key={option.key} className="flex flex-wrap items-center gap-2">
               <TextInput
-                aria-label={`Option ${index + 1} name`}
+                aria-label={`Nombre de la opción ${index + 1}`}
                 required
                 maxLength={MAX_NAME_LENGTH}
-                placeholder={index === 0 ? 'Small' : 'Large'}
+                placeholder={index === 0 ? 'Chico' : 'Grande'}
                 value={option.name}
                 onChange={(e) => setOption(option.key, { name: e.target.value })}
                 className="min-w-0 flex-1 basis-40"
@@ -113,7 +113,7 @@ export function GroupEditor({ initial, submitLabel, onSubmit, onCancel }: GroupE
                   +{CURRENCY_SYMBOL}
                 </span>
                 <TextInput
-                  aria-label={`Option ${index + 1} extra price`}
+                  aria-label={`Precio extra de la opción ${index + 1}`}
                   inputMode="decimal"
                   placeholder="0.00"
                   value={option.price}
@@ -128,23 +128,23 @@ export function GroupEditor({ initial, submitLabel, onSubmit, onCancel }: GroupE
                   onChange={(e) => setOption(option.key, { is_available: e.target.checked })}
                   className="h-4 w-4 accent-zinc-950"
                 />
-                Available
+                Disponible
               </label>
               <div className="flex items-center gap-1">
                 <IconButton
-                  label={`Move option ${index + 1} up`}
+                  label={`Subir opción ${index + 1}`}
                   icon={<CaretUpIcon size={16} />}
                   disabled={busy || index === 0}
                   onClick={() => setOptions((rows) => moveRow(rows, index, -1))}
                 />
                 <IconButton
-                  label={`Move option ${index + 1} down`}
+                  label={`Bajar opción ${index + 1}`}
                   icon={<CaretDownIcon size={16} />}
                   disabled={busy || index === options.length - 1}
                   onClick={() => setOptions((rows) => moveRow(rows, index, 1))}
                 />
                 <IconButton
-                  label={`Remove option ${index + 1}`}
+                  label={`Quitar opción ${index + 1}`}
                   tone="danger"
                   icon={<TrashIcon size={16} />}
                   disabled={busy || options.length === 1}
@@ -155,7 +155,7 @@ export function GroupEditor({ initial, submitLabel, onSubmit, onCancel }: GroupE
           ))}
         </ul>
         <p className="text-xs text-muted">
-          Leave the price empty for a free option. Untick Available when an option is sold out for now.
+          Deja el precio vacío para una opción sin costo. Desmarca Disponible cuando una opción esté agotada por ahora.
         </p>
         <Button
           variant="ghost"
@@ -163,17 +163,17 @@ export function GroupEditor({ initial, submitLabel, onSubmit, onCancel }: GroupE
           disabled={busy || options.length >= MAX_OPTIONS}
           onClick={() => setOptions((rows) => [...rows, blankOption()])}
         >
-          Add option
+          Agregar opción
         </Button>
       </fieldset>
 
       {error && <ErrorText>{error}</ErrorText>}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" variant="primary" disabled={busy}>
-          {busy ? 'Saving…' : submitLabel}
+          {busy ? 'Guardando…' : submitLabel}
         </Button>
         <Button variant="ghost" disabled={busy} onClick={onCancel}>
-          Cancel
+          Cancelar
         </Button>
       </div>
     </form>

@@ -60,27 +60,27 @@ describe('catalog API errors', () => {
 
   it('asks to check the fields for schema errors without a detail', async () => {
     stubFetch(jsonResponse(422, { type: 'about:blank', title: 'Unprocessable Content', status: 422, errors: [] }))
-    expect((await failureOf(listCatalog())).message).toBe('Please check the fields and try again.')
+    expect((await failureOf(listCatalog())).message).toBe('Revisa los campos e intenta de nuevo.')
   })
 
   it('says the server failed, not that it is unreachable, on a 500', async () => {
     stubFetch(new Response('boom', { status: 500 }))
     expect((await failureOf(listCatalog())).message).toBe(
-      'The server could not complete that. Please try again in a moment.',
+      'El servidor no pudo completar la acción. Intenta de nuevo en un momento.',
     )
   })
 
   it('says the session ended when the refresh also fails', async () => {
     // The original 401, then the single refresh attempt the HTTP client makes.
     const calls = stubFetch(problem(401, ''), problem(401, ''))
-    expect((await failureOf(listCatalog())).message).toBe('Your session ended. Sign in again to keep editing.')
+    expect((await failureOf(listCatalog())).message).toBe('Tu sesión terminó. Inicia sesión de nuevo para seguir editando.')
     expect(calls.map((call) => call.url)).toEqual(['/api/v1/catalog/categories', '/api/v1/auth/refresh'])
   })
 
   it('says the server is unreachable only when the request never got an answer', async () => {
     stubFetch(new TypeError('Failed to fetch'))
     expect((await failureOf(listCatalog())).message).toBe(
-      'Could not reach the server. Check your connection and try again.',
+      'No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.',
     )
   })
 })
@@ -126,9 +126,9 @@ describe('image upload', () => {
     const calls = stubFetch(jsonResponse(200, signature), jsonResponse(200, signature))
 
     const gif = new File(['img'], 'taco.gif', { type: 'image/gif' })
-    expect((await failureOf(uploadImageFile(gif))).message).toBe('Use a jpg, png, webp image.')
+    expect((await failureOf(uploadImageFile(gif))).message).toBe('Usa una imagen jpg, png, webp.')
     const big = new File([new Uint8Array(signature.max_bytes + 1)], 'big.jpg', { type: 'image/jpeg' })
-    expect((await failureOf(uploadImageFile(big))).message).toBe('The image must be at most 5 MB.')
+    expect((await failureOf(uploadImageFile(big))).message).toBe('La imagen debe pesar como máximo 5 MB.')
 
     expect(calls.map((call) => call.url)).toEqual(['/api/v1/catalog/images/signature', '/api/v1/catalog/images/signature'])
   })

@@ -20,7 +20,7 @@ import { StaffMemberRow } from './StaffMemberRow.tsx'
 type ListState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded'; staff: StaffMember[] }
 
 function messageOf(error: unknown): string {
-  return error instanceof StaffError ? error.message : 'Something went wrong. Please try again.'
+  return error instanceof StaffError ? error.message : 'Algo salió mal. Intenta de nuevo.'
 }
 
 function byName(a: StaffMember, b: StaffMember): number {
@@ -104,20 +104,20 @@ export function StaffPanel() {
   return (
     <div className="space-y-8">
       <SectionHeader
-        title="Staff"
-        description="Add someone with just their name: you get a code and a PIN to give them. Names can repeat; each person signs in with their own code. Deactivating someone, changing their role or generating a new PIN signs them out of every device right away."
+        title="Personal"
+        description="Agrega a alguien solo con su nombre: recibes un código y un PIN para entregárselos. Los nombres se pueden repetir; cada persona inicia sesión con su propio código. Desactivar a alguien, cambiar su rol o generar un nuevo PIN cierra su sesión en todos sus dispositivos de inmediato."
       />
 
       <NewStaffMemberForm onCreate={handleCreate} />
 
       {credentials && <StaffCredentials member={credentials} onDismiss={() => setCredentials(null)} />}
 
-      {list.status === 'loading' && <ListSkeleton label="Loading staff" />}
+      {list.status === 'loading' && <ListSkeleton label="Cargando personal" />}
       {list.status === 'error' && <LoadError message={list.message} onRetry={retry} />}
       {list.status === 'loaded' &&
         (list.staff.length === 0 ? (
-          <EmptyState icon={<UsersThreeIcon size={24} aria-hidden />} title="No waiters or cooks yet">
-            Add the people on your shift with the form above. Each one gets a code and a PIN to sign in on their own device.
+          <EmptyState icon={<UsersThreeIcon size={24} aria-hidden />} title="Aún no hay meseros ni cocineros">
+            Agrega a las personas de tu turno con el formulario de arriba. Cada una recibe un código y un PIN para iniciar sesión en su propio dispositivo.
           </EmptyState>
         ) : (
           <Card className="p-2">

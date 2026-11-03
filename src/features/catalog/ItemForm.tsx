@@ -40,7 +40,7 @@ export function ItemForm({ initial, modifierGroups, submitLabel, onSubmit, onCan
     event.preventDefault()
     const priceCents = parsePrice(price)
     if (priceCents === null) {
-      setError(`Enter a price from 0 to ${formatPrice(MAX_PRICE_CENTS)}, like 25 or 25.50.`)
+      setError(`Escribe un precio de 0 a ${formatPrice(MAX_PRICE_CENTS)}, como 25 o 25.50.`)
       return
     }
     const modifierGroupIds = groupsToSave(modifierGroups, groupIds)
@@ -53,10 +53,10 @@ export function ItemForm({ initial, modifierGroups, submitLabel, onSubmit, onCan
   return (
     <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-zinc-50 p-4">
       <div className="grid gap-4 sm:grid-cols-[1fr_10rem]">
-        <Field label="Name">
+        <Field label="Nombre">
           <TextInput required maxLength={80} placeholder="Taco al pastor" value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
-        <Field label="Price">
+        <Field label="Precio">
           <div className="relative">
             <span aria-hidden className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-zinc-400">
               {CURRENCY_SYMBOL}
@@ -72,17 +72,17 @@ export function ItemForm({ initial, modifierGroups, submitLabel, onSubmit, onCan
           </div>
         </Field>
       </div>
-      <Field label="Description" hint="Optional. Up to 500 characters.">
+      <Field label="Descripción" hint="Opcional. Hasta 500 caracteres.">
         <TextArea
           maxLength={500}
           rows={2}
-          placeholder="Pork marinated with achiote, pineapple, onion and cilantro"
+          placeholder="Cerdo marinado con achiote, piña, cebolla y cilantro"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
       </Field>
       <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-ink-soft">Badges (optional)</legend>
+        <legend className="text-sm font-medium text-ink-soft">Etiquetas (opcional)</legend>
         <div className="flex flex-wrap gap-x-4 gap-y-2">
           {BADGES.map((badge) => (
             <label key={badge} className="flex items-center gap-2 text-sm text-ink-soft">
@@ -110,10 +110,10 @@ export function ItemForm({ initial, modifierGroups, submitLabel, onSubmit, onCan
       {error && <ErrorText>{error}</ErrorText>}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" variant="primary" disabled={busy}>
-          {busy ? 'Saving…' : submitLabel}
+          {busy ? 'Guardando…' : submitLabel}
         </Button>
         <Button variant="ghost" disabled={busy} onClick={onCancel}>
-          Cancel
+          Cancelar
         </Button>
       </div>
     </form>
@@ -130,16 +130,16 @@ interface ModifierGroupPickerProps {
 function ModifierGroupPicker({ library, selected, onToggle }: ModifierGroupPickerProps) {
   return (
     <fieldset className="space-y-2">
-      <legend className="text-sm font-medium text-ink-soft">Modifier groups (optional)</legend>
+      <legend className="text-sm font-medium text-ink-soft">Grupos de opciones (opcional)</legend>
       {library === null ? (
-        <p className="text-sm text-muted">Modifier groups could not load. Saving keeps the groups this item already has.</p>
+        <p className="text-sm text-muted">No se pudieron cargar los grupos de opciones. Al guardar, el producto conserva los grupos que ya tiene.</p>
       ) : library.length === 0 ? (
         <p className="text-sm text-muted">
-          No modifier groups yet.{' '}
+          Aún no hay grupos de opciones.{' '}
           <Link to="/admin/modifiers" className="font-medium text-ink underline underline-offset-4 hover:text-ink-soft">
-            Create sizes or extras
+            Crea tamaños o extras
           </Link>{' '}
-          to let guests choose them on this item.
+          para que los comensales los elijan en este producto.
         </p>
       ) : (
         <div className="flex flex-wrap gap-x-4 gap-y-2">

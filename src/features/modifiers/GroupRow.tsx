@@ -34,20 +34,20 @@ export function GroupRow({ group, actions }: { group: ModifierGroup; actions: Gr
               <li key={option.id} className={option.is_available ? '' : 'text-zinc-400 line-through'}>
                 {option.name}
                 {option.price_cents > 0 && <span className="font-mono"> +{formatMoney(option.price_cents)}</span>}
-                {!option.is_available && <span className="sr-only"> (sold out)</span>}
+                {!option.is_available && <span className="sr-only"> (agotado)</span>}
               </li>
             ))}
           </ul>
         </div>
         <div className="flex items-center gap-1">
           <IconButton
-            label={`Edit ${group.name}`}
+            label={`Editar ${group.name}`}
             icon={<PencilSimpleIcon size={16} />}
             disabled={busy}
             onClick={() => setMode(mode === 'edit' ? 'view' : 'edit')}
           />
           <IconButton
-            label={`Delete ${group.name}`}
+            label={`Eliminar ${group.name}`}
             tone="danger"
             icon={<TrashIcon size={16} />}
             disabled={busy}
@@ -60,7 +60,7 @@ export function GroupRow({ group, actions }: { group: ModifierGroup; actions: Gr
         <div className="mt-4">
           <GroupEditor
             initial={group}
-            submitLabel="Save changes"
+            submitLabel="Guardar cambios"
             onSubmit={(payload) => run(() => actions.update(payload), () => setMode('view'))}
             onCancel={() => setMode('view')}
           />
@@ -70,14 +70,14 @@ export function GroupRow({ group, actions }: { group: ModifierGroup; actions: Gr
       {mode === 'confirm-delete' && (
         <div className="mt-4 flex flex-wrap items-center gap-4 rounded-xl bg-red-50 p-4">
           <p className="flex-1 text-sm text-red-800">
-            Delete {group.name}? Every item that uses it loses these choices. This cannot be undone.
+            ¿Eliminar {group.name}? Cada producto que lo usa pierde estas opciones. Esto no se puede deshacer.
           </p>
           <div className="flex gap-2">
             <Button variant="danger" disabled={busy} onClick={() => void run(actions.remove, () => setMode('view'))}>
-              Delete group
+              Eliminar grupo
             </Button>
             <Button variant="ghost" disabled={busy} onClick={() => setMode('view')}>
-              Keep it
+              Conservarlo
             </Button>
           </div>
         </div>

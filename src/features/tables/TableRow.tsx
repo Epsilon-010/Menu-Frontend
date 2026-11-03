@@ -36,20 +36,20 @@ function QrLinkRow({ link, onNewQr, disabled }: { link: string; onNewQr: () => v
     <div className="space-y-2 rounded-xl bg-zinc-50 p-3">
       <div className="flex flex-wrap items-center gap-2">
         <QrCodeIcon size={16} className="shrink-0 text-zinc-500" aria-hidden />
-        <span className="text-xs font-medium text-zinc-500">QR link</span>
+        <span className="text-xs font-medium text-zinc-500">Link del QR</span>
         <code className="min-w-0 flex-1 truncate font-mono text-xs text-zinc-700 select-all" title={link}>
           {link}
         </code>
         <div className="flex gap-1">
           <Button variant="secondary" icon={<CopyIcon size={16} aria-hidden />} onClick={() => void handleCopy()}>
-            {copy === 'copied' ? 'Copied' : 'Copy link'}
+            {copy === 'copied' ? 'Copiado' : 'Copiar link'}
           </Button>
           <Button variant="ghost" disabled={disabled} onClick={onNewQr}>
-            New QR
+            Nuevo QR
           </Button>
         </div>
       </div>
-      {copy === 'failed' && <ErrorText>Could not copy here. Select the link and copy it by hand.</ErrorText>}
+      {copy === 'failed' && <ErrorText>No se pudo copiar aquí. Selecciona el link y cópialo a mano.</ErrorText>}
     </div>
   )
 }
@@ -73,7 +73,7 @@ export function TableRow({ table, onUpdate, onRegeneratePin, onRegenerateQr }: T
       {mode.kind === 'rename' ? (
         <form onSubmit={handleRename} className="flex flex-wrap items-center gap-2">
           <TextInput
-            aria-label="Table name"
+            aria-label="Nombre de la mesa"
             required
             maxLength={60}
             autoFocus
@@ -82,10 +82,10 @@ export function TableRow({ table, onUpdate, onRegeneratePin, onRegenerateQr }: T
             className="max-w-xs"
           />
           <Button type="submit" variant="primary" disabled={busy}>
-            Save
+            Guardar
           </Button>
           <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-            Cancel
+            Cancelar
           </Button>
         </form>
       ) : (
@@ -96,22 +96,22 @@ export function TableRow({ table, onUpdate, onRegeneratePin, onRegenerateQr }: T
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <p className={`font-medium ${table.is_active ? 'text-zinc-950' : 'text-zinc-400'}`}>{table.name}</p>
-              {!table.is_active && <Badge>Inactive</Badge>}
+              {!table.is_active && <Badge>Inactiva</Badge>}
             </div>
             <p className="text-sm text-zinc-500">
-              Code <span className="font-mono tracking-widest text-zinc-700">{table.code}</span>
+              Código <span className="font-mono tracking-widest text-zinc-700">{table.code}</span>
             </p>
           </div>
           <div className="flex items-center gap-1">
             <IconButton
-              label="Rename table"
+              label="Cambiar nombre de la mesa"
               icon={<PencilSimpleIcon size={16} />}
               disabled={busy}
               onClick={() => setMode({ kind: 'rename', name: table.name })}
             />
-            <IconButton label="Generate a new PIN" icon={<KeyIcon size={16} />} disabled={busy} onClick={() => setMode({ kind: 'confirm-pin' })} />
+            <IconButton label="Generar un nuevo PIN" icon={<KeyIcon size={16} />} disabled={busy} onClick={() => setMode({ kind: 'confirm-pin' })} />
             <IconButton
-              label={table.is_active ? 'Deactivate table' : 'Activate table'}
+              label={table.is_active ? 'Desactivar mesa' : 'Activar mesa'}
               tone={table.is_active ? 'danger' : 'default'}
               icon={<PowerIcon size={16} />}
               disabled={busy}
@@ -130,9 +130,9 @@ export function TableRow({ table, onUpdate, onRegeneratePin, onRegenerateQr }: T
           />
         ) : (
           <div className="flex flex-wrap items-center gap-2 rounded-xl bg-zinc-50 p-3">
-            <p className="flex-1 text-sm text-zinc-500">This table has no QR link yet.</p>
+            <p className="flex-1 text-sm text-zinc-500">Esta mesa aún no tiene link de QR.</p>
             <Button variant="secondary" disabled={busy} onClick={() => setMode({ kind: 'confirm-qr' })}>
-              Create QR link
+              Crear link de QR
             </Button>
           </div>
         ))}
@@ -140,15 +140,15 @@ export function TableRow({ table, onUpdate, onRegeneratePin, onRegenerateQr }: T
       {mode.kind === 'confirm-qr' && (
         <div className="flex flex-wrap items-center gap-4 rounded-xl bg-amber-50 p-4">
           <p className="flex-1 text-sm text-amber-900">
-            The old QR of {table.name} stops working and guests who joined with it are signed out. The tablet stays
-            signed in. Print the new link again.
+            El QR anterior de {table.name} deja de funcionar y se cierra la sesión de los comensales que entraron con
+            él. La tablet sigue con su sesión. Vuelve a imprimir el nuevo link.
           </p>
           <div className="flex gap-2">
             <Button variant="primary" disabled={busy} onClick={() => void run(onRegenerateQr)}>
-              Generate new QR
+              Generar nuevo QR
             </Button>
             <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-              Cancel
+              Cancelar
             </Button>
           </div>
         </div>
@@ -157,14 +157,14 @@ export function TableRow({ table, onUpdate, onRegeneratePin, onRegenerateQr }: T
       {mode.kind === 'confirm-pin' && (
         <div className="flex flex-wrap items-center gap-4 rounded-xl bg-amber-50 p-4">
           <p className="flex-1 text-sm text-amber-900">
-            The tablet of {table.name} signs out right away and will need the new PIN.
+            La tablet de {table.name} cierra sesión de inmediato y va a necesitar el nuevo PIN.
           </p>
           <div className="flex gap-2">
             <Button variant="primary" disabled={busy} onClick={() => void run(onRegeneratePin)}>
-              Generate new PIN
+              Generar nuevo PIN
             </Button>
             <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-              Cancel
+              Cancelar
             </Button>
           </div>
         </div>

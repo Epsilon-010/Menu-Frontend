@@ -20,23 +20,23 @@ const done = () => Promise.resolve(null)
 describe('modifier group row', () => {
   it('shows the rule and every option with its extra price, marking sold out ones', () => {
     const html = renderToStaticMarkup(<GroupRow group={SIZE} actions={{ update: done, remove: done }} />)
-    expect(html).toContain('Choose 1 to 2')
+    expect(html).toContain('Elige de 1 a 2')
     expect(html).toMatch(/Small<\/li>/)
-    expect(html).toMatch(/Large<span class="font-mono"> \+\$12\.50<\/span><span class="sr-only"> \(sold out\)<\/span>/)
+    expect(html).toMatch(/Large<span class="font-mono"> \+\$12\.50<\/span><span class="sr-only"> \(agotado\)<\/span>/)
   })
 })
 
 describe('modifier group editor', () => {
   it('fills the saved group in order with its prices and the rule guests see', () => {
     const html = renderToStaticMarkup(<GroupEditor initial={SIZE} submitLabel="Save changes" onSubmit={done} onCancel={() => undefined} />)
-    expect(html).toContain('Guests see: <span class="font-medium text-ink">Choose 1 to 2</span>')
+    expect(html).toContain('Los comensales ven: <span class="font-medium text-ink">Elige de 1 a 2</span>')
     expect(html.indexOf('value="Small"')).toBeLessThan(html.indexOf('value="Large"'))
     expect(html).toContain('value="12.50"')
   })
 
   it('starts a new group as required, choose 1, with one option', () => {
     const html = renderToStaticMarkup(<GroupEditor submitLabel="Add group" onSubmit={done} onCancel={() => undefined} />)
-    expect(html).toContain('Required · choose 1')
-    expect(html.match(/aria-label="Option \d+ name"/g)).toHaveLength(1)
+    expect(html).toContain('Obligatorio · elige 1')
+    expect(html.match(/aria-label="Nombre de la opción \d+"/g)).toHaveLength(1)
   })
 })

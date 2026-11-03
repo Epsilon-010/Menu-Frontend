@@ -8,7 +8,7 @@ describe('parseLateMinutes', () => {
   })
 
   it('explains what is wrong with anything else', () => {
-    const message = 'Use a whole number of minutes from 1 to 240.'
+    const message = 'Usa un número entero de minutos de 1 a 240.'
     for (const input of ['', '0', '241', '12.5', 'abc', '-3']) {
       expect(parseLateMinutes(input)).toEqual({ ok: false, message })
     }

@@ -17,15 +17,15 @@ export function StaffCredentials({ member, onDismiss }: StaffCredentialsProps) {
           <KeyIcon size={20} aria-hidden />
         </span>
         <div>
-          <p className="font-semibold text-amber-950">Sign in credentials for {member.full_name}</p>
+          <p className="font-semibold text-amber-950">Credenciales de acceso de {member.full_name}</p>
           <p className="text-sm text-amber-800">
-            Give this code and PIN to {member.full_name}. They sign in on the Staff tab. The PIN is shown only once.
+            Entrega este código y PIN a {member.full_name}. Inicia sesión en la pestaña Personal. El PIN se muestra una sola vez.
           </p>
         </div>
       </div>
       <dl className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl bg-white p-4">
-          <dt className="text-xs font-medium text-zinc-500">Code</dt>
+          <dt className="text-xs font-medium text-zinc-500">Código</dt>
           <dd className="font-mono text-2xl tracking-widest text-zinc-950">{normalizeStaffCode(member.code)}</dd>
         </div>
         <div className="rounded-xl bg-white p-4">
@@ -34,7 +34,7 @@ export function StaffCredentials({ member, onDismiss }: StaffCredentialsProps) {
         </div>
       </dl>
       <Button variant="secondary" onClick={onDismiss}>
-        I gave it to them
+        Ya se lo entregué
       </Button>
     </div>
   )

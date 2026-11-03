@@ -40,7 +40,7 @@ export function StaffMemberRow({ member, onUpdate, onRegeneratePin }: StaffMembe
       {mode.kind === 'edit' ? (
         <form onSubmit={handleSaveEdit} className="flex flex-wrap items-center gap-2">
           <TextInput
-            aria-label="Full name"
+            aria-label="Nombre completo"
             required
             maxLength={120}
             autoFocus
@@ -49,7 +49,7 @@ export function StaffMemberRow({ member, onUpdate, onRegeneratePin }: StaffMembe
             className="max-w-xs"
           />
           <Select
-            aria-label="Role"
+            aria-label="Rol"
             value={mode.role}
             onChange={(event) => setMode({ ...mode, role: event.target.value as StaffRole })}
             className="max-w-40"
@@ -61,10 +61,10 @@ export function StaffMemberRow({ member, onUpdate, onRegeneratePin }: StaffMembe
             ))}
           </Select>
           <Button type="submit" variant="primary" disabled={busy}>
-            Save
+            Guardar
           </Button>
           <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-            Cancel
+            Cancelar
           </Button>
         </form>
       ) : (
@@ -76,27 +76,27 @@ export function StaffMemberRow({ member, onUpdate, onRegeneratePin }: StaffMembe
             <div className="flex flex-wrap items-center gap-2">
               <p className={`font-medium ${member.is_active ? 'text-zinc-950' : 'text-zinc-400'}`}>{member.full_name}</p>
               <Badge>{ROLE_LABELS[member.role]}</Badge>
-              {!member.is_active && <Badge tone="warning">Inactive</Badge>}
+              {!member.is_active && <Badge tone="warning">Inactivo</Badge>}
             </div>
             <p className="text-sm text-zinc-500">
-              Code <span className="font-mono tracking-widest text-zinc-700">{normalizeStaffCode(member.code)}</span>
+              Código <span className="font-mono tracking-widest text-zinc-700">{normalizeStaffCode(member.code)}</span>
             </p>
           </div>
           <div className="flex items-center gap-1">
             <IconButton
-              label="Edit name and role"
+              label="Editar nombre y rol"
               icon={<PencilSimpleIcon size={16} />}
               disabled={busy}
               onClick={() => setMode({ kind: 'edit', full_name: member.full_name, role: member.role })}
             />
             <IconButton
-              label="Generate a new PIN"
+              label="Generar un nuevo PIN"
               icon={<KeyIcon size={16} />}
               disabled={busy}
               onClick={() => setMode({ kind: 'confirm-pin' })}
             />
             <IconButton
-              label={member.is_active ? 'Deactivate' : 'Activate'}
+              label={member.is_active ? 'Desactivar' : 'Activar'}
               tone={member.is_active ? 'danger' : 'default'}
               icon={<PowerIcon size={16} />}
               disabled={busy}
@@ -109,14 +109,14 @@ export function StaffMemberRow({ member, onUpdate, onRegeneratePin }: StaffMembe
       {mode.kind === 'confirm-pin' && (
         <div className="flex flex-wrap items-center gap-4 rounded-xl bg-amber-50 p-4">
           <p className="flex-1 text-sm text-amber-900">
-            {member.full_name} signs out of every device right away and will need the new PIN. The code stays the same.
+            {member.full_name} cierra sesión en todos sus dispositivos de inmediato y va a necesitar el nuevo PIN. El código no cambia.
           </p>
           <div className="flex gap-2">
             <Button variant="primary" disabled={busy} onClick={() => void run(onRegeneratePin)}>
-              Generate new PIN
+              Generar nuevo PIN
             </Button>
             <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-              Cancel
+              Cancelar
             </Button>
           </div>
         </div>

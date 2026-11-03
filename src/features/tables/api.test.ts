@@ -60,7 +60,7 @@ describe('tables API', () => {
     stubFetch(new Response('boom', { status: 500 }))
 
     expect((await failureOf(createTable('Mesa 4', 't1'))).message).toBe(
-      'The server could not complete that. Please try again in a moment.',
+      'El servidor no pudo completar la acción. Intenta de nuevo en un momento.',
     )
   })
 

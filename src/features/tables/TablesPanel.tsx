@@ -21,7 +21,7 @@ import { createDraftIds } from '../../shared/api/idempotency.ts'
 type ListState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded'; tables: Table[] }
 
 function messageOf(error: unknown): string {
-  return error instanceof TableError ? error.message : 'Something went wrong. Please try again.'
+  return error instanceof TableError ? error.message : 'Algo salió mal. Intenta de nuevo.'
 }
 
 function byName(a: Table, b: Table): number {
@@ -127,27 +127,27 @@ export function TablesPanel() {
   return (
     <div className="space-y-8">
       <SectionHeader
-        title="Tables"
-        description="Each tablet signs in with its table code and a PIN. The PIN is shown only once; a new PIN or deactivating the table signs its tablet out right away. Guests without a tablet join from their phones with the table's QR link while a waiter has the table open."
+        title="Mesas"
+        description="Cada tablet inicia sesión con el código de su mesa y un PIN. El PIN se muestra una sola vez; un nuevo PIN o desactivar la mesa cierra la sesión de su tablet de inmediato. Los comensales sin tablet entran desde su celular con el link del QR de la mesa mientras un mesero la tenga abierta."
       />
       <p className="text-sm text-zinc-500">
-        To print a QR code for now, paste the table's link into any QR code generator.
+        Por ahora, para imprimir un código QR, pega el link de la mesa en cualquier generador de códigos QR.
       </p>
 
       <Card className="p-4">
         <form onSubmit={handleCreate} className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <TextInput
-              aria-label="New table name"
+              aria-label="Nombre de la nueva mesa"
               required
               maxLength={60}
-              placeholder="New table, like Table 4 or Terrace 2"
+              placeholder="Nueva mesa, como Mesa 4 o Terraza 2"
               value={name}
               onChange={(event) => setName(event.target.value)}
               className="min-w-0 flex-1"
             />
             <Button type="submit" variant="primary" icon={<PlusIcon size={16} aria-hidden />} disabled={saving}>
-              {saving ? 'Adding…' : 'Add table'}
+              {saving ? 'Agregando…' : 'Agregar mesa'}
             </Button>
           </div>
           {createError && <ErrorText>{createError}</ErrorText>}
@@ -161,13 +161,13 @@ export function TablesPanel() {
               <KeyIcon size={20} aria-hidden />
             </span>
             <div>
-              <p className="font-semibold text-amber-950">Tablet credentials for {credentials.name}</p>
-              <p className="text-sm text-amber-800">Write the PIN down now. It will not be shown again.</p>
+              <p className="font-semibold text-amber-950">Credenciales de la tablet de {credentials.name}</p>
+              <p className="text-sm text-amber-800">Anota el PIN ahora. No se volverá a mostrar.</p>
             </div>
           </div>
           <dl className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl bg-white p-4">
-              <dt className="text-xs font-medium text-zinc-500">Table code</dt>
+              <dt className="text-xs font-medium text-zinc-500">Código de la mesa</dt>
               <dd className="font-mono text-2xl tracking-widest text-zinc-950">{credentials.code}</dd>
             </div>
             <div className="rounded-xl bg-white p-4">
@@ -176,17 +176,17 @@ export function TablesPanel() {
             </div>
           </dl>
           <Button variant="secondary" onClick={() => setCredentials(null)}>
-            I wrote it down
+            Ya lo anoté
           </Button>
         </div>
       )}
 
-      {list.status === 'loading' && <ListSkeleton label="Loading tables" />}
+      {list.status === 'loading' && <ListSkeleton label="Cargando mesas" />}
       {list.status === 'error' && <LoadError message={list.message} onRetry={retry} />}
       {list.status === 'loaded' &&
         (list.tables.length === 0 ? (
-          <EmptyState icon={<ChairIcon size={24} aria-hidden />} title="No tables yet">
-            Add one table per tablet. You get a code and a PIN to sign that tablet in as its table.
+          <EmptyState icon={<ChairIcon size={24} aria-hidden />} title="Aún no hay mesas">
+            Agrega una mesa por tablet. Recibes un código y un PIN para iniciar sesión en esa tablet como su mesa.
           </EmptyState>
         ) : (
           <Card className="p-2">

@@ -20,7 +20,7 @@ import { NewAdminForm, type CreateOutcome } from './NewAdminForm.tsx'
 type ListState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded'; admins: AdminAccount[] }
 
 function messageOf(error: unknown): string {
-  return error instanceof AdminsError ? error.message : 'Something went wrong. Please try again.'
+  return error instanceof AdminsError ? error.message : 'Algo salió mal. Intenta de nuevo.'
 }
 
 function byName(a: AdminAccount, b: AdminAccount): number {
@@ -41,10 +41,10 @@ function TemporaryPassword({ admin, onDismiss }: { admin: AdminWithTemporaryPass
           <KeyIcon size={20} aria-hidden />
         </span>
         <div>
-          <p className="font-semibold text-amber-950">Sign in details for {admin.full_name}</p>
+          <p className="font-semibold text-amber-950">Datos de acceso de {admin.full_name}</p>
           <p className="text-sm text-amber-800">
-            Give them this email and temporary password. They must choose their own password when they first sign in.
-            The temporary password is shown only once.
+            Entrégale este email y la contraseña temporal. Debe elegir su propia contraseña la primera vez que inicie
+            sesión. La contraseña temporal se muestra una sola vez.
           </p>
         </div>
       </div>
@@ -54,12 +54,12 @@ function TemporaryPassword({ admin, onDismiss }: { admin: AdminWithTemporaryPass
           <dd className="truncate text-lg text-zinc-950">{admin.email}</dd>
         </div>
         <div className="rounded-xl bg-white p-4">
-          <dt className="text-xs font-medium text-zinc-500">Temporary password</dt>
+          <dt className="text-xs font-medium text-zinc-500">Contraseña temporal</dt>
           <dd className="font-mono text-2xl tracking-widest text-zinc-950">{admin.temporary_password}</dd>
         </div>
       </dl>
       <Button variant="secondary" onClick={onDismiss}>
-        I gave it to them
+        Ya se la entregué
       </Button>
     </div>
   )
@@ -127,15 +127,15 @@ export function AdminsPanel() {
   return (
     <div className="space-y-8">
       <SectionHeader
-        title="Admins"
-        description="Admins manage everything in the business. Add one with a name and an email: you get a temporary password to hand them. Deactivating an admin signs them out of every device right away; you cannot deactivate yourself."
+        title="Administradores"
+        description="Los administradores gestionan todo el negocio. Agrega uno con nombre y email: recibes una contraseña temporal para entregársela. Desactivar a un administrador cierra su sesión en todos sus dispositivos de inmediato; no puedes desactivarte a ti mismo."
       />
 
       <NewAdminForm onCreate={handleCreate} />
 
       {created && <TemporaryPassword admin={created} onDismiss={() => setCreated(null)} />}
 
-      {list.status === 'loading' && <ListSkeleton label="Loading admins" />}
+      {list.status === 'loading' && <ListSkeleton label="Cargando administradores" />}
       {list.status === 'error' && <LoadError message={list.message} onRetry={retry} />}
       {list.status === 'loaded' && (
         <Card className="p-2">

@@ -36,7 +36,7 @@ export function AdminRow({ admin, isYou, onUpdate }: AdminRowProps) {
       {mode.kind === 'edit' ? (
         <form onSubmit={handleSaveEdit} className="flex flex-wrap items-center gap-2">
           <TextInput
-            aria-label="Full name"
+            aria-label="Nombre completo"
             required
             maxLength={120}
             autoFocus
@@ -45,10 +45,10 @@ export function AdminRow({ admin, isYou, onUpdate }: AdminRowProps) {
             className="max-w-xs"
           />
           <Button type="submit" variant="primary" disabled={busy}>
-            Save
+            Guardar
           </Button>
           <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-            Cancel
+            Cancelar
           </Button>
         </form>
       ) : (
@@ -61,22 +61,22 @@ export function AdminRow({ admin, isYou, onUpdate }: AdminRowProps) {
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <p className={`font-medium ${admin.is_active ? 'text-zinc-950' : 'text-zinc-400'}`}>{admin.full_name}</p>
-              {isYou && <Badge>You</Badge>}
-              {admin.must_change_password && <Badge tone="warning">Temporary password</Badge>}
-              {!admin.is_active && <Badge tone="warning">Inactive</Badge>}
+              {isYou && <Badge>Tú</Badge>}
+              {admin.must_change_password && <Badge tone="warning">Contraseña temporal</Badge>}
+              {!admin.is_active && <Badge tone="warning">Inactivo</Badge>}
             </div>
             <p className="truncate text-sm text-zinc-500">{admin.email}</p>
           </div>
           <div className="flex items-center gap-1">
             <IconButton
-              label="Edit name"
+              label="Editar nombre"
               icon={<PencilSimpleIcon size={16} />}
               disabled={busy}
               onClick={() => setMode({ kind: 'edit', full_name: admin.full_name })}
             />
             {!isYou && (
               <IconButton
-                label={admin.is_active ? 'Deactivate' : 'Activate'}
+                label={admin.is_active ? 'Desactivar' : 'Activar'}
                 tone={admin.is_active ? 'danger' : 'default'}
                 icon={<PowerIcon size={16} />}
                 disabled={busy}
@@ -92,14 +92,14 @@ export function AdminRow({ admin, isYou, onUpdate }: AdminRowProps) {
       {mode.kind === 'confirm-deactivate' && (
         <div className="flex flex-wrap items-center gap-4 rounded-xl bg-amber-50 p-4">
           <p className="flex-1 text-sm text-amber-900">
-            {admin.full_name} signs out of every device right away and can no longer sign in until reactivated.
+            {admin.full_name} cierra sesión en todos sus dispositivos de inmediato y no puede volver a entrar hasta que lo reactives.
           </p>
           <div className="flex gap-2">
             <Button variant="primary" disabled={busy} onClick={() => void run(() => onUpdate({ is_active: false }))}>
-              Deactivate
+              Desactivar
             </Button>
             <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-              Cancel
+              Cancelar
             </Button>
           </div>
         </div>

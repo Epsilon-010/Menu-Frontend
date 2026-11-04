@@ -4,7 +4,7 @@ import type { VisitEndReason } from './authContext.ts'
 const COPY: Record<VisitEndReason, { title: string; body: string }> = {
   ended: {
     title: 'Tu visita en esta mesa terminó',
-    body: 'Gracias por venir. Para pedir de nuevo, pide a tu mesero que abra la mesa y escanea su código QR.',
+    body: 'Gracias por venir. Para pedir de nuevo, escanea otra vez el código QR de la mesa.',
   },
   left: {
     title: 'Saliste de la mesa',

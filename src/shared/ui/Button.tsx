@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { FOCUS_RING } from '../../components/ui/styles.ts'
 import { buttonClass, MOTION, type ButtonSize, type ButtonVariant } from './classes.ts'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -30,7 +31,7 @@ export function IconButton({ label, icon, tone = 'default', className = '', type
       type={type}
       aria-label={label}
       title={label}
-      className={`inline-flex items-center justify-center rounded-lg p-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 ${MOTION} ${colors} ${className}`}
+      className={`inline-flex items-center justify-center rounded-lg p-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 ${MOTION} ${FOCUS_RING} ${colors} ${className}`}
       {...props}
     >
       {icon}

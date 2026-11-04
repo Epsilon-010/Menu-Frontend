@@ -8,8 +8,9 @@ import {
   TextAaIcon,
 } from '@phosphor-icons/react'
 import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs.tsx'
+import { cn } from '../../lib/utils.ts'
 import { Button } from '../../shared/ui/Button.tsx'
-import { MOTION } from '../../shared/ui/classes.ts'
 import { ErrorText, ListSkeleton, LoadError, SuccessText } from '../../shared/ui/Feedback.tsx'
 import { Card, SectionHeader } from '../../shared/ui/Section.tsx'
 import { useAuth } from '../auth/useAuth.ts'
@@ -359,28 +360,32 @@ export function ThemeEditorPanel() {
       )}
 
       {/* Wide screens: sections | preview | options, the last two pinned so nothing needs scrolling back. */}
-      <div className="grid gap-4 lg:grid-cols-[12rem_minmax(0,1fr)_25rem] lg:items-start lg:gap-6">
+      <Tabs
+        value={section}
+        onValueChange={(value) => setSection(value as EditorSection)}
+        orientation="vertical"
+        className="grid gap-4 lg:grid-cols-[13rem_minmax(0,1fr)_25rem] lg:items-start lg:gap-6"
+      >
         <nav aria-label="Secciones del diseño" className="min-w-0 lg:sticky lg:top-24">
-          <ul role="tablist" aria-orientation="vertical" className="flex gap-1 overflow-x-auto pb-1 lg:flex-col lg:pb-0">
+          <TabsList className="flex w-full justify-start overflow-x-auto lg:flex-col lg:items-stretch">
             {SECTIONS.map((option) => (
-              <li key={option.id} role="presentation" className="shrink-0">
-                <button
-                  type="button"
-                  role="tab"
-                  id={`design-tab-${option.id}`}
-                  aria-selected={section === option.id}
-                  aria-controls="design-options"
-                  onClick={() => setSection(option.id)}
-                  className={`inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap active:scale-[0.98] ${MOTION} ${
-                    section === option.id ? 'bg-action text-action-ink' : 'text-ink-soft hover:bg-subtle hover:text-ink'
-                  }`}
-                >
-                  {option.icon}
-                  {option.label}
-                </button>
-              </li>
+              <TabsTrigger
+                key={option.id}
+                value={option.id}
+                className={cn(
+                  'shrink-0 justify-start',
+                  // The active section is marked by a short bar in the action color: under it on small screens,
+                  // at its left in the vertical rail.
+                  'after:absolute after:inset-x-3 after:bottom-0.5 after:h-0.5 after:rounded-full after:bg-action after:opacity-0',
+                  'lg:after:inset-x-auto lg:after:inset-y-2 lg:after:bottom-auto lg:after:left-0.5 lg:after:h-auto lg:after:w-0.5',
+                  'after:transition-opacity after:duration-300 after:ease-smooth data-[state=active]:after:opacity-100',
+                )}
+              >
+                {option.icon}
+                {option.label}
+              </TabsTrigger>
             ))}
-          </ul>
+          </TabsList>
         </nav>
 
         <aside aria-label="Vista previa" className="order-last min-w-0 lg:sticky lg:top-24 lg:order-none">
@@ -388,20 +393,15 @@ export function ThemeEditorPanel() {
         </aside>
 
         <Card className="@container min-w-0 lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto">
-          <section
-            id="design-options"
-            role="tabpanel"
-            aria-labelledby={`design-tab-${current.id}`}
-            className="space-y-4 p-4"
-          >
+          <TabsContent value={current.id} className="space-y-4 p-4">
             <div className="space-y-1">
               <h2 className="text-lg font-semibold tracking-tight text-ink">{current.label}</h2>
               <p className="text-sm text-pretty text-muted">{current.description}</p>
             </div>
             {panels[current.id]}
-          </section>
+          </TabsContent>
         </Card>
-      </div>
+      </Tabs>
     </div>
   )
 }

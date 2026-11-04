@@ -1,5 +1,14 @@
-import { Field, Select } from '../../shared/ui/Field.tsx'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select.tsx'
 import type { FontId, FontRole, FontStyle, TextAlign, TextElement, TextTransform, Theme } from './api.ts'
+import { Choice, ControlField, SliderField } from './Choice.tsx'
 import { withRoleFont, withScale, withTextStyle } from './editor.ts'
 import {
   FONT_ROLES,
@@ -33,54 +42,36 @@ const TRANSFORM_LABELS: Record<TextTransform, string> = {
   capitalize: 'Mayúscula En Cada Palabra',
 }
 const ALIGN_LABELS: Record<TextAlign, string> = { left: 'Izquierda', center: 'Centro', right: 'Derecha' }
+const STYLE_LABELS: Record<FontStyle, string> = { normal: 'Normal', italic: 'Cursiva' }
+const TRANSFORMS = Object.keys(TRANSFORM_LABELS) as TextTransform[]
+const ALIGNS = Object.keys(ALIGN_LABELS) as TextAlign[]
+const STYLES = Object.keys(STYLE_LABELS) as FontStyle[]
 // Price and buttons sit in a row, where alignment has no visible effect.
 const ALIGNABLE: TextElement[] = ['business_name', 'category', 'product_name', 'description']
 
-function RangeField({
-  label,
-  value,
-  min,
-  max,
-  step = 1,
-  display,
-  onChange,
-}: {
-  label: string
-  value: number
-  min: number
-  max: number
-  step?: number
-  display: string
-  onChange: (value: number) => void
-}) {
+function FontSelect({ label, value, onChange }: { label: string; value: FontId; onChange: (font: FontId) => void }) {
   return (
-    <Field label={`${label}: ${display}`}>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-        className="w-full accent-zinc-950"
-      />
-    </Field>
-  )
-}
-
-function FontSelect({ value, onChange }: { value: FontId; onChange: (font: FontId) => void }) {
-  return (
-    <Select value={value} onChange={(event) => onChange(event.target.value as FontId)}>
-      {FONT_GROUPS.map((group) => (
-        <optgroup key={group.label} label={group.label}>
-          {group.fonts.map((font) => (
-            <option key={font} value={font}>
-              {FONTS[font].family}
-            </option>
-          ))}
-        </optgroup>
-      ))}
-    </Select>
+    <ControlField label={label}>
+      {({ controlId }) => (
+        <Select value={value} onValueChange={(font) => onChange(font as FontId)}>
+          <SelectTrigger id={controlId}>
+            <SelectValue>{FONTS[value].family}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {FONT_GROUPS.map((group) => (
+              <SelectGroup key={group.label}>
+                <SelectLabel>{group.label}</SelectLabel>
+                {group.fonts.map((font) => (
+                  <SelectItem key={font} value={font}>
+                    {FONTS[font].family}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+    </ControlField>
   )
 }
 
@@ -88,65 +79,63 @@ function ElementControls({ theme, element, onChange }: { theme: Theme; element: 
   const style = theme.typography.elements[element]
   const font = FONTS[theme.typography.fonts[style.font]]
   const change = (changes: Parameters<typeof withTextStyle>[2]) => onChange(withTextStyle(theme, element, changes))
+  const roleLabels = Object.fromEntries(
+    FONT_ROLES.map((role) => [role, `${ROLE_LABELS[role]} (${FONTS[theme.typography.fonts[role]].family})`]),
+  ) as Record<FontRole, string>
+  const weights = font.weights.map(String)
 
   return (
-    <details className="group rounded-lg border border-line bg-surface">
-      <summary className="flex cursor-pointer items-center justify-between gap-4 px-3 py-2 text-sm font-semibold text-ink">
+    <details className="group rounded-xl border border-line bg-surface">
+      <summary className="flex cursor-pointer items-center justify-between gap-4 rounded-xl px-3 py-2 text-sm font-semibold text-ink hover:bg-subtle">
         {ELEMENT_LABELS[element]}
         <span className="text-xs font-normal text-muted">
           {font.family} · {style.size}px · {style.weight}
         </span>
       </summary>
       <div className="grid gap-4 border-t border-line p-3 @sm:grid-cols-2">
-        <Field label="Fuente">
-          <Select value={style.font} onChange={(event) => change({ font: event.target.value as FontRole })}>
-            {FONT_ROLES.map((role) => (
-              <option key={role} value={role}>
-                {ROLE_LABELS[role]} ({FONTS[theme.typography.fonts[role]].family})
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="Grosor">
-          <Select value={style.weight} onChange={(event) => change({ weight: Number(event.target.value) })}>
-            {font.weights.map((weight) => (
-              <option key={weight} value={weight}>
-                {weight}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="Estilo" hint={font.italic ? undefined : `${font.family} no tiene cursivas.`}>
-          <Select
-            value={style.style}
-            disabled={!font.italic}
-            onChange={(event) => change({ style: event.target.value as FontStyle })}
-          >
-            <option value="normal">Normal</option>
-            <option value="italic">Cursiva</option>
-          </Select>
-        </Field>
-        <Field label="Mayúsculas y minúsculas">
-          <Select value={style.transform} onChange={(event) => change({ transform: event.target.value as TextTransform })}>
-            {Object.entries(TRANSFORM_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </Select>
-        </Field>
+        <Choice
+          label="Fuente"
+          kind="select"
+          value={style.font}
+          options={FONT_ROLES}
+          labels={roleLabels}
+          onChange={(role) => change({ font: role })}
+        />
+        <Choice
+          label="Grosor"
+          kind="select"
+          value={String(style.weight)}
+          options={weights}
+          labels={Object.fromEntries(weights.map((weight) => [weight, weight]))}
+          onChange={(weight) => change({ weight: Number(weight) })}
+        />
+        <Choice
+          label="Estilo"
+          hint={font.italic ? undefined : `${font.family} no tiene cursivas.`}
+          value={style.style}
+          options={STYLES}
+          labels={STYLE_LABELS}
+          disabled={!font.italic}
+          onChange={(fontStyle) => change({ style: fontStyle })}
+        />
+        <Choice
+          label="Mayúsculas y minúsculas"
+          kind="select"
+          value={style.transform}
+          options={TRANSFORMS}
+          labels={TRANSFORM_LABELS}
+          onChange={(transform) => change({ transform })}
+        />
         {ALIGNABLE.includes(element) && (
-          <Field label="Alineación">
-            <Select value={style.align} onChange={(event) => change({ align: event.target.value as TextAlign })}>
-              {Object.entries(ALIGN_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </Select>
-          </Field>
+          <Choice
+            label="Alineación"
+            value={style.align}
+            options={ALIGNS}
+            labels={ALIGN_LABELS}
+            onChange={(align) => change({ align })}
+          />
         )}
-        <RangeField
+        <SliderField
           label="Tamaño"
           value={style.size}
           min={SIZE_RANGE.min}
@@ -154,7 +143,7 @@ function ElementControls({ theme, element, onChange }: { theme: Theme; element: 
           display={`${style.size}px`}
           onChange={(size) => change({ size })}
         />
-        <RangeField
+        <SliderField
           label="Interlineado"
           value={style.line_height}
           min={LINE_HEIGHT_RANGE.min}
@@ -162,7 +151,7 @@ function ElementControls({ theme, element, onChange }: { theme: Theme; element: 
           display={(style.line_height / 100).toFixed(2)}
           onChange={(line_height) => change({ line_height })}
         />
-        <RangeField
+        <SliderField
           label="Espaciado entre letras"
           value={style.letter_spacing}
           min={LETTER_SPACING_RANGE.min}
@@ -188,12 +177,15 @@ export function TypographyControls({ theme, onChange }: TypographyControlsProps)
     <div className="space-y-6">
       <div className="grid gap-4 @sm:grid-cols-2">
         {FONT_ROLES.map((role) => (
-          <Field key={role} label={`Fuente de ${ROLE_LABELS[role].toLowerCase()}`}>
-            <FontSelect value={typography.fonts[role]} onChange={(font) => onChange(withRoleFont(theme, role, font))} />
-          </Field>
+          <FontSelect
+            key={role}
+            label={`Fuente de ${ROLE_LABELS[role].toLowerCase()}`}
+            value={typography.fonts[role]}
+            onChange={(font) => onChange(withRoleFont(theme, role, font))}
+          />
         ))}
       </div>
-      <RangeField
+      <SliderField
         label="Escala del texto"
         value={typography.scale}
         min={SCALE_RANGE.min}

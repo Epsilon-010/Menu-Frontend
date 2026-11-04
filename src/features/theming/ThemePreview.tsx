@@ -1,6 +1,6 @@
 import { DeviceMobileIcon, DeviceTabletIcon, ForkKnifeIcon, ShoppingBagIcon } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
-import { MOTION } from '../../shared/ui/classes.ts'
+import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group.tsx'
 import { formatMoney } from '../catalog/price.ts'
 import { fetchMenu, type MenuCategory } from '../ordering/api.ts'
 import { MenuBrowser } from '../ordering/MenuBrowser.tsx'
@@ -89,23 +89,19 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div role="radiogroup" aria-label="Tamaño de la vista previa" className="inline-flex gap-1 rounded-xl border border-line bg-surface p-1">
+      <ToggleGroup
+        type="single"
+        aria-label="Tamaño de la vista previa"
+        value={device}
+        onValueChange={(option) => option && setDevice(option as Device)}
+      >
         {(Object.keys(DEVICES) as Device[]).map((option) => (
-          <button
-            key={option}
-            type="button"
-            role="radio"
-            aria-checked={device === option}
-            onClick={() => setDevice(option)}
-            className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold active:scale-[0.98] ${MOTION} ${
-              device === option ? 'bg-action text-action-ink' : 'text-ink-soft hover:bg-subtle'
-            }`}
-          >
+          <ToggleGroupItem key={option} value={option}>
             {option === 'phone' ? <DeviceMobileIcon size={16} aria-hidden /> : <DeviceTabletIcon size={16} aria-hidden />}
             {DEVICES[option].label}
-          </button>
+          </ToggleGroupItem>
         ))}
-      </div>
+      </ToggleGroup>
 
       <div ref={ref} className="w-full">
         <div style={{ width: frame.width * scale, height: frame.height * scale }} className="mx-auto" aria-label={`Vista previa del menú, ${frame.label}`}>

@@ -1,4 +1,3 @@
-import { Field, Select } from '../../shared/ui/Field.tsx'
 import type {
   AddButtonStyle,
   BadgeShape,
@@ -39,7 +38,7 @@ import {
   MIN_OVERLAY_OPACITY,
   PRICE_POSITIONS,
 } from './cards.ts'
-import { Choice } from './Choice.tsx'
+import { Choice, SliderField } from './Choice.tsx'
 import { withCards } from './editor.ts'
 
 // Records keyed by every option: a new option cannot ship without its label.
@@ -79,7 +78,10 @@ const BADGE_SHAPE_LABELS: Record<BadgeShape, string> = { pill: 'Píldora', round
 
 const LINES = Array.from(
   { length: MAX_DESCRIPTION_LINES - MIN_DESCRIPTION_LINES + 1 },
-  (_, index) => MIN_DESCRIPTION_LINES + index,
+  (_, index) => String(MIN_DESCRIPTION_LINES + index),
+)
+const LINE_LABELS: Record<string, string> = Object.fromEntries(
+  LINES.map((lines) => [lines, lines === '0' ? 'Ocultar la descripción' : lines]),
 )
 
 interface CardControlsProps {
@@ -137,16 +139,14 @@ export function CardControls({ theme, onChange }: CardControlsProps) {
       </fieldset>
 
       {cards.template === 'overlay' && !listView && (
-        <Field label={`Oscurecer bajo el texto: ${cards.overlay_opacity}%`}>
-          <input
-            type="range"
-            min={MIN_OVERLAY_OPACITY}
-            max={MAX_OVERLAY_OPACITY}
-            value={cards.overlay_opacity}
-            onChange={(event) => set({ overlay_opacity: Number(event.target.value) })}
-            className="w-full accent-zinc-950"
-          />
-        </Field>
+        <SliderField
+          label="Oscurecer bajo el texto"
+          value={cards.overlay_opacity}
+          min={MIN_OVERLAY_OPACITY}
+          max={MAX_OVERLAY_OPACITY}
+          display={`${cards.overlay_opacity}%`}
+          onChange={(overlay_opacity) => set({ overlay_opacity })}
+        />
       )}
 
       <fieldset className="grid gap-4 @sm:grid-cols-2">
@@ -187,18 +187,14 @@ export function CardControls({ theme, onChange }: CardControlsProps) {
           labels={PADDING_LABELS}
           onChange={(padding) => set({ padding })}
         />
-        <Field label="Líneas de descripción">
-          <Select
-            value={cards.description_lines}
-            onChange={(event) => set({ description_lines: Number(event.target.value) })}
-          >
-            {LINES.map((lines) => (
-              <option key={lines} value={lines}>
-                {lines === 0 ? 'Ocultar la descripción' : lines}
-              </option>
-            ))}
-          </Select>
-        </Field>
+        <Choice
+          label="Líneas de descripción"
+          kind="select"
+          value={String(cards.description_lines)}
+          options={LINES}
+          labels={LINE_LABELS}
+          onChange={(lines) => set({ description_lines: Number(lines) })}
+        />
         <Choice
           label="Precio"
           value={cards.price_position}

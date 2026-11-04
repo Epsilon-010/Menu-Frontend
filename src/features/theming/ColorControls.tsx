@@ -1,7 +1,9 @@
-import { WarningIcon } from '@phosphor-icons/react'
+import { MoonIcon, SunIcon, WarningIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
+import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group.tsx'
 import { MOTION } from '../../shared/ui/classes.ts'
-import { Field, TextInput } from '../../shared/ui/Field.tsx'
+import { TextInput } from '../../shared/ui/Field.tsx'
+import { SliderField, SwitchField } from './Choice.tsx'
 import type { ColorField, Theme, ThemeColors, ThemeMode } from './api.ts'
 import { parseHexInput, withColor, withGradient, withMode } from './editor.ts'
 import { contrastWarnings, MIN_CONTRAST } from './style.ts'
@@ -111,22 +113,19 @@ export function ColorControls({ theme, defaults, onChange }: ColorControlsProps)
     <div className="space-y-6">
       <div className="space-y-2">
         <span className="block text-sm font-medium text-ink-soft">Modo</span>
-        <div role="radiogroup" aria-label="Modo" className="inline-flex gap-1 rounded-xl border border-line bg-surface p-1">
+        <ToggleGroup
+          type="single"
+          aria-label="Modo"
+          value={colors.mode}
+          onValueChange={(mode) => mode && mode !== colors.mode && onChange(withMode(theme, mode as ThemeMode, defaults))}
+        >
           {(['light', 'dark'] as ThemeMode[]).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              role="radio"
-              aria-checked={colors.mode === mode}
-              onClick={() => colors.mode !== mode && onChange(withMode(theme, mode, defaults))}
-              className={`rounded-lg px-3 py-2 text-sm font-semibold active:scale-[0.98] ${MOTION} ${
-                colors.mode === mode ? 'bg-action text-action-ink' : 'text-ink-soft hover:bg-subtle'
-              }`}
-            >
+            <ToggleGroupItem key={mode} value={mode}>
+              {mode === 'light' ? <SunIcon size={16} aria-hidden /> : <MoonIcon size={16} aria-hidden />}
               {mode === 'light' ? 'Claro' : 'Oscuro'}
-            </button>
+            </ToggleGroupItem>
           ))}
-        </div>
+        </ToggleGroup>
         <p className="text-xs text-muted">Al cambiar de modo se vuelve a la paleta de ese modo.</p>
       </div>
 
@@ -148,30 +147,24 @@ export function ColorControls({ theme, defaults, onChange }: ColorControlsProps)
 
       <fieldset className="space-y-3">
         <legend className="text-sm font-semibold text-ink">Degradado del encabezado</legend>
-        <label className="flex items-center gap-2 text-sm text-ink-soft">
-          <input
-            type="checkbox"
-            checked={colors.gradient.enabled}
-            onChange={(event) => onChange(withGradient(theme, { enabled: event.target.checked }))}
-            className="h-4 w-4 accent-zinc-950"
-          />
-          Pintar el encabezado del menú con un degradado cuando no hay imagen de banner
-        </label>
+        <SwitchField
+          label="Pintar el encabezado del menú con un degradado cuando no hay imagen de banner"
+          checked={colors.gradient.enabled}
+          onChange={(enabled) => onChange(withGradient(theme, { enabled }))}
+        />
         {colors.gradient.enabled && (
           <div className="grid gap-4 @sm:grid-cols-2">
             <ColorInput label="Desde" value={colors.gradient.from} onChange={(from) => onChange(withGradient(theme, { from }))} />
             <ColorInput label="Hasta" value={colors.gradient.to} onChange={(to) => onChange(withGradient(theme, { to }))} />
-            <Field label={`Ángulo: ${colors.gradient.angle}°`}>
-              <input
-                type="range"
-                min={0}
-                max={360}
-                step={15}
-                value={colors.gradient.angle}
-                onChange={(event) => onChange(withGradient(theme, { angle: Number(event.target.value) }))}
-                className="w-full accent-zinc-950"
-              />
-            </Field>
+            <SliderField
+              label="Ángulo"
+              value={colors.gradient.angle}
+              min={0}
+              max={360}
+              step={15}
+              display={`${colors.gradient.angle}°`}
+              onChange={(angle) => onChange(withGradient(theme, { angle }))}
+            />
           </div>
         )}
       </fieldset>

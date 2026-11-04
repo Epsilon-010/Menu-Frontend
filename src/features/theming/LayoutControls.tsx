@@ -1,5 +1,4 @@
-import { Field, Select } from '../../shared/ui/Field.tsx'
-import { Choice } from './Choice.tsx'
+import { Choice, SwitchField } from './Choice.tsx'
 import type { CartStyle, CategoryHeader, Density, Navigation, ProductView, Theme, ThemeLayout } from './api.ts'
 import { withLayout } from './editor.ts'
 import {
@@ -32,7 +31,8 @@ const CART_LABELS: Record<CartStyle, string> = {
   floating: 'Botón flotante en la esquina',
 }
 
-const COLUMNS = Array.from({ length: MAX_COLUMNS - MIN_COLUMNS + 1 }, (_, index) => MIN_COLUMNS + index)
+const COLUMNS = Array.from({ length: MAX_COLUMNS - MIN_COLUMNS + 1 }, (_, index) => String(MIN_COLUMNS + index))
+const COLUMN_LABELS: Record<string, string> = Object.fromEntries(COLUMNS.map((columns) => [columns, columns]))
 
 type Flag = 'sticky_header' | 'show_banner' | 'show_tagline' | 'show_welcome'
 
@@ -71,19 +71,16 @@ export function LayoutControls({ theme, onChange }: LayoutControlsProps) {
           labels={VIEW_LABELS}
           onChange={(product_view) => set({ product_view })}
         />
-        <Field label="Columnas" hint="En pantallas anchas; las tablets muestran hasta tres y los celulares una.">
-          <Select
-            value={layout.columns}
-            disabled={layout.product_view !== 'grid'}
-            onChange={(event) => set({ columns: Number(event.target.value) })}
-          >
-            {COLUMNS.map((columns) => (
-              <option key={columns} value={columns}>
-                {columns}
-              </option>
-            ))}
-          </Select>
-        </Field>
+        <Choice
+          label="Columnas"
+          hint="En pantallas anchas; las tablets muestran hasta tres y los celulares una."
+          kind="segmented"
+          value={String(layout.columns)}
+          options={COLUMNS}
+          labels={COLUMN_LABELS}
+          disabled={layout.product_view !== 'grid'}
+          onChange={(columns) => set({ columns: Number(columns) })}
+        />
         <Choice
           label="Espaciado"
           value={layout.density}
@@ -108,18 +105,10 @@ export function LayoutControls({ theme, onChange }: LayoutControlsProps) {
         onChange={(cart) => set({ cart })}
       />
 
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-semibold text-ink">Parte superior del menú</legend>
+      <fieldset className="space-y-3">
+        <legend className="mb-3 text-sm font-semibold text-ink">Parte superior del menú</legend>
         {FLAGS.map(({ field, label }) => (
-          <label key={field} className="flex items-center gap-2 text-sm text-ink-soft">
-            <input
-              type="checkbox"
-              checked={layout[field]}
-              onChange={(event) => set({ [field]: event.target.checked })}
-              className="h-4 w-4 accent-zinc-950"
-            />
-            {label}
-          </label>
+          <SwitchField key={field} label={label} checked={layout[field]} onChange={(checked) => set({ [field]: checked })} />
         ))}
       </fieldset>
     </div>

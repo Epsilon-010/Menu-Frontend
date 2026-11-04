@@ -51,10 +51,15 @@ describe('qrLogin', () => {
     expect(JSON.parse(String(calls[1].init?.body))).toEqual({ token: 'tok' })
   })
 
-  it('shows the server message when the table is not open or the QR is not valid', async () => {
-    stubFetch(problem(409, 'This table is not open yet; ask your waiter'), problem(401, 'This QR code is not valid'))
+  it('shows the server message when the table is full or the QR is not valid', async () => {
+    stubFetch(
+      problem(409, 'This table already has the most guests it allows; ask your waiter'),
+      problem(401, 'This QR code is not valid'),
+    )
 
-    expect((await failureOf(qrLogin('tok'))).message).toBe('This table is not open yet; ask your waiter.')
+    expect((await failureOf(qrLogin('tok'))).message).toBe(
+      'This table already has the most guests it allows; ask your waiter.',
+    )
     expect((await failureOf(qrLogin('tok'))).message).toBe('This QR code is not valid.')
   })
 

@@ -85,8 +85,8 @@ function sentence(text: string): string {
 }
 
 /**
- * Joins the table's open visit as a guest with the token printed in its QR. The API sets the
- * session cookies; it answers 409 while no waiter has opened the table.
+ * Joins the table's visit (the first scan opens it) as a guest with the token printed in its QR. The API sets the
+ * session cookies; it answers 409 when the visit already has the most guests it allows.
  */
 export async function qrLogin(token: string, name?: string): Promise<SessionInfo> {
   const trimmed = name?.trim() ?? ''

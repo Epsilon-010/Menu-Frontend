@@ -27,7 +27,7 @@ export interface Bill {
 export interface TableOverview {
   table_id: string
   table_name: string
-  /** Null while the table is closed: its QR lets nobody in. */
+  /** Null while nobody is sitting there; the first QR scan (or the waiter) opens the next visit. */
   bill: Bill | null
 }
 
@@ -81,7 +81,7 @@ export async function listTableBills(): Promise<TableOverview[]> {
   return tables.map((table) => (table.bill ? { ...table, bill: billFrom(table.bill) } : table))
 }
 
-/** Opens the table so its QR lets guests in. Idempotent: an open table answers with its bill. */
+/** Opens the table by hand (the first QR scan also opens it). Idempotent: an open table answers with its bill. */
 export async function openTable(tableId: string): Promise<Bill> {
   return billFrom((await (await send('/bills', json({ table_id: tableId }))).json()) as Bill)
 }

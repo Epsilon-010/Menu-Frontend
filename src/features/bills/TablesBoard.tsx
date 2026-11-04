@@ -119,7 +119,7 @@ export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = 
     <div className="space-y-8">
       <SectionHeader
         title="Mesas"
-        description="Abre una mesa para que los comensales entren con su QR y pidan desde su celular. Al registrar el pago se cierra la cuenta y se cierra la sesión de todos los comensales."
+        description="Cada mesa se abre sola cuando alguien escanea su QR, y los comensales piden desde su celular. Al registrar el pago se cierra la cuenta y la sesión de todos los comensales."
       />
 
       {stale && (

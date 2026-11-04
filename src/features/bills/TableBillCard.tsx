@@ -69,7 +69,7 @@ export function TableBillCard({
           <p className="text-sm text-zinc-500">
             {bill
               ? `Abierta a las ${clockTime(bill.opened_at)} · ${bill.orders.length} ${bill.orders.length === 1 ? 'orden' : 'órdenes'}`
-              : 'Los comensales no pueden entrar con el QR hasta que la abras.'}
+              : 'Se abre sola cuando alguien escanea su QR.'}
           </p>
         </div>
         {bill && <p className="text-lg font-semibold text-zinc-950 tabular-nums">{formatMoney(bill.total_cents)}</p>}
@@ -97,7 +97,7 @@ export function TableBillCard({
           <Button variant="primary" icon={<DoorOpenIcon size={16} aria-hidden />} disabled={busy} onClick={() => void run(onOpen)}>
             {busy ? 'Abriendo…' : 'Abrir mesa'}
           </Button>
-          <p className="text-xs text-zinc-500">Una vez abierta, el QR de la mesa deja entrar a los comensales hasta que se pague la cuenta.</p>
+          <p className="text-xs text-zinc-500">No hace falta abrirla: el primer comensal que escanea el QR la abre. Al cobrar se cierra la sesión de todos.</p>
         </div>
       )}
 
@@ -188,7 +188,7 @@ export function TableBillCard({
       {bill && mode.kind === 'confirm-close' && (
         <div className="flex flex-wrap items-center gap-4 rounded-xl bg-amber-50 p-4">
           <p className="flex-1 text-sm text-amber-900">
-            ¿Cerrar {table.table_name}? Su QR ya no deja entrar a nadie y se cierra la sesión de quien haya entrado.
+            ¿Cerrar {table.table_name}? Se cierra la sesión de quien haya entrado; el próximo que escanee el QR abre una visita nueva.
           </p>
           <div className="flex gap-2">
             <Button variant="primary" disabled={busy} onClick={() => void run(onClose)}>

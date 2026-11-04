@@ -1,10 +1,12 @@
 import { PencilSimpleIcon, PowerIcon, ShieldCheckIcon } from '@phosphor-icons/react'
 import { useState, type FormEvent } from 'react'
-import { Button, IconButton } from '../../shared/ui/Button.tsx'
+import { DropdownMenuItem } from '../../components/ui/dropdown-menu.tsx'
+import { Button } from '../../shared/ui/Button.tsx'
 import { MOTION } from '../../shared/ui/classes.ts'
 import { TextInput } from '../../shared/ui/Field.tsx'
 import { Badge, ErrorText } from '../../shared/ui/Feedback.tsx'
 import { useRowAction } from '../../shared/ui/useRowAction.ts'
+import { ConfirmDialog, MoreActionsMenu, TooltipIconButton } from '../../shared/ui/RowActions.tsx'
 import type { AdminAccount, AdminChanges } from './api.ts'
 
 type Mode = { kind: 'view' } | { kind: 'edit'; full_name: string } | { kind: 'confirm-deactivate' }
@@ -32,7 +34,7 @@ export function AdminRow({ admin, isYou, onUpdate }: AdminRowProps) {
   }
 
   return (
-    <li className={`space-y-4 rounded-lg p-3 hover:bg-zinc-50 ${MOTION}`} aria-busy={busy}>
+    <li className={`space-y-4 rounded-lg p-3 hover:bg-canvas ${MOTION}`} aria-busy={busy}>
       {mode.kind === 'edit' ? (
         <form onSubmit={handleSaveEdit} className="flex flex-wrap items-center gap-2">
           <TextInput
@@ -54,58 +56,59 @@ export function AdminRow({ admin, isYou, onUpdate }: AdminRowProps) {
       ) : (
         <div className="flex flex-wrap items-center gap-4">
           <span
-            className={`flex h-10 w-10 items-center justify-center rounded-lg ${admin.is_active ? 'bg-zinc-100 text-zinc-700' : 'bg-zinc-50 text-zinc-300'}`}
+            className={`flex h-10 w-10 items-center justify-center rounded-lg ${admin.is_active ? 'bg-subtle text-ink-soft' : 'bg-canvas text-line-strong'}`}
           >
             <ShieldCheckIcon size={20} aria-hidden />
           </span>
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <p className={`font-medium ${admin.is_active ? 'text-zinc-950' : 'text-zinc-400'}`}>{admin.full_name}</p>
+              <p className={`font-medium ${admin.is_active ? 'text-ink' : 'text-faint'}`}>{admin.full_name}</p>
               {isYou && <Badge>Tú</Badge>}
               {admin.must_change_password && <Badge tone="warning">Contraseña temporal</Badge>}
               {!admin.is_active && <Badge tone="warning">Inactivo</Badge>}
             </div>
-            <p className="truncate text-sm text-zinc-500">{admin.email}</p>
+            <p className="truncate text-sm text-muted">{admin.email}</p>
           </div>
           <div className="flex items-center gap-1">
-            <IconButton
+            <TooltipIconButton
               label="Editar nombre"
-              icon={<PencilSimpleIcon size={16} />}
+              icon={<PencilSimpleIcon size={16} aria-hidden />}
               disabled={busy}
               onClick={() => setMode({ kind: 'edit', full_name: admin.full_name })}
             />
             {!isYou && (
-              <IconButton
-                label={admin.is_active ? 'Desactivar' : 'Activar'}
-                tone={admin.is_active ? 'danger' : 'default'}
-                icon={<PowerIcon size={16} />}
-                disabled={busy}
-                onClick={() =>
-                  admin.is_active ? setMode({ kind: 'confirm-deactivate' }) : void run(() => onUpdate({ is_active: true }))
-                }
-              />
+              <MoreActionsMenu label={`Más acciones de ${admin.full_name}`} disabled={busy}>
+                <DropdownMenuItem
+                  tone={admin.is_active ? 'danger' : 'default'}
+                  onSelect={() =>
+                    admin.is_active ? setMode({ kind: 'confirm-deactivate' }) : void run(() => onUpdate({ is_active: true }))
+                  }
+                >
+                  <PowerIcon size={16} aria-hidden />
+                  {admin.is_active ? 'Desactivar' : 'Activar'}
+                </DropdownMenuItem>
+              </MoreActionsMenu>
             )}
           </div>
         </div>
       )}
 
-      {mode.kind === 'confirm-deactivate' && (
-        <div className="flex flex-wrap items-center gap-4 rounded-xl bg-amber-50 p-4">
-          <p className="flex-1 text-sm text-amber-900">
-            {admin.full_name} cierra sesión en todos sus dispositivos de inmediato y no puede volver a entrar hasta que lo reactives.
-          </p>
-          <div className="flex gap-2">
-            <Button variant="primary" disabled={busy} onClick={() => void run(() => onUpdate({ is_active: false }))}>
-              Desactivar
-            </Button>
-            <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-              Cancelar
-            </Button>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={mode.kind === 'confirm-deactivate'}
+        onCancel={() => setMode({ kind: 'view' })}
+        title={`Desactivar a ${admin.full_name}`}
+        cancelLabel="Cancelar"
+        confirmLabel="Desactivar"
+        confirmVariant="danger"
+        onConfirm={() => void run(() => onUpdate({ is_active: false }))}
+        busy={busy}
+        error={error}
+      >
+        {admin.full_name} cierra sesión en todos sus dispositivos de inmediato y no puede volver a entrar hasta que lo
+        reactives.
+      </ConfirmDialog>
 
-      {error && <ErrorText>{error}</ErrorText>}
+      {error && mode.kind !== 'confirm-deactivate' && <ErrorText>{error}</ErrorText>}
     </li>
   )
 }

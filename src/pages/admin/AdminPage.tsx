@@ -6,7 +6,7 @@ import { AppShell, type NavItem } from '../../shared/ui/AppShell.tsx'
 
 const ADMIN_NAV: NavItem[] = [
   { to: '/admin', label: 'Menú', icon: <BowlFoodIcon size={16} aria-hidden />, end: true },
-  { to: '/admin/modifiers', label: 'Modificadores', icon: <SlidersHorizontalIcon size={16} aria-hidden /> },
+  { to: '/admin/modifiers', label: 'Opciones y extras', icon: <SlidersHorizontalIcon size={16} aria-hidden /> },
   { to: '/admin/tables', label: 'Mesas', icon: <ChairIcon size={16} aria-hidden /> },
   { to: '/admin/staff', label: 'Personal', icon: <UsersThreeIcon size={16} aria-hidden /> },
   { to: '/admin/admins', label: 'Administradores', icon: <ShieldCheckIcon size={16} aria-hidden /> },

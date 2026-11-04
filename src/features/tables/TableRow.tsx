@@ -1,10 +1,12 @@
 import { ChairIcon, CopyIcon, KeyIcon, PencilSimpleIcon, PowerIcon, QrCodeIcon } from '@phosphor-icons/react'
 import { useState, type FormEvent } from 'react'
-import { Button, IconButton } from '../../shared/ui/Button.tsx'
+import { DropdownMenuItem, DropdownMenuSeparator } from '../../components/ui/dropdown-menu.tsx'
+import { Button } from '../../shared/ui/Button.tsx'
 import { MOTION } from '../../shared/ui/classes.ts'
 import { TextInput } from '../../shared/ui/Field.tsx'
 import { Badge, ErrorText } from '../../shared/ui/Feedback.tsx'
 import { useRowAction } from '../../shared/ui/useRowAction.ts'
+import { ConfirmDialog, MoreActionsMenu, TooltipIconButton } from '../../shared/ui/RowActions.tsx'
 import { qrLink, type Table, type TableChanges } from './api.ts'
 
 type Mode = { kind: 'view' } | { kind: 'rename'; name: string } | { kind: 'confirm-pin' } | { kind: 'confirm-qr' }
@@ -33,11 +35,11 @@ function QrLinkRow({ link, onNewQr, disabled }: { link: string; onNewQr: () => v
   }
 
   return (
-    <div className="space-y-2 rounded-xl bg-zinc-50 p-3">
+    <div className="space-y-2 rounded-xl bg-canvas p-3">
       <div className="flex flex-wrap items-center gap-2">
-        <QrCodeIcon size={16} className="shrink-0 text-zinc-500" aria-hidden />
-        <span className="text-xs font-medium text-zinc-500">Link del QR</span>
-        <code className="min-w-0 flex-1 truncate font-mono text-xs text-zinc-700 select-all" title={link}>
+        <QrCodeIcon size={16} className="shrink-0 text-muted" aria-hidden />
+        <span className="text-xs font-medium text-muted">Link del QR</span>
+        <code className="min-w-0 flex-1 truncate font-mono text-xs text-ink-soft select-all" title={link}>
           {link}
         </code>
         <div className="flex gap-1">
@@ -69,7 +71,7 @@ export function TableRow({ table, onUpdate, onRegeneratePin, onRegenerateQr }: T
   }
 
   return (
-    <li className={`space-y-4 rounded-lg p-3 hover:bg-zinc-50 ${MOTION}`} aria-busy={busy}>
+    <li className={`space-y-4 rounded-lg p-3 hover:bg-canvas ${MOTION}`} aria-busy={busy}>
       {mode.kind === 'rename' ? (
         <form onSubmit={handleRename} className="flex flex-wrap items-center gap-2">
           <TextInput
@@ -90,33 +92,39 @@ export function TableRow({ table, onUpdate, onRegeneratePin, onRegenerateQr }: T
         </form>
       ) : (
         <div className="flex flex-wrap items-center gap-4">
-          <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${table.is_active ? 'bg-zinc-100 text-zinc-700' : 'bg-zinc-50 text-zinc-300'}`}>
+          <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${table.is_active ? 'bg-subtle text-ink-soft' : 'bg-canvas text-line-strong'}`}>
             <ChairIcon size={20} aria-hidden />
           </span>
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <p className={`font-medium ${table.is_active ? 'text-zinc-950' : 'text-zinc-400'}`}>{table.name}</p>
+              <p className={`font-medium ${table.is_active ? 'text-ink' : 'text-faint'}`}>{table.name}</p>
               {!table.is_active && <Badge>Inactiva</Badge>}
             </div>
-            <p className="text-sm text-zinc-500">
-              Código <span className="font-mono tracking-widest text-zinc-700">{table.code}</span>
+            <p className="text-sm text-muted">
+              Código <span className="font-mono tracking-widest text-ink-soft">{table.code}</span>
             </p>
           </div>
           <div className="flex items-center gap-1">
-            <IconButton
+            <TooltipIconButton
               label="Cambiar nombre de la mesa"
-              icon={<PencilSimpleIcon size={16} />}
+              icon={<PencilSimpleIcon size={16} aria-hidden />}
               disabled={busy}
               onClick={() => setMode({ kind: 'rename', name: table.name })}
             />
-            <IconButton label="Generar un nuevo PIN" icon={<KeyIcon size={16} />} disabled={busy} onClick={() => setMode({ kind: 'confirm-pin' })} />
-            <IconButton
-              label={table.is_active ? 'Desactivar mesa' : 'Activar mesa'}
-              tone={table.is_active ? 'danger' : 'default'}
-              icon={<PowerIcon size={16} />}
-              disabled={busy}
-              onClick={() => void run(() => onUpdate({ is_active: !table.is_active }))}
-            />
+            <MoreActionsMenu label={`Más acciones de ${table.name}`} disabled={busy}>
+              <DropdownMenuItem onSelect={() => setMode({ kind: 'confirm-pin' })}>
+                <KeyIcon size={16} aria-hidden />
+                Generar un nuevo PIN
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                tone={table.is_active ? 'danger' : 'default'}
+                onSelect={() => void run(() => onUpdate({ is_active: !table.is_active }))}
+              >
+                <PowerIcon size={16} aria-hidden />
+                {table.is_active ? 'Desactivar mesa' : 'Activar mesa'}
+              </DropdownMenuItem>
+            </MoreActionsMenu>
           </div>
         </div>
       )}
@@ -129,48 +137,42 @@ export function TableRow({ table, onUpdate, onRegeneratePin, onRegenerateQr }: T
             onNewQr={() => setMode({ kind: 'confirm-qr' })}
           />
         ) : (
-          <div className="flex flex-wrap items-center gap-2 rounded-xl bg-zinc-50 p-3">
-            <p className="flex-1 text-sm text-zinc-500">Esta mesa aún no tiene link de QR.</p>
+          <div className="flex flex-wrap items-center gap-2 rounded-xl bg-canvas p-3">
+            <p className="flex-1 text-sm text-muted">Esta mesa aún no tiene link de QR.</p>
             <Button variant="secondary" disabled={busy} onClick={() => setMode({ kind: 'confirm-qr' })}>
               Crear link de QR
             </Button>
           </div>
         ))}
 
-      {mode.kind === 'confirm-qr' && (
-        <div className="flex flex-wrap items-center gap-4 rounded-xl bg-amber-50 p-4">
-          <p className="flex-1 text-sm text-amber-900">
-            El QR anterior de {table.name} deja de funcionar y se cierra la sesión de los comensales que entraron con
-            él. La tablet sigue con su sesión. Vuelve a imprimir el nuevo link.
-          </p>
-          <div className="flex gap-2">
-            <Button variant="primary" disabled={busy} onClick={() => void run(onRegenerateQr)}>
-              Generar nuevo QR
-            </Button>
-            <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-              Cancelar
-            </Button>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={mode.kind === 'confirm-qr'}
+        onCancel={() => setMode({ kind: 'view' })}
+        title="Generar nuevo QR"
+        cancelLabel="Cancelar"
+        confirmLabel="Generar nuevo QR"
+        onConfirm={() => void run(onRegenerateQr)}
+        busy={busy}
+        error={error}
+      >
+        El QR anterior de {table.name} deja de funcionar y se cierra la sesión de los comensales que entraron con él. La
+        tablet sigue con su sesión. Vuelve a imprimir el nuevo link.
+      </ConfirmDialog>
 
-      {mode.kind === 'confirm-pin' && (
-        <div className="flex flex-wrap items-center gap-4 rounded-xl bg-amber-50 p-4">
-          <p className="flex-1 text-sm text-amber-900">
-            La tablet de {table.name} cierra sesión de inmediato y va a necesitar el nuevo PIN.
-          </p>
-          <div className="flex gap-2">
-            <Button variant="primary" disabled={busy} onClick={() => void run(onRegeneratePin)}>
-              Generar nuevo PIN
-            </Button>
-            <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-              Cancelar
-            </Button>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={mode.kind === 'confirm-pin'}
+        onCancel={() => setMode({ kind: 'view' })}
+        title="Generar nuevo PIN"
+        cancelLabel="Cancelar"
+        confirmLabel="Generar nuevo PIN"
+        onConfirm={() => void run(onRegeneratePin)}
+        busy={busy}
+        error={error}
+      >
+        La tablet de {table.name} cierra sesión de inmediato y va a necesitar el nuevo PIN.
+      </ConfirmDialog>
 
-      {error && <ErrorText>{error}</ErrorText>}
+      {error && mode.kind !== 'confirm-qr' && mode.kind !== 'confirm-pin' && <ErrorText>{error}</ErrorText>}
     </li>
   )
 }

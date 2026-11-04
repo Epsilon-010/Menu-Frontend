@@ -1,5 +1,7 @@
 import { CaretDownIcon, CaretUpIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react'
-import { useState, type FormEvent } from 'react'
+import { useId, useState, type FormEvent } from 'react'
+import { Label } from '../../components/ui/label.tsx'
+import { Switch } from '../../components/ui/switch.tsx'
 import { Button, IconButton } from '../../shared/ui/Button.tsx'
 import { Field, TextInput } from '../../shared/ui/Field.tsx'
 import { ErrorText } from '../../shared/ui/Feedback.tsx'
@@ -31,6 +33,7 @@ interface GroupEditorProps {
 export function GroupEditor({ initial, submitLabel, onSubmit, onCancel }: GroupEditorProps) {
   const [form, setForm] = useState<GroupForm>(() => formFromGroup(initial))
   const [busy, setBusy] = useState(false)
+  const switchId = useId()
   const [error, setError] = useState<string | null>(null)
 
   function setOptions(update: (options: OptionRow[]) => OptionRow[]) {
@@ -58,7 +61,7 @@ export function GroupEditor({ initial, submitLabel, onSubmit, onCancel }: GroupE
   const { options } = form
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-zinc-50 p-4">
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-canvas p-4">
       <div className="grid gap-4 sm:grid-cols-[1fr_9rem_9rem]">
         <Field label="Nombre del grupo">
           <TextInput
@@ -109,7 +112,7 @@ export function GroupEditor({ initial, submitLabel, onSubmit, onCancel }: GroupE
                 className="min-w-0 flex-1 basis-40"
               />
               <div className="relative w-32">
-                <span aria-hidden className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-zinc-400">
+                <span aria-hidden className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-faint">
                   +{CURRENCY_SYMBOL}
                 </span>
                 <TextInput
@@ -121,15 +124,17 @@ export function GroupEditor({ initial, submitLabel, onSubmit, onCancel }: GroupE
                   className="pl-8 font-mono"
                 />
               </div>
-              <label className="flex items-center gap-2 text-sm text-ink-soft">
-                <input
-                  type="checkbox"
+              <div className="flex items-center gap-2">
+                <Switch
+                  id={`${switchId}-${option.key}`}
+                  aria-label={`Opción ${index + 1} disponible`}
                   checked={option.is_available}
-                  onChange={(e) => setOption(option.key, { is_available: e.target.checked })}
-                  className="h-4 w-4 accent-zinc-950"
+                  onCheckedChange={(checked) => setOption(option.key, { is_available: checked })}
                 />
-                Disponible
-              </label>
+                <Label htmlFor={`${switchId}-${option.key}`} className="font-normal">
+                  Disponible
+                </Label>
+              </div>
               <div className="flex items-center gap-1">
                 <IconButton
                   label={`Subir opción ${index + 1}`}
@@ -155,7 +160,7 @@ export function GroupEditor({ initial, submitLabel, onSubmit, onCancel }: GroupE
           ))}
         </ul>
         <p className="text-xs text-muted">
-          Deja el precio vacío para una opción sin costo. Desmarca Disponible cuando una opción esté agotada por ahora.
+          Deja el precio vacío para una opción sin costo. Apaga Disponible cuando una opción esté agotada por ahora.
         </p>
         <Button
           variant="ghost"

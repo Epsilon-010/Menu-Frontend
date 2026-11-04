@@ -1,4 +1,4 @@
-import { PlusIcon, SlidersHorizontalIcon } from '@phosphor-icons/react'
+import { LightbulbIcon, PlusIcon, SlidersHorizontalIcon } from '@phosphor-icons/react'
 import { useCallback, useEffect, useState } from 'react'
 import { createDraftIds } from '../../shared/api/idempotency.ts'
 import { Button } from '../../shared/ui/Button.tsx'
@@ -105,11 +105,25 @@ export function ModifiersPanel() {
   )
 
   const header = (
-    <SectionHeader
-      title="Grupos de opciones"
-      description="Lo que los comensales eligen en un producto, como el tamaño o los extras. Asigna un grupo a todos los productos que quieras en Menú; al editarlo aquí cambia en todos."
-      action={list.status === 'loaded' ? newGroupButton : undefined}
-    />
+    <div className="space-y-4">
+      <SectionHeader
+        title="Opciones y extras"
+        description="Lo que los comensales eligen en un producto, como el tamaño o los extras. Asigna un grupo a todos los productos que quieras en Menú; al editarlo aquí cambia en todos."
+        action={list.status === 'loaded' ? newGroupButton : undefined}
+      />
+      <div className="flex items-start gap-3 rounded-2xl border border-line bg-surface p-4">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-subtle text-ink-soft">
+          <LightbulbIcon size={16} aria-hidden />
+        </span>
+        <div className="space-y-1 text-sm">
+          <p className="font-medium text-ink">Ejemplo: Proteína (elige 1): Pollo, Tasajo +$20</p>
+          <p className="text-muted">
+            Crea el grupo una vez, ponle sus opciones con su precio extra y elígelo en cada producto que lo ofrezca. Al
+            pedir, el comensal escoge una opción y el precio se suma solo.
+          </p>
+        </div>
+      </div>
+    </div>
   )
 
   if (list.status !== 'loaded') {

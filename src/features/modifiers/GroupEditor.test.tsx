@@ -34,6 +34,12 @@ describe('modifier group editor', () => {
     expect(html).toContain('value="12.50"')
   })
 
+  it('shows each option availability as a switch', () => {
+    const html = renderToStaticMarkup(<GroupEditor initial={SIZE} submitLabel="Save changes" onSubmit={done} onCancel={() => undefined} />)
+    expect(html).toMatch(/role="switch" aria-checked="true"[^>]*aria-label="Opción 1 disponible"/)
+    expect(html).toMatch(/role="switch" aria-checked="false"[^>]*aria-label="Opción 2 disponible"/)
+  })
+
   it('starts a new group as required, choose 1, with one option', () => {
     const html = renderToStaticMarkup(<GroupEditor submitLabel="Add group" onSubmit={done} onCancel={() => undefined} />)
     expect(html).toContain('Obligatorio · elige 1')

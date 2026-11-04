@@ -1,9 +1,11 @@
 import { ChartBarIcon } from '@phosphor-icons/react'
 import { useEffect, useMemo, useState } from 'react'
+import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group.tsx'
 import { Button } from '../../shared/ui/Button.tsx'
-import { Field, Select, TextInput } from '../../shared/ui/Field.tsx'
+import { Field, TextInput } from '../../shared/ui/Field.tsx'
 import { EmptyState, ErrorText, ListSkeleton, LoadError, SuccessText } from '../../shared/ui/Feedback.tsx'
 import { Card, SectionHeader } from '../../shared/ui/Section.tsx'
+import { SelectField } from '../../shared/ui/RowActions.tsx'
 import { OrdersError } from '../kitchen/api.ts'
 import { fetchStatistics, fetchTenantSettings, updateTenantSettings, type Statistics } from './api.ts'
 import { presetRange, rangeError, statsRequestKey, todayIn, type DateRange, type RangePreset } from './logic.ts'
@@ -78,19 +80,19 @@ function TimezoneSetting({ timezone, onSaved }: { timezone: string; onSaved: (ti
   }
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <Field label="Zona horaria del negocio" className="min-w-64">
-        {options === null ? (
+      {options === null ? (
+        <Field label="Zona horaria del negocio" className="min-w-64">
           <TextInput value={choice} placeholder="America/Mexico_City" onChange={(event) => setChoice(event.target.value)} />
-        ) : (
-          <Select value={choice} onChange={(event) => setChoice(event.target.value)}>
-            {options.map((zone) => (
-              <option key={zone} value={zone}>
-                {zone}
-              </option>
-            ))}
-          </Select>
-        )}
-      </Field>
+        </Field>
+      ) : (
+        <SelectField
+          label="Zona horaria del negocio"
+          className="min-w-64"
+          value={choice}
+          options={options.map((zone) => ({ value: zone, label: zone }))}
+          onChange={setChoice}
+        />
+      )}
       <Button variant="primary" disabled={saving} onClick={() => void save()}>
         {saving ? 'Guardando…' : 'Guardar'}
       </Button>
@@ -184,19 +186,20 @@ export function StatsPanel() {
       )}
       {zone !== null && (
         <Card className="space-y-4 p-4">
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Rango de fechas">
+          <ToggleGroup
+            type="single"
+            aria-label="Rango de fechas"
+            value={preset}
+            className="flex-wrap"
+            // Pressing the chosen range again would clear it; the report always has a range.
+            onValueChange={(next) => next && choosePreset(next as RangePreset)}
+          >
             {PRESETS.map((option) => (
-              <Button
-                key={option.value}
-                size="sm"
-                variant={preset === option.value ? 'primary' : 'secondary'}
-                aria-pressed={preset === option.value}
-                onClick={() => choosePreset(option.value)}
-              >
+              <ToggleGroupItem key={option.value} value={option.value} className="py-2">
                 {option.label}
-              </Button>
+              </ToggleGroupItem>
             ))}
-          </div>
+          </ToggleGroup>
           {preset === 'custom' && (
             <div className="flex flex-wrap items-end gap-3">
               <Field label="Desde">

@@ -79,6 +79,17 @@ describe('modifier group picker', () => {
     expect(html).not.toContain('type="checkbox" value="g')
   })
 
+  it('explains what groups are for and links to the modifiers page when the library has groups', () => {
+    const html = render(PASTOR, [SIZE])
+    expect(html).toMatch(/<a[^>]*href="\/admin\/modifiers"[^>]*>Crea grupos en Opciones y extras<\/a>/)
+  })
+
+  it('shows only the empty-library link when there are no groups', () => {
+    const html = render(PASTOR, [])
+    expect(html).not.toContain('Crea grupos en Opciones y extras')
+    expect(html.match(/href="\/admin\/modifiers"/g)).toHaveLength(1)
+  })
+
   it('says the groups could not load and keeps those of the item when the library is missing', () => {
     const html = render({ ...PASTOR, modifier_group_ids: ['g1'] }, null)
     expect(html).toContain('No se pudieron cargar los grupos de opciones. Al guardar, el producto conserva los grupos que ya tiene.')

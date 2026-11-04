@@ -1,13 +1,16 @@
 import { CookingPotIcon, KeyIcon, PencilSimpleIcon, PowerIcon, CallBellIcon } from '@phosphor-icons/react'
 import { useState, type FormEvent } from 'react'
-import { Button, IconButton } from '../../shared/ui/Button.tsx'
+import { DropdownMenuItem, DropdownMenuSeparator } from '../../components/ui/dropdown-menu.tsx'
+import { Button } from '../../shared/ui/Button.tsx'
 import { MOTION } from '../../shared/ui/classes.ts'
-import { Select, TextInput } from '../../shared/ui/Field.tsx'
+import { TextInput } from '../../shared/ui/Field.tsx'
 import { Badge, ErrorText } from '../../shared/ui/Feedback.tsx'
 import { useRowAction } from '../../shared/ui/useRowAction.ts'
+import { ConfirmDialog, MoreActionsMenu, TooltipIconButton } from '../../shared/ui/RowActions.tsx'
 import type { StaffMember, StaffMemberChanges, StaffRole } from './api.ts'
 import { normalizeStaffCode } from './credentials.ts'
 import { ROLE_LABELS } from './labels.ts'
+import { RoleToggle } from './RoleToggle.tsx'
 
 type Mode = { kind: 'view' } | { kind: 'edit'; full_name: string; role: StaffRole } | { kind: 'confirm-pin' }
 
@@ -36,7 +39,7 @@ export function StaffMemberRow({ member, onUpdate, onRegeneratePin }: StaffMembe
   const RoleIcon = member.role === 'kitchen' ? CookingPotIcon : CallBellIcon
 
   return (
-    <li className={`space-y-4 rounded-lg p-3 hover:bg-zinc-50 ${MOTION}`} aria-busy={busy}>
+    <li className={`space-y-4 rounded-lg p-3 hover:bg-canvas ${MOTION}`} aria-busy={busy}>
       {mode.kind === 'edit' ? (
         <form onSubmit={handleSaveEdit} className="flex flex-wrap items-center gap-2">
           <TextInput
@@ -48,18 +51,7 @@ export function StaffMemberRow({ member, onUpdate, onRegeneratePin }: StaffMembe
             onChange={(event) => setMode({ ...mode, full_name: event.target.value })}
             className="max-w-xs"
           />
-          <Select
-            aria-label="Rol"
-            value={mode.role}
-            onChange={(event) => setMode({ ...mode, role: event.target.value as StaffRole })}
-            className="max-w-40"
-          >
-            {Object.entries(ROLE_LABELS).map(([role, label]) => (
-              <option key={role} value={role}>
-                {label}
-              </option>
-            ))}
-          </Select>
+          <RoleToggle value={mode.role} onChange={(role) => setMode({ ...mode, role })} />
           <Button type="submit" variant="primary" disabled={busy}>
             Guardar
           </Button>
@@ -69,60 +61,59 @@ export function StaffMemberRow({ member, onUpdate, onRegeneratePin }: StaffMembe
         </form>
       ) : (
         <div className="flex flex-wrap items-center gap-4">
-          <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${member.is_active ? 'bg-zinc-100 text-zinc-700' : 'bg-zinc-50 text-zinc-300'}`}>
+          <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${member.is_active ? 'bg-subtle text-ink-soft' : 'bg-canvas text-line-strong'}`}>
             <RoleIcon size={20} aria-hidden />
           </span>
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <p className={`font-medium ${member.is_active ? 'text-zinc-950' : 'text-zinc-400'}`}>{member.full_name}</p>
+              <p className={`font-medium ${member.is_active ? 'text-ink' : 'text-faint'}`}>{member.full_name}</p>
               <Badge>{ROLE_LABELS[member.role]}</Badge>
               {!member.is_active && <Badge tone="warning">Inactivo</Badge>}
             </div>
-            <p className="text-sm text-zinc-500">
-              Código <span className="font-mono tracking-widest text-zinc-700">{normalizeStaffCode(member.code)}</span>
+            <p className="text-sm text-muted">
+              Código <span className="font-mono tracking-widest text-ink-soft">{normalizeStaffCode(member.code)}</span>
             </p>
           </div>
           <div className="flex items-center gap-1">
-            <IconButton
+            <TooltipIconButton
               label="Editar nombre y rol"
-              icon={<PencilSimpleIcon size={16} />}
+              icon={<PencilSimpleIcon size={16} aria-hidden />}
               disabled={busy}
               onClick={() => setMode({ kind: 'edit', full_name: member.full_name, role: member.role })}
             />
-            <IconButton
-              label="Generar un nuevo PIN"
-              icon={<KeyIcon size={16} />}
-              disabled={busy}
-              onClick={() => setMode({ kind: 'confirm-pin' })}
-            />
-            <IconButton
-              label={member.is_active ? 'Desactivar' : 'Activar'}
-              tone={member.is_active ? 'danger' : 'default'}
-              icon={<PowerIcon size={16} />}
-              disabled={busy}
-              onClick={() => void run(() => onUpdate({ is_active: !member.is_active }))}
-            />
+            <MoreActionsMenu label={`Más acciones de ${member.full_name}`} disabled={busy}>
+              <DropdownMenuItem onSelect={() => setMode({ kind: 'confirm-pin' })}>
+                <KeyIcon size={16} aria-hidden />
+                Generar un nuevo PIN
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                tone={member.is_active ? 'danger' : 'default'}
+                onSelect={() => void run(() => onUpdate({ is_active: !member.is_active }))}
+              >
+                <PowerIcon size={16} aria-hidden />
+                {member.is_active ? 'Desactivar' : 'Activar'}
+              </DropdownMenuItem>
+            </MoreActionsMenu>
           </div>
         </div>
       )}
 
-      {mode.kind === 'confirm-pin' && (
-        <div className="flex flex-wrap items-center gap-4 rounded-xl bg-amber-50 p-4">
-          <p className="flex-1 text-sm text-amber-900">
-            {member.full_name} cierra sesión en todos sus dispositivos de inmediato y va a necesitar el nuevo PIN. El código no cambia.
-          </p>
-          <div className="flex gap-2">
-            <Button variant="primary" disabled={busy} onClick={() => void run(onRegeneratePin)}>
-              Generar nuevo PIN
-            </Button>
-            <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-              Cancelar
-            </Button>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={mode.kind === 'confirm-pin'}
+        onCancel={() => setMode({ kind: 'view' })}
+        title="Generar nuevo PIN"
+        cancelLabel="Cancelar"
+        confirmLabel="Generar nuevo PIN"
+        onConfirm={() => void run(onRegeneratePin)}
+        busy={busy}
+        error={error}
+      >
+        {member.full_name} cierra sesión en todos sus dispositivos de inmediato y va a necesitar el nuevo PIN. El código no
+        cambia.
+      </ConfirmDialog>
 
-      {error && <ErrorText>{error}</ErrorText>}
+      {error && mode.kind !== 'confirm-pin' && <ErrorText>{error}</ErrorText>}
     </li>
   )
 }

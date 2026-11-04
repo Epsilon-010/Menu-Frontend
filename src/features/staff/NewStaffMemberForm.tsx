@@ -1,11 +1,11 @@
 import { PlusIcon } from '@phosphor-icons/react'
-import { useState, type FormEvent } from 'react'
+import { useId, useState, type FormEvent } from 'react'
 import { Button } from '../../shared/ui/Button.tsx'
-import { Field, Select, TextInput } from '../../shared/ui/Field.tsx'
+import { Field, TextInput } from '../../shared/ui/Field.tsx'
 import { ErrorText } from '../../shared/ui/Feedback.tsx'
 import { Card } from '../../shared/ui/Section.tsx'
-import type { NewStaffMember, StaffRole } from './api.ts'
-import { ROLE_LABELS } from './labels.ts'
+import type { NewStaffMember } from './api.ts'
+import { RoleToggle } from './RoleToggle.tsx'
 import { createDraftIds } from '../../shared/api/idempotency.ts'
 
 const EMPTY: NewStaffMember = { full_name: '', role: 'waiter' }
@@ -21,6 +21,7 @@ export function NewStaffMemberForm({ onCreate }: NewStaffMemberFormProps) {
   const [draft, setDraft] = useState<NewStaffMember>(EMPTY)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const roleLabelId = useId()
   // Client ids for new members: a retry of the same data reuses its id, edited data gets a new one.
   // Names may repeat, so after a success the next member always gets a new id.
   const [drafts] = useState(() => createDraftIds())
@@ -42,8 +43,8 @@ export function NewStaffMemberForm({ onCreate }: NewStaffMemberFormProps) {
     <Card className="p-6">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-1">
-          <h2 className="font-semibold text-zinc-950">Agregar a alguien del personal</h2>
-          <p className="text-sm text-zinc-500">Recibes un código y un PIN para entregárselos. Con ellos inicia sesión.</p>
+          <h2 className="font-semibold text-ink">Agregar a alguien del personal</h2>
+          <p className="text-sm text-muted">Recibes un código y un PIN para entregárselos. Con ellos inicia sesión.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Nombre completo">
@@ -56,15 +57,12 @@ export function NewStaffMemberForm({ onCreate }: NewStaffMemberFormProps) {
               onChange={(event) => setDraft({ ...draft, full_name: event.target.value })}
             />
           </Field>
-          <Field label="Rol">
-            <Select value={draft.role} onChange={(event) => setDraft({ ...draft, role: event.target.value as StaffRole })}>
-              {Object.entries(ROLE_LABELS).map(([role, label]) => (
-                <option key={role} value={role}>
-                  {label}
-                </option>
-              ))}
-            </Select>
-          </Field>
+          <div className="space-y-2">
+            <span id={roleLabelId} className="block text-sm font-medium text-ink-soft">
+              Rol
+            </span>
+            <RoleToggle labelledBy={roleLabelId} value={draft.role} onChange={(role) => setDraft({ ...draft, role })} />
+          </div>
         </div>
         {error && <ErrorText>{error}</ErrorText>}
         <Button type="submit" variant="primary" icon={<PlusIcon size={16} aria-hidden />} disabled={saving}>

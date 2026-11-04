@@ -6,6 +6,7 @@ import { ErrorText } from '../../shared/ui/Feedback.tsx'
 import type { ModifierGroup } from '../modifiers/api.ts'
 import { groupsToSave, pickInOrder, selectionRule } from '../modifiers/logic.ts'
 import { BADGE_LABELS, BADGES, type Badge } from './badges.ts'
+import { CHECKBOX, CHECKBOX_LABEL } from '../../shared/ui/controls.ts'
 import { CURRENCY_SYMBOL, formatPrice, MAX_PRICE_CENTS, parsePrice } from './price.ts'
 
 export interface ItemFormValues {
@@ -51,14 +52,14 @@ export function ItemForm({ initial, modifierGroups, submitLabel, onSubmit, onCan
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-zinc-50 p-4">
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-canvas p-4">
       <div className="grid gap-4 sm:grid-cols-[1fr_10rem]">
         <Field label="Nombre">
           <TextInput required maxLength={80} placeholder="Taco al pastor" value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
         <Field label="Precio">
           <div className="relative">
-            <span aria-hidden className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-zinc-400">
+            <span aria-hidden className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-faint">
               {CURRENCY_SYMBOL}
             </span>
             <TextInput
@@ -83,9 +84,9 @@ export function ItemForm({ initial, modifierGroups, submitLabel, onSubmit, onCan
       </Field>
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium text-ink-soft">Etiquetas (opcional)</legend>
-        <div className="flex flex-wrap gap-x-4 gap-y-2">
+        <div className="flex flex-wrap gap-2">
           {BADGES.map((badge) => (
-            <label key={badge} className="flex items-center gap-2 text-sm text-ink-soft">
+            <label key={badge} className={CHECKBOX_LABEL}>
               <input
                 type="checkbox"
                 checked={badges.includes(badge)}
@@ -93,7 +94,7 @@ export function ItemForm({ initial, modifierGroups, submitLabel, onSubmit, onCan
                   // Kept in the fixed order, once each, like the server stores them.
                   setBadges((current) => pickInOrder(BADGES, current, badge, event.target.checked))
                 }
-                className="h-4 w-4 accent-zinc-950"
+                className={CHECKBOX}
               />
               {BADGE_LABELS[badge]}
             </label>
@@ -131,6 +132,16 @@ function ModifierGroupPicker({ library, selected, onToggle }: ModifierGroupPicke
   return (
     <fieldset className="space-y-2">
       <legend className="text-sm font-medium text-ink-soft">Grupos de opciones (opcional)</legend>
+      {/* An empty library already explains itself below, with its own link. */}
+      {(library === null || library.length > 0) && (
+        <p className="text-xs text-muted">
+          Lo que el comensal elige al pedir este producto, como el tamaño o los extras.{' '}
+          <Link to="/admin/modifiers" className="font-medium text-ink underline underline-offset-4 hover:text-ink-soft">
+            Crea grupos en Opciones y extras
+          </Link>
+          .
+        </p>
+      )}
       {library === null ? (
         <p className="text-sm text-muted">No se pudieron cargar los grupos de opciones. Al guardar, el producto conserva los grupos que ya tiene.</p>
       ) : library.length === 0 ? (
@@ -142,14 +153,14 @@ function ModifierGroupPicker({ library, selected, onToggle }: ModifierGroupPicke
           para que los comensales los elijan en este producto.
         </p>
       ) : (
-        <div className="flex flex-wrap gap-x-4 gap-y-2">
+        <div className="flex flex-wrap gap-2">
           {library.map((group) => (
-            <label key={group.id} className="flex items-center gap-2 text-sm text-ink-soft">
+            <label key={group.id} className={CHECKBOX_LABEL}>
               <input
                 type="checkbox"
                 checked={selected.includes(group.id)}
                 onChange={(event) => onToggle(group.id, event.target.checked)}
-                className="h-4 w-4 accent-zinc-950"
+                className={CHECKBOX}
               />
               {group.name}
               <span className="text-xs text-muted">{selectionRule(group.min_select, group.max_select)}</span>

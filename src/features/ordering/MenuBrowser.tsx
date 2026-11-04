@@ -1,151 +1,19 @@
-import { BowlFoodIcon, PlusIcon } from '@phosphor-icons/react'
+import { BowlFoodIcon } from '@phosphor-icons/react'
 import { useEffect, useState, type ReactNode } from 'react'
-import { Button } from '../../shared/ui/Button.tsx'
 import { MOTION } from '../../shared/ui/classes.ts'
 import { EmptyState } from '../../shared/ui/Feedback.tsx'
-import { formatMoney } from '../catalog/price.ts'
-import { BADGE_LABELS, type Badge } from '../catalog/badges.ts'
-import type { BadgeShape, CardTemplate, CategoryHeader, ThemeCards, ThemeLayout } from '../theming/api.ts'
+import type { CategoryHeader, ThemeCards, ThemeLayout } from '../theming/api.ts'
+import { DEFAULT_CARDS } from '../theming/cards.ts'
 import {
-  cardAspectClass,
-  cardFitClass,
-  cardImageClass,
-  cardPaddingClass,
-  cardShellClass,
-  badgeShapeClass,
-  buttonShapeClass,
-  cardTemplate,
-  DEFAULT_CARDS,
-  descriptionClampClass,
-} from '../theming/cards.ts'
-import { currentCategoryId, DEFAULT_LAYOUT, densitySpacing, gridColumnsClass, showsOneCategory } from '../theming/layout.ts'
-import { AddLineForm } from './AddLineForm.tsx'
+  categoryArrangement,
+  currentCategoryId,
+  DEFAULT_LAYOUT,
+  densitySpacing,
+  gridColumnsClass,
+  showsOneCategory,
+} from '../theming/layout.ts'
 import type { MenuCategory, MenuItem } from './api.ts'
-
-function Badges({ badges, shape }: { badges: Badge[]; shape: BadgeShape }) {
-  if (badges.length === 0) return null
-  return (
-    <ul aria-label="Etiquetas" className="flex flex-wrap gap-1">
-      {badges.map((badge) => (
-        <li key={badge} className={`${badgeShapeClass(shape)} bg-badge px-2 py-0.5 text-xs font-semibold text-badge-ink`}>
-          {BADGE_LABELS[badge]}
-        </li>
-      ))}
-    </ul>
-  )
-}
-
-interface AddButtonProps {
-  name: string
-  cards: ThemeCards
-  onClick: () => void
-}
-
-function AddButton({ name, cards, onClick }: AddButtonProps) {
-  const { style, shape } = cards.add_button
-  return (
-    <Button
-      variant="secondary"
-      icon={style === 'text' ? undefined : <PlusIcon size={16} aria-hidden />}
-      aria-label={style === 'icon' ? `Agregar ${name}` : undefined}
-      onClick={onClick}
-      className={`type-button ${buttonShapeClass(shape)}`}
-    >
-      {style === 'icon' ? null : 'Agregar'}
-    </Button>
-  )
-}
-
-interface ItemCardProps {
-  item: MenuItem
-  onAdd: (quantity: number, note: string, optionIds: string[]) => Promise<string | null>
-  cards: ThemeCards
-  template: CardTemplate
-}
-
-function ItemCard({ item, onAdd, cards, template }: ItemCardProps) {
-  const [adding, setAdding] = useState(false)
-  const image = item.image?.card_url ?? null
-  // Without an image the overlay template is a plain card: there is nothing to write over.
-  const overlay = template === 'overlay' && image !== null
-  const clamp = descriptionClampClass(cards.description_lines)
-  const padding = cardPaddingClass(cards)
-  // The add form takes the footer's place, so the price moves next to the name while it is open.
-  const priceBesideName = cards.price_position === 'top' || adding
-
-  const price = (
-    <p className={`type-price shrink-0 tabular-nums ${overlay ? 'text-white' : 'text-price'}`}>{formatMoney(item.price_cents)}</p>
-  )
-  const text = (
-    <div className="flex-1 space-y-2">
-      <Badges badges={item.badges} shape={cards.badge_shape} />
-      <div className="space-y-1">
-        <div className="flex items-start justify-between gap-4">
-          <h3 className={`type-product-name flex-1 text-pretty ${overlay ? 'text-white' : 'text-ink'}`}>{item.name}</h3>
-          {priceBesideName && price}
-        </div>
-        {item.description && clamp && (
-          <p className={`type-description ${clamp} text-pretty ${overlay ? 'text-white/85' : 'text-muted'}`}>{item.description}</p>
-        )}
-      </div>
-    </div>
-  )
-  const button = <AddButton name={item.name} cards={cards} onClick={() => setAdding(true)} />
-  const footer =
-    priceBesideName ? (
-      button
-    ) : (
-      <div className="flex items-center justify-between gap-4">
-        {price}
-        {button}
-      </div>
-    )
-  // Closing unmounts the form, so the next open starts again from one dish and no options.
-  const form = <AddLineForm item={item} onAdd={onAdd} onDone={() => setAdding(false)} />
-  const shell = `h-full overflow-hidden bg-surface ${cardShellClass(cards)}`
-
-  if (overlay) {
-    return (
-      <article className={`flex flex-col ${shell}`}>
-        {/* The image fills the card; the text sits at its foot over a dark scrim, and a long text grows the card. */}
-        {/* One column as wide as the card (never as wide as the text), so long texts wrap inside it. */}
-        <div className="relative grid flex-1 grid-cols-[minmax(0,1fr)]">
-          <img src={image} alt={item.name} loading="lazy" className={`absolute inset-0 h-full w-full bg-subtle ${cardFitClass(cards)}`} />
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent"
-            style={{ opacity: cards.overlay_opacity / 100 }}
-          />
-          <div aria-hidden className={`[grid-area:1/1] w-full ${cardAspectClass(cards)}`} />
-          <div className={`relative flex min-w-0 flex-col gap-4 self-end [grid-area:1/1] ${padding}`}>
-            {text}
-            {!adding && footer}
-          </div>
-        </div>
-        {adding && <div className={padding}>{form}</div>}
-      </article>
-    )
-  }
-
-  const horizontal = template === 'horizontal'
-  const direction = horizontal ? (cards.image.position === 'right' ? 'flex-row-reverse' : 'flex-row') : 'flex-col'
-  return (
-    <article className={`flex ${direction} ${shell}`}>
-      {image && (
-        <img
-          src={image}
-          alt={item.name}
-          loading="lazy"
-          className={horizontal ? `w-28 shrink-0 bg-subtle ${cardFitClass(cards)} @2xl:w-40` : `w-full bg-subtle ${cardImageClass(cards)}`}
-        />
-      )}
-      <div className={`flex min-w-0 flex-1 flex-col gap-4 ${padding}`}>
-        {text}
-        {adding ? form : footer}
-      </div>
-    </article>
-  )
-}
+import { ProductCard } from './ProductCard.tsx'
 
 interface MenuBrowserProps {
   categories: MenuCategory[]
@@ -202,11 +70,12 @@ interface ProductsProps {
   onAdd: MenuBrowserProps['onAdd']
 }
 
+/** The products of one category: its own view, columns and card template when it has them, else the general ones. */
 function Products({ category, layout, cards, onAdd }: ProductsProps) {
   const { items: gap } = densitySpacing(layout.density)
-  const template = cardTemplate(layout.product_view, cards.template)
+  const { product_view, columns, template } = categoryArrangement(layout, cards, category.id)
   const card = (item: MenuItem) => (
-    <ItemCard
+    <ProductCard
       key={item.id}
       item={item}
       cards={cards}
@@ -214,8 +83,8 @@ function Products({ category, layout, cards, onAdd }: ProductsProps) {
       onAdd={(quantity, note, optionIds) => onAdd(item.id, quantity, note, optionIds)}
     />
   )
-  if (layout.product_view === 'list') return <div className={`flex flex-col ${gap}`}>{category.items.map(card)}</div>
-  if (layout.product_view === 'carousel') {
+  if (product_view === 'list') return <div className={`flex flex-col ${gap}`}>{category.items.map(card)}</div>
+  if (product_view === 'carousel') {
     return (
       <div
         role="region"
@@ -231,7 +100,7 @@ function Products({ category, layout, cards, onAdd }: ProductsProps) {
       </div>
     )
   }
-  return <div className={`grid ${gap} ${gridColumnsClass(layout.columns)}`}>{category.items.map(card)}</div>
+  return <div className={`grid ${gap} ${gridColumnsClass(columns)}`}>{category.items.map(card)}</div>
 }
 
 interface CategoryNavProps {

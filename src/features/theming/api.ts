@@ -98,6 +98,16 @@ export type ProductView = 'grid' | 'list' | 'carousel'
 export type Density = 'compact' | 'comfortable' | 'spacious'
 export type CategoryHeader = 'plain' | 'underline' | 'band'
 export type CartStyle = 'bar' | 'panel' | 'floating'
+/** The parts of the menu's top, drawn in the order the theme lists them (the logo goes with the name). */
+export type HeaderBlock = 'banner' | 'name' | 'tagline' | 'welcome'
+
+/** How one category shows its products instead of the general layout and card template. */
+export interface CategoryLayout {
+  product_view: ProductView
+  /** Grid columns on wide screens (1-4). */
+  columns: number
+  card_template: CardTemplate
+}
 
 export interface ThemeLayout {
   navigation: Navigation
@@ -111,6 +121,10 @@ export interface ThemeLayout {
   show_tagline: boolean
   show_welcome: boolean
   cart: CartStyle
+  /** A permutation of every header block; the `show_*` flags still hide some. */
+  header_blocks: HeaderBlock[]
+  /** Per category id: its own product view, columns and card template; any other category uses the general ones. */
+  categories: Record<string, CategoryLayout>
 }
 
 export type CardTemplate = 'vertical' | 'horizontal' | 'overlay'
@@ -128,6 +142,8 @@ export type ButtonShape = 'square' | 'rounded' | 'pill'
 export type CardHover = 'none' | 'lift' | 'grow'
 export type CardAnimation = 'none' | 'fade' | 'rise'
 export type BadgeShape = 'pill' | 'rounded'
+/** The parts of a product card; `heading` is the name with the price (placed by `price_position`). */
+export type CardBlock = 'image' | 'heading' | 'description' | 'badges' | 'add_button'
 
 export interface ThemeCards {
   /** Grid and carousel cards; list rows are always horizontal. */
@@ -146,10 +162,12 @@ export interface ThemeCards {
   /** % of the dark scrim under the text of the overlay template (30-90). */
   overlay_opacity: number
   badge_shape: BadgeShape
+  /** A permutation of every card block. Only the vertical template moves the image; the others keep it fixed. */
+  blocks: CardBlock[]
 }
 
 export interface Theme {
-  schema_version: 4
+  schema_version: 5
   colors: ThemeColors
   brand: ThemeBrand
   typography: Typography

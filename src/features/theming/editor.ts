@@ -1,8 +1,11 @@
 import type {
+  CardBlock,
+  CategoryLayout,
   ColorField,
   FontId,
   ImageSlot,
   FontRole,
+  HeaderBlock,
   TextElement,
   TextStyle,
   Theme,
@@ -68,6 +71,26 @@ export function withLayout(theme: Theme, changes: Partial<ThemeLayout>): Theme {
 
 export function withCards(theme: Theme, changes: Partial<ThemeCards>): Theme {
   return { ...theme, cards: { ...theme.cards, ...changes } }
+}
+
+export function withCardBlocks(theme: Theme, blocks: CardBlock[]): Theme {
+  return withCards(theme, { blocks })
+}
+
+export function withHeaderBlocks(theme: Theme, header_blocks: HeaderBlock[]): Theme {
+  return withLayout(theme, { header_blocks })
+}
+
+/** What a category starts with when it gets its own design: the general view, columns and card template. */
+export function generalCategoryLayout(theme: Theme): CategoryLayout {
+  return { product_view: theme.layout.product_view, columns: theme.layout.columns, card_template: theme.cards.template }
+}
+
+/** Gives a category its own layout, changes it, or (null) sends it back to the general layout. */
+export function withCategoryLayout(theme: Theme, categoryId: string, value: CategoryLayout | null): Theme {
+  if (value !== null) return withLayout(theme, { categories: { ...theme.layout.categories, [categoryId]: value } })
+  const categories = Object.fromEntries(Object.entries(theme.layout.categories).filter(([id]) => id !== categoryId))
+  return withLayout(theme, { categories })
 }
 
 /** A preset replaces colors, typography, layout and cards; the brand (name, texts, images) stays the tenant's. */

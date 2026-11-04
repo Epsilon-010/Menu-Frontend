@@ -1,6 +1,8 @@
+import { CategoryLayoutControls } from './CategoryLayoutControls.tsx'
 import { Choice, SwitchField } from './Choice.tsx'
-import type { CartStyle, CategoryHeader, Density, Navigation, ProductView, Theme, ThemeLayout } from './api.ts'
-import { withLayout } from './editor.ts'
+import type { CartStyle, CategoryHeader, Density, HeaderBlock, Navigation, ProductView, Theme, ThemeLayout } from './api.ts'
+import { withHeaderBlocks, withLayout } from './editor.ts'
+import { SortableBlocks } from './SortableBlocks.tsx'
 import {
   CART_STYLES,
   CATEGORY_HEADERS,
@@ -34,6 +36,13 @@ const CART_LABELS: Record<CartStyle, string> = {
 const COLUMNS = Array.from({ length: MAX_COLUMNS - MIN_COLUMNS + 1 }, (_, index) => String(MIN_COLUMNS + index))
 const COLUMN_LABELS: Record<string, string> = Object.fromEntries(COLUMNS.map((columns) => [columns, columns]))
 
+const HEADER_BLOCK_LABELS: Record<HeaderBlock, string> = {
+  banner: 'Banner',
+  name: 'Nombre y logo',
+  tagline: 'Eslogan',
+  welcome: 'Mensaje de bienvenida',
+}
+
 type Flag = 'sticky_header' | 'show_banner' | 'show_tagline' | 'show_welcome'
 
 const FLAGS: { field: Flag; label: string }[] = [
@@ -48,7 +57,10 @@ interface LayoutControlsProps {
   onChange: (theme: Theme) => void
 }
 
-/** How the menu is arranged: category navigation, product view, spacing, sections shown and the cart. */
+/**
+ * How the menu is arranged: category navigation, product view, spacing, sections shown and their order, the cart,
+ * and the categories with a design of their own.
+ */
 export function LayoutControls({ theme, onChange }: LayoutControlsProps) {
   const { layout } = theme
   const set = (changes: Partial<ThemeLayout>) => onChange(withLayout(theme, changes))
@@ -111,6 +123,16 @@ export function LayoutControls({ theme, onChange }: LayoutControlsProps) {
           <SwitchField key={field} label={label} checked={layout[field]} onChange={(checked) => set({ [field]: checked })} />
         ))}
       </fieldset>
+
+      <SortableBlocks
+        label="Orden del encabezado"
+        hint="El logo siempre va con el nombre. Lo que ocultes arriba no aparece, aunque conserve su lugar."
+        blocks={layout.header_blocks}
+        labels={HEADER_BLOCK_LABELS}
+        onChange={(blocks) => onChange(withHeaderBlocks(theme, blocks))}
+      />
+
+      <CategoryLayoutControls theme={theme} onChange={onChange} />
     </div>
   )
 }

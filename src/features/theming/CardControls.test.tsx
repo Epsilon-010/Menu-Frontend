@@ -68,4 +68,21 @@ describe('card controls', () => {
     expect(disabled(control(render({ border: { width: 'none', color: 'border' } }), 'Color del borde'))).toBe(true)
     expect(disabled(control(render(), 'Color del borde'))).toBe(false)
   })
+
+  it('list the parts of the card in the theme order, each with a drag handle and up and down buttons', () => {
+    const html = render({ blocks: ['add_button', 'image', 'heading', 'description', 'badges'] })
+    expect(html).toContain('Orden de la tarjeta')
+    const rows = [...html.matchAll(/aria-label="Arrastrar ([^"]+)"/g)].map((match) => match[1])
+    expect(rows).toEqual(['Botón de agregar', 'Imagen', 'Nombre y precio', 'Descripción', 'Etiquetas'])
+    // The first row cannot go up and the last cannot go down.
+    expect(html).toMatch(/aria-label="Subir Botón de agregar"[^>]*disabled=""/)
+    expect(html).toMatch(/aria-label="Bajar Etiquetas"[^>]*disabled=""/)
+    expect(html).not.toMatch(/aria-label="Subir Imagen"[^>]*disabled=""/)
+  })
+
+  it('say the image only moves in the vertical template', () => {
+    expect(render({ template: 'overlay' })).toContain('La imagen solo cambia de lugar con la plantilla vertical')
+    expect(render()).not.toContain('La imagen solo cambia de lugar con la plantilla vertical')
+  })
 })
+

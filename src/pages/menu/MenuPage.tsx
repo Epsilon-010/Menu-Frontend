@@ -130,6 +130,8 @@ export function MenuPage() {
   const layout = theme?.theme.layout ?? DEFAULT_LAYOUT
   const cards = theme?.theme.cards ?? DEFAULT_CARDS
   const placement = cartPlacement(layout.cart)
+  // A category of the menu with its own four-column grid widens the page as the general one does.
+  const categoryIds = menu.status === 'loaded' ? menu.data.map((category) => category.id) : []
 
   if (published.status === 'loading') {
     // A moment at most (the theme is cached): avoids showing the neutral look before the business's.
@@ -149,7 +151,7 @@ export function MenuPage() {
       signingOut={leaving}
       signOutLabel="Salir"
       fixedBar={layout.sticky_header}
-      width={menuWidthClass(layout)}
+      width={menuWidthClass(layout, categoryIds)}
     >
       <div className={`grid gap-8 pb-24 ${placement.grid}`}>
         <div className={`min-w-0 space-y-12 ${placement.main}`}>

@@ -1,4 +1,5 @@
 import { MOTION } from '../../shared/ui/classes.ts'
+import { permutationOr } from './blocks.ts'
 import type {
   AddButtonStyle,
   BadgeShape,
@@ -6,6 +7,7 @@ import type {
   BorderWidth,
   ButtonShape,
   CardAnimation,
+  CardBlock,
   CardHover,
   CardPadding,
   CardRadius,
@@ -34,6 +36,8 @@ export const BUTTON_SHAPES: ButtonShape[] = ['square', 'rounded', 'pill']
 export const CARD_HOVERS: CardHover[] = ['none', 'lift', 'grow']
 export const CARD_ANIMATIONS: CardAnimation[] = ['none', 'fade', 'rise']
 export const BADGE_SHAPES: BadgeShape[] = ['pill', 'rounded']
+/** Every card block, in the default order. */
+export const CARD_BLOCKS: CardBlock[] = ['image', 'badges', 'heading', 'description', 'add_button']
 export const MIN_DESCRIPTION_LINES = 0
 export const MAX_DESCRIPTION_LINES = 6
 export const MIN_OVERLAY_OPACITY = 30
@@ -54,6 +58,7 @@ export const DEFAULT_CARDS: ThemeCards = {
   animation: 'none',
   overlay_opacity: 60,
   badge_shape: 'pill',
+  blocks: CARD_BLOCKS,
 }
 
 // Full class names (Tailwind only generates classes it sees written out).
@@ -185,5 +190,6 @@ export function normalizeCards(raw: unknown): ThemeCards {
     animation: oneOf(value.animation, CARD_ANIMATIONS, d.animation),
     overlay_opacity: whole(value.overlay_opacity, MIN_OVERLAY_OPACITY, MAX_OVERLAY_OPACITY, d.overlay_opacity),
     badge_shape: oneOf(value.badge_shape, BADGE_SHAPES, d.badge_shape),
+    blocks: permutationOr(value.blocks, CARD_BLOCKS),
   }
 }

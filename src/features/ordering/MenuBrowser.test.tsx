@@ -187,3 +187,35 @@ describe('the product cards by the theme', () => {
     expect(pastor).toContain('motion-safe:animate-card-fade')
   })
 })
+
+describe('categories with their own design', () => {
+  it('show their products as the category says, while the others keep the general layout and cards', () => {
+    const html = render({ categories: { drinks: { product_view: 'carousel', columns: 1, card_template: 'overlay' } } })
+    expect(html).toContain('role="region" aria-label="Drinks, desliza para ver más"')
+    expect(html).not.toContain('aria-label="Tacos, desliza')
+    expect(html).toContain('grid gap-4 @[39rem]:grid-cols-2')
+  })
+
+  it('use their own columns and card template', () => {
+    const html = renderToStaticMarkup(
+      <MenuBrowser
+        categories={CATEGORIES}
+        onAdd={() => Promise.resolve(null)}
+        layout={{
+          ...DEFAULT_LAYOUT,
+          product_view: 'list',
+          categories: { tacos: { product_view: 'grid', columns: 3, card_template: 'overlay' } },
+        }}
+        cards={DEFAULT_CARDS}
+      />,
+    )
+    expect(html).toContain('grid gap-4 @[37rem]:grid-cols-3')
+    expect(card(html, 'Suadero')).toContain('style="opacity:0.6"')
+    // Drinks follows the general list.
+    expect(card(html, 'Horchata')).toContain('flex-row ')
+  })
+
+  it('ignore the design of a category that is gone', () => {
+    expect(render({ categories: { removed: { product_view: 'list', columns: 1, card_template: 'horizontal' } } })).toBe(render())
+  })
+})

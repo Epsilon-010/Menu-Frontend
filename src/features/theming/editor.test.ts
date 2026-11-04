@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { Theme, ThemeColors, ThemePreset } from './api.ts'
+import { moveBlock } from './blocks.ts'
 import {
+  generalCategoryLayout,
   keepNewerEdits,
   matchingPreset,
   parseHexInput,
@@ -11,6 +13,9 @@ import {
   withDefaults,
   withColor,
   withCards,
+  withCardBlocks,
+  withCategoryLayout,
+  withHeaderBlocks,
   withLayout,
   withMode,
   withPreset,
@@ -45,7 +50,7 @@ const LIGHT: ThemeColors = {
 const DARK: ThemeColors = { ...LIGHT, mode: 'dark', background: '#09090b', text: '#fafafa' }
 
 const THEME: Theme = {
-  schema_version: 4,
+  schema_version: 5,
   colors: LIGHT,
   brand: {
     name: '',
@@ -208,7 +213,7 @@ describe('reset, export and import', () => {
 
   it('resets everything but the brand to the default design (the first template)', () => {
     const theme = {
-      schema_version: 4,
+      schema_version: 5,
       colors: { ...LIGHT, primary: '#000000' },
       brand,
       typography: DEFAULT_TYPOGRAPHY,
@@ -246,5 +251,51 @@ describe('reset, export and import', () => {
     expect(removedImagesText(['logo', 'banner', 'background'])).toBe(
       'El logo, el banner y la imagen de fondo quedaron fuera: pertenecen a otro negocio o ya no están en tus diseños. Sube las imágenes de nuevo.',
     )
+  })
+})
+
+describe('ordering blocks', () => {
+  it('moves one block to another place and keeps every other block in order', () => {
+    expect(moveBlock(['a', 'b', 'c', 'd'], 0, 2)).toEqual(['b', 'c', 'a', 'd'])
+    expect(moveBlock(['a', 'b', 'c', 'd'], 3, 1)).toEqual(['a', 'd', 'b', 'c'])
+  })
+
+  it('leaves the list as it is for a move past either end', () => {
+    expect(moveBlock(['a', 'b'], 0, -1)).toEqual(['a', 'b'])
+    expect(moveBlock(['a', 'b'], 1, 2)).toEqual(['a', 'b'])
+    expect(moveBlock(['a', 'b'], 1, 1)).toEqual(['a', 'b'])
+  })
+
+  it('writes the new order of the card and of the header into the theme, changing nothing else', () => {
+    const cards = withCardBlocks(THEME, moveBlock(THEME.cards.blocks, 0, 4))
+    expect(cards.cards).toEqual({ ...DEFAULT_CARDS, blocks: ['badges', 'heading', 'description', 'add_button', 'image'] })
+    expect(cards.layout).toBe(THEME.layout)
+    const header = withHeaderBlocks(THEME, moveBlock(THEME.layout.header_blocks, 3, 0))
+    expect(header.layout).toEqual({ ...DEFAULT_LAYOUT, header_blocks: ['welcome', 'banner', 'name', 'tagline'] })
+    expect(header.cards).toBe(THEME.cards)
+  })
+})
+
+describe('a category with its own design', () => {
+  const BREAKFAST = '0b6c1a52-7a0e-4f4e-9d77-0d2a8c6e1f11'
+  const DRINKS = '5e0f7c33-1b8d-4c2a-a1f9-3d6b2e9c4a22'
+
+  it('starts from the general view, columns and card template', () => {
+    const theme = withCards(withLayout(THEME, { product_view: 'carousel', columns: 3 }), { template: 'overlay' })
+    expect(generalCategoryLayout(theme)).toEqual({ product_view: 'carousel', columns: 3, card_template: 'overlay' })
+  })
+
+  it('is written under its id, changed in place, and removed when it goes back to the general layout', () => {
+    const breakfast = { product_view: 'list', columns: 1, card_template: 'horizontal' } as const
+    const drinks = { product_view: 'grid', columns: 3, card_template: 'vertical' } as const
+    const both = withCategoryLayout(withCategoryLayout(THEME, BREAKFAST, breakfast), DRINKS, drinks)
+    expect(both.layout.categories).toEqual({ [BREAKFAST]: breakfast, [DRINKS]: drinks })
+    const changed = withCategoryLayout(both, BREAKFAST, { ...breakfast, product_view: 'carousel' })
+    expect(Object.keys(changed.layout.categories)).toEqual([BREAKFAST, DRINKS])
+    expect(changed.layout.categories[BREAKFAST].product_view).toBe('carousel')
+    const removed = withCategoryLayout(changed, BREAKFAST, null)
+    expect(removed.layout.categories).toEqual({ [DRINKS]: drinks })
+    expect(removed.layout).toEqual({ ...DEFAULT_LAYOUT, categories: { [DRINKS]: drinks } })
+    expect(THEME.layout.categories).toEqual({})
   })
 })

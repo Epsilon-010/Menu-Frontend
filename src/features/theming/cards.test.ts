@@ -33,6 +33,7 @@ describe('product cards', () => {
       animation: 'none',
       overlay_opacity: 60,
       badge_shape: 'pill',
+      blocks: ['image', 'badges', 'heading', 'description', 'add_button'],
     })
     expect(cardShellClass(DEFAULT_CARDS)).toBe('rounded-2xl border border-line')
     expect(cardImageClass(DEFAULT_CARDS)).toBe('aspect-[4/3] object-cover')
@@ -94,5 +95,13 @@ describe('product cards', () => {
       overlay_opacity: 75,
       hover: 'lift',
     })
+  })
+
+  it('keep the order of their blocks when it lists each block once, and the default order otherwise', () => {
+    const blocks = ['add_button', 'badges', 'heading', 'image', 'description'] as const
+    expect(normalizeCards({ ...DEFAULT_CARDS, blocks }).blocks).toEqual(blocks)
+    for (const odd of [undefined, {}, ['image'], ['image', 'heading', 'description', 'badges', 'badges'], ['image', 'heading', 'description', 'badges', 'price']]) {
+      expect(normalizeCards({ ...DEFAULT_CARDS, blocks: odd }).blocks).toEqual(DEFAULT_CARDS.blocks)
+    }
   })
 })

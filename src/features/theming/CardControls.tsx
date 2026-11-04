@@ -5,6 +5,7 @@ import type {
   BorderWidth,
   ButtonShape,
   CardAnimation,
+  CardBlock,
   CardHover,
   CardPadding,
   CardRadius,
@@ -39,13 +40,21 @@ import {
   PRICE_POSITIONS,
 } from './cards.ts'
 import { Choice, SliderField } from './Choice.tsx'
-import { withCards } from './editor.ts'
+import { withCardBlocks, withCards } from './editor.ts'
+import { SortableBlocks } from './SortableBlocks.tsx'
 
 // Records keyed by every option: a new option cannot ship without its label.
 const TEMPLATE_LABELS: Record<CardTemplate, string> = {
   vertical: 'Vertical: imagen arriba',
   horizontal: 'Horizontal: imagen junto al texto',
   overlay: 'Imagen completa con el texto encima',
+}
+const BLOCK_LABELS: Record<CardBlock, string> = {
+  image: 'Imagen',
+  heading: 'Nombre y precio',
+  description: 'Descripción',
+  badges: 'Etiquetas',
+  add_button: 'Botón de agregar',
 }
 const ASPECT_LABELS: Record<ImageAspect, string> = { square: 'Cuadrada', landscape: '4:3', wide: '16:9' }
 const FIT_LABELS: Record<ImageFit, string> = { cover: 'Llenar y recortar', contain: 'Mostrarla completa' }
@@ -89,7 +98,7 @@ interface CardControlsProps {
   onChange: (theme: Theme) => void
 }
 
-/** How each product card looks: template, image, shape, add button, motion and badges. */
+/** How each product card looks: template, order of its parts, image, shape, add button, motion and badges. */
 export function CardControls({ theme, onChange }: CardControlsProps) {
   const { cards } = theme
   const set = (changes: Partial<ThemeCards>) => onChange(withCards(theme, changes))
@@ -109,6 +118,18 @@ export function CardControls({ theme, onChange }: CardControlsProps) {
             ? 'La vista de lista siempre dibuja filas horizontales; la plantilla aplica a la cuadrícula y al carrusel.'
             : 'Los productos sin imagen muestran una tarjeta simple.'
         }
+      />
+
+      <SortableBlocks
+        label="Orden de la tarjeta"
+        hint={
+          cards.template === 'vertical' && !listView
+            ? 'El precio sigue la opción Precio: junto al nombre o junto al botón.'
+            : 'La imagen solo cambia de lugar con la plantilla vertical; aquí queda fija y se ordena el texto.'
+        }
+        blocks={cards.blocks}
+        labels={BLOCK_LABELS}
+        onChange={(blocks) => onChange(withCardBlocks(theme, blocks))}
       />
 
       <fieldset className="grid gap-4 @sm:grid-cols-2 @md:grid-cols-3">

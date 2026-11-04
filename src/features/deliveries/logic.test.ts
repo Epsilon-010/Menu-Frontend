@@ -211,3 +211,10 @@ describe('deliveredNotes', () => {
     expect(deliveredNotes(tables([large]))[0].delivered).toEqual(['2 × Dish a (Size: Large)'])
   })
 })
+
+describe('deliveredNotes pending count', () => {
+  it('counts the dishes still owed by quantity, not by line', () => {
+    const board = tables([tableItem('a', 'delivered'), { ...tableItem('b', 'ready'), quantity: 3 }])
+    expect(deliveredNotes(board)[0].pending).toBe(3)
+  })
+})

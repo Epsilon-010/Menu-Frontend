@@ -114,7 +114,7 @@ export interface DeliveredNote {
   sent_at: string
   /** Like "2 × Tacos (Meat: Pastor)". */
   delivered: string[]
-  /** Dishes not delivered yet; rejected ones are not owed. */
+  /** Dishes not delivered yet, by quantity; rejected ones are not owed. */
   pending: number
 }
 
@@ -131,7 +131,9 @@ export function deliveredNotes(tables: TableOverview[]): DeliveredNote[] {
         order_number: order.number,
         sent_at: order.created_at,
         delivered: delivered.map((item) => `${item.quantity} × ${dishLabel(item.name, item.modifiers)}`),
-        pending: order.items.filter((item) => item.status !== 'delivered' && item.status !== 'cancelled').length,
+        pending: order.items
+          .filter((item) => item.status !== 'delivered' && item.status !== 'cancelled')
+          .reduce((total, item) => total + item.quantity, 0),
       })
     }
   }

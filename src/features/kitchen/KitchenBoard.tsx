@@ -51,7 +51,7 @@ export function KitchenBoard() {
             Las órdenes nuevas llegan aquí en cuanto una mesa las envía, de la más antigua a la más reciente. Tú eliges qué platillos empezar.
           </EmptyState>
         ) : (
-          <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid items-start gap-6 lg:grid-cols-2 2xl:grid-cols-3">
             {orders.map((order) => (
               <KitchenOrderCard
                 key={order.id}

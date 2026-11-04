@@ -1,5 +1,6 @@
-import { BellRingingIcon, ProhibitIcon, XIcon } from '@phosphor-icons/react'
+import { ArrowDownIcon, BellRingingIcon, ProhibitIcon, XIcon } from '@phosphor-icons/react'
 import { useCallback, useRef, useState } from 'react'
+import { Button } from '../../components/ui/button.tsx'
 import { IconButton } from '../../shared/ui/Button.tsx'
 import { useNow } from '../../shared/ui/useNow.ts'
 import { useSoundAlert } from '../../shared/sound/useSoundAlert.ts'
@@ -75,7 +76,7 @@ export function ServiceBoard() {
       {requests.length > 0 && (
         <div
           role="alert"
-          className="sticky top-20 z-10 space-y-2 rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm"
+          className="sticky top-20 z-10 space-y-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 shadow-md"
         >
           <p className="flex items-center gap-2 font-semibold text-amber-900">
             <BellRingingIcon size={18} aria-hidden />
@@ -84,13 +85,13 @@ export function ServiceBoard() {
           <ul className="flex flex-wrap gap-2">
             {requests.map((request) => (
               <li key={request.bill_id}>
-                <button
-                  type="button"
+                <Button
+                  className="min-h-11 border-amber-300 text-amber-900 hover:border-amber-400 hover:bg-amber-100"
                   onClick={() => goToTable(request.table_id)}
-                  className="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-amber-900 ring-1 ring-amber-200 hover:bg-amber-100 focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:outline-none"
                 >
+                  <ArrowDownIcon size={16} aria-hidden />
                   {request.table_name} · {clockTime(request.requested_at)}
-                </button>
+                </Button>
               </li>
             ))}
           </ul>
@@ -98,7 +99,7 @@ export function ServiceBoard() {
       )}
 
       {rejections.length > 0 && (
-        <div role="alert" className="space-y-2 rounded-2xl border border-red-200 bg-red-50 p-4">
+        <div role="alert" className="space-y-3 rounded-2xl border border-red-200 bg-red-50 p-4">
           <div className="flex items-start justify-between gap-4">
             <p className="flex items-center gap-2 font-semibold text-red-900">
               <ProhibitIcon size={18} aria-hidden />

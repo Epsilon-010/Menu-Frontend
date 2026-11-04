@@ -1,11 +1,12 @@
-import { CheckIcon } from '@phosphor-icons/react'
+import { CheckCircleIcon, CheckIcon } from '@phosphor-icons/react'
 import type { ReactNode } from 'react'
+import { cn } from '../../lib/utils.ts'
 import { Button } from '../../shared/ui/Button.tsx'
-import { Badge, ErrorText } from '../../shared/ui/Feedback.tsx'
+import { ErrorText } from '../../shared/ui/Feedback.tsx'
 import { useRowAction } from '../../shared/ui/useRowAction.ts'
 import type { StaffOrder, StaffOrderItem } from '../kitchen/api.ts'
-import { staffItemLabel, staffItemTone } from '../kitchen/logic.ts'
 import { OrderTicketHeader } from '../kitchen/OrderTicketHeader.tsx'
+import { StatusBadge } from '../kitchen/StatusBadge.tsx'
 import { rejectionNote } from '../ordering/logic.ts'
 import { modifierSummary } from '../ordering/modifiers.ts'
 import { deliveryCounter, deliveryProgress, splitDelivery, visibleSections, type DeliverySection, type DeliveryView } from './logic.ts'
@@ -29,17 +30,17 @@ const SECTION_TITLES: Record<DeliverySection, string> = {
 function DishLine({ item, children }: { item: StaffOrderItem; children?: ReactNode }) {
   const note = rejectionNote(item)
   return (
-    <li className="flex items-start justify-between gap-4 rounded-xl p-2 text-sm">
+    <li className="flex items-center justify-between gap-3 py-2 text-sm">
       <div className="min-w-0 space-y-1">
-        <p className={item.status === 'cancelled' ? 'text-zinc-400 line-through' : 'text-zinc-950'}>
-          <span className="font-semibold tabular-nums">{item.quantity} ×</span> {item.name}
-          <span className="text-zinc-500"> · {item.added_by}</span>
+        <p className={item.status === 'cancelled' ? 'text-faint line-through' : 'text-ink'}>
+          <span className="font-semibold tabular-nums">{item.quantity} ×</span> <span className="font-medium">{item.name}</span>
+          <span className="text-muted"> · {item.added_by}</span>
         </p>
-        {item.modifiers.length > 0 && <p className="text-zinc-600">{modifierSummary(item.modifiers)}</p>}
+        {item.modifiers.length > 0 && <p className="text-ink-soft">{modifierSummary(item.modifiers)}</p>}
         {item.note && <p className="text-amber-800">Nota: {item.note}</p>}
         {note && <p className="font-medium text-red-700">{note}</p>}
       </div>
-      {children ?? (item.status !== 'cancelled' && <Badge tone={staffItemTone(item.status)}>{staffItemLabel(item.status)}</Badge>)}
+      {children ?? (item.status !== 'cancelled' && <StatusBadge status={item.status} className="shrink-0" />)}
     </li>
   )
 }
@@ -57,7 +58,10 @@ export function DeliveryOrderCard({ order, now, late, view, onDeliver }: Deliver
     <article
       aria-busy={busy}
       aria-label={deliveryCounter(order)}
-      className={`flex flex-col gap-4 rounded-2xl border bg-white p-4 ${late ? 'border-red-300 ring-2 ring-red-200' : 'border-zinc-200'}`}
+      className={cn(
+        'flex flex-col gap-4 rounded-2xl border bg-surface p-4 shadow-xs',
+        late ? 'border-red-300 ring-2 ring-red-200' : 'border-line',
+      )}
     >
       <OrderTicketHeader
         order={order}
@@ -69,7 +73,7 @@ export function DeliveryOrderCard({ order, now, late, view, onDeliver }: Deliver
             <span className="whitespace-nowrap">
               {order.table_name} · Orden #{order.number}
             </span>{' '}
-            <span className="whitespace-nowrap font-normal text-zinc-500">· {deliveryProgress(order)}</span>
+            <span className="whitespace-nowrap font-normal text-muted">· {deliveryProgress(order)}</span>
           </>
         }
       />
@@ -77,17 +81,19 @@ export function DeliveryOrderCard({ order, now, late, view, onDeliver }: Deliver
       {visibleSections(view).map((section) => {
         const items = groups[section]
         if (items.length === 0) return null
-        return (
-          <section key={section} className="space-y-1">
-            <h3 className={`text-xs font-semibold uppercase tracking-wide ${section === 'ready' ? 'text-emerald-700' : 'text-zinc-500'}`}>
-              {SECTION_TITLES[section]} ({items.length})
-            </h3>
-            <ul className={section === 'ready' ? 'rounded-xl bg-emerald-50' : ''}>
-              {items.map((item) =>
-                section === 'ready' ? (
+        if (section === 'ready') {
+          return (
+            <section key={section} className="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-emerald-800">
+                <CheckCircleIcon size={18} weight="fill" aria-hidden />
+                {SECTION_TITLES[section]} ({items.length})
+              </h3>
+              <ul className="divide-y divide-emerald-200">
+                {items.map((item) => (
                   <DishLine key={item.id} item={item}>
                     <Button
                       variant="secondary"
+                      className="min-h-11 shrink-0"
                       icon={<CheckIcon size={16} aria-hidden />}
                       disabled={busy}
                       onClick={() => deliver([item.id])}
@@ -95,10 +101,20 @@ export function DeliveryOrderCard({ order, now, late, view, onDeliver }: Deliver
                       Entregar
                     </Button>
                   </DishLine>
-                ) : (
-                  <DishLine key={item.id} item={item} />
-                ),
-              )}
+                ))}
+              </ul>
+            </section>
+          )
+        }
+        return (
+          <section key={section} className="space-y-1 px-1">
+            <h3 className="text-xs font-semibold tracking-wide text-muted uppercase">
+              {SECTION_TITLES[section]} ({items.length})
+            </h3>
+            <ul className="divide-y divide-line">
+              {items.map((item) => (
+                <DishLine key={item.id} item={item} />
+              ))}
             </ul>
           </section>
         )
@@ -107,8 +123,9 @@ export function DeliveryOrderCard({ order, now, late, view, onDeliver }: Deliver
       {groups.ready.length > 1 && (
         <Button
           variant="primary"
-          className="mt-auto"
-          icon={<CheckIcon size={16} aria-hidden />}
+          size="md"
+          className="mt-auto min-h-12 w-full"
+          icon={<CheckIcon size={20} aria-hidden />}
           disabled={busy}
           onClick={() => deliver(groups.ready.map((item) => item.id))}
         >

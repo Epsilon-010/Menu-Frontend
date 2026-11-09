@@ -5,6 +5,7 @@ import { SectionHeader } from '../../shared/ui/Section.tsx'
 import { OrdersError, updateItemStatus } from '../kitchen/api.ts'
 import {
   addOrderDish,
+  BillChangedError,
   BillError,
   closeTable,
   dismissBillRequest,
@@ -94,7 +95,9 @@ export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = 
     try {
       await action()
     } catch (error) {
-      void reload()
+      // The waiter is asked to confirm the new total, so it must be on screen before the question.
+      if (error instanceof BillChangedError) await reload()
+      else void reload()
       return messageOf(error)
     }
     if (!(await reload())) setStale(true)
@@ -105,8 +108,8 @@ export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = 
     const bill = table.bill
     return {
       onOpen: () => act(() => openTable(table.table_id)),
-      onPay: (method: PaymentMethod) =>
-        bill ? act(() => registerPayment(bill.id, method)) : Promise.resolve('Esta mesa no está abierta.'),
+      onPay: (method: PaymentMethod, expectedTotalCents: number) =>
+        bill ? act(() => registerPayment(bill.id, method, expectedTotalCents)) : Promise.resolve('Esta mesa no está abierta.'),
       onClose: () => (bill ? act(() => closeTable(bill.id)) : Promise.resolve(null)),
       onDismissRequest: () => (bill ? act(() => dismissBillRequest(bill.id)) : Promise.resolve(null)),
       onCancelDish: (orderId: string, itemId: string, reason: string) =>

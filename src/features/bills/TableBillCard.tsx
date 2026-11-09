@@ -9,7 +9,7 @@ import {
   WalletIcon,
   XCircleIcon,
 } from '@phosphor-icons/react'
-import { useState, type ReactNode } from 'react'
+import { useReducer, type ReactNode } from 'react'
 import { Badge } from '../../components/ui/badge.tsx'
 import {
   Dialog,
@@ -28,6 +28,7 @@ import { formatMoney } from '../catalog/price.ts'
 import { OrderCard } from '../ordering/OrderCard.tsx'
 import { clockTime } from '../ordering/logic.ts'
 import { PAYMENT_METHODS, type NewOrderDish, type PaymentMethod, type TableOverview } from './api.ts'
+import { billDialogFor, billDialogReducer, NO_BILL_DIALOG } from './billDialog.ts'
 import { AddDishControl, CancelDishControl } from './DishCorrections.tsx'
 import { acceptsNewDishes, canCancelDish, hasSomethingToCharge, tableCardId } from './logic.ts'
 
@@ -37,13 +38,12 @@ const METHOD_ICONS: Record<PaymentMethod, ReactNode> = {
   other: <WalletIcon size={18} aria-hidden />,
 }
 
-type Mode = { kind: 'view' } | { kind: 'pay'; method: PaymentMethod } | { kind: 'confirm-close' }
-
 interface TableBillCardProps {
   table: TableOverview
   /** Each action resolves to an error message, or null when it was done. */
   onOpen: () => Promise<string | null>
-  onPay: (method: PaymentMethod) => Promise<string | null>
+  /** `expectedTotalCents` is the total on screen when the waiter confirmed. */
+  onPay: (method: PaymentMethod, expectedTotalCents: number) => Promise<string | null>
   onClose: () => Promise<string | null>
   /** The waiter attended the table that asked for the bill. */
   onDismissRequest: () => Promise<string | null>
@@ -62,18 +62,21 @@ export function TableBillCard({
   onCancelDish,
   onAddDish,
 }: TableBillCardProps) {
-  const [mode, setMode] = useState<Mode>({ kind: 'view' })
-  const { busy, error, run: runAction } = useRowAction()
+  const [dialog, dispatch] = useReducer(billDialogReducer, NO_BILL_DIALOG)
+  const { busy, run: runAction } = useRowAction()
   const { bill } = table
+  const billId = bill?.id ?? null
   const requestedAt = bill?.bill_requested_at ?? null
+  const { mode, error } = billDialogFor(dialog, billId)
 
-  function run(action: () => Promise<string | null>) {
-    return runAction(action, () => setMode({ kind: 'view' }))
+  async function run(action: () => Promise<string | null>) {
+    const failure = await runAction(action)
+    dispatch({ type: 'settled', billId, error: failure })
   }
 
   /** Closing a confirmation while it is being saved would hide its outcome. */
   function closeDialog() {
-    if (!busy) setMode({ kind: 'view' })
+    if (!busy) dispatch({ type: 'dismiss' })
   }
 
   return (
@@ -181,7 +184,7 @@ export function TableBillCard({
               className="min-h-12 w-full sm:w-auto"
               icon={<MoneyIcon size={20} aria-hidden />}
               disabled={busy}
-              onClick={() => setMode({ kind: 'pay', method: 'cash' })}
+              onClick={() => dispatch({ type: 'open', billId: bill.id, mode: { kind: 'pay', method: 'cash' } })}
             >
               Registrar pago
             </Button>
@@ -192,7 +195,7 @@ export function TableBillCard({
               className="min-h-12 w-full sm:w-auto"
               icon={<XCircleIcon size={20} aria-hidden />}
               disabled={busy}
-              onClick={() => setMode({ kind: 'confirm-close' })}
+              onClick={() => dispatch({ type: 'open', billId: bill.id, mode: { kind: 'confirm-close' } })}
             >
               Cerrar mesa
             </Button>
@@ -221,7 +224,7 @@ export function TableBillCard({
                 disabled={busy}
                 aria-labelledby={`method-${bill.id}`}
                 // Pressing the chosen method again would clear it; a payment always has a method.
-                onValueChange={(next) => next && setMode({ kind: 'pay', method: next as PaymentMethod })}
+                onValueChange={(next) => next && dispatch({ type: 'method', method: next as PaymentMethod })}
               >
                 {PAYMENT_METHODS.map((option) => (
                   <ToggleGroupItem key={option.value} value={option.value} className="min-h-11 text-base">
@@ -242,7 +245,7 @@ export function TableBillCard({
                 className="min-h-11"
                 disabled={busy}
                 onClick={() => {
-                  if (mode.kind === 'pay') void run(() => onPay(mode.method))
+                  if (mode.kind === 'pay') void run(() => onPay(mode.method, bill.total_cents))
                 }}
               >
                 {busy ? 'Registrando…' : `Registrar pago de ${formatMoney(bill.total_cents)}`}

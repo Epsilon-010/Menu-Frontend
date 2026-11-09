@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { Order } from './api.ts'
+import { formatMoney } from '../catalog/price.ts'
 import {
+  cartBarTotal,
   cartVersionOf,
   createOrderSender,
   groupByPerson,
@@ -138,6 +140,24 @@ describe('createOrderSender', () => {
     const { orders } = sender(order)
 
     await expect(orders.send(3)).resolves.toBe(order)
+  })
+})
+
+describe('cartBarTotal', () => {
+  it('shows the total of a loaded cart', () => {
+    expect(cartBarTotal({ status: 'loaded', data: { total_cents: 1250 } })).toBe(formatMoney(1250))
+  })
+
+  it('shows a loaded empty cart as zero, because that total is known', () => {
+    expect(cartBarTotal({ status: 'loaded', data: { total_cents: 0 } })).toBe(formatMoney(0))
+  })
+
+  it('has no amount while the cart loads', () => {
+    expect(cartBarTotal({ status: 'loading' })).toBeNull()
+  })
+
+  it('says the total is unavailable when the cart failed to load', () => {
+    expect(cartBarTotal({ status: 'error' })).toBe('No disponible')
   })
 })
 

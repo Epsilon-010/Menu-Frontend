@@ -2,11 +2,10 @@ import { CheckCircleIcon, ReceiptIcon, ShoppingBagIcon, XIcon } from '@phosphor-
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../features/auth/useAuth.ts'
 import { useSessionHeartbeat } from '../../features/auth/useSessionHeartbeat.ts'
-import { formatMoney } from '../../features/catalog/price.ts'
 import type { Cart, Order } from '../../features/ordering/api.ts'
 import { BillRequestControl } from '../../features/ordering/BillRequestControl.tsx'
 import { CartContents } from '../../features/ordering/CartContents.tsx'
-import { dishCount, hasSomethingToPay } from '../../features/ordering/logic.ts'
+import { cartBarTotal, dishCount, hasSomethingToPay } from '../../features/ordering/logic.ts'
 import { MenuBrowser } from '../../features/ordering/MenuBrowser.tsx'
 import { OrderCard } from '../../features/ordering/OrderCard.tsx'
 import { SendConfirmation } from '../../features/ordering/SendConfirmation.tsx'
@@ -124,6 +123,7 @@ export function MenuPage() {
 
   const loadedCart = cart.status === 'loaded' ? cart.data : null
   const count = loadedCart ? dishCount(loadedCart) : 0
+  const barTotal = cartBarTotal(cart)
   const theme = published.status === 'loaded' ? published.data : null
   const logoId = theme?.theme.brand.logo.image_id
   const logoUrl = theme && logoId ? theme.image_urls[logoId] : undefined
@@ -205,7 +205,11 @@ export function MenuPage() {
             Pedido de la mesa
             {count > 0 && <span className="rounded-md bg-badge px-2 text-sm text-badge-ink tabular-nums">{count}</span>}
           </span>
-          <span className="text-base font-semibold tabular-nums">{formatMoney(loadedCart?.total_cents ?? 0)}</span>
+          {barTotal === null ? (
+            <span role="status" aria-label="Cargando el total" className="h-6 w-16 animate-pulse rounded-lg bg-cart-ink/30" />
+          ) : (
+            <span className="text-base font-semibold tabular-nums">{barTotal}</span>
+          )}
         </button>
       </div>
 

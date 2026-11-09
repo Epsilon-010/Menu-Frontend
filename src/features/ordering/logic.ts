@@ -1,5 +1,6 @@
 /** Pure rules of the table screen, kept apart from React so they can be tested on their own. */
 import { createDraftIds } from '../../shared/api/idempotency.ts'
+import { formatMoney } from '../catalog/price.ts'
 import type { Cart, CartLine, Order, OrderItemStatus, OrderStatus } from './api.ts'
 
 export interface PersonLines<Line> {
@@ -44,6 +45,17 @@ export function cartVersionOf(data: string): number | null {
 /** How many dishes the cart holds (quantities added up), unavailable ones excluded. */
 export function dishCount(cart: Cart): number {
   return cart.lines.reduce((count, line) => count + (line.available ? line.quantity : 0), 0)
+}
+
+/**
+ * What the cart bar shows as the total: the amount of a loaded cart, null while it loads (the bar draws a placeholder)
+ * and a note when it failed. Never $0.00 for a cart nobody has seen yet.
+ */
+export function cartBarTotal(
+  cart: { status: 'loading' } | { status: 'error' } | { status: 'loaded'; data: Pick<Cart, 'total_cents'> },
+): string | null {
+  if (cart.status === 'loading') return null
+  return cart.status === 'loaded' ? formatMoney(cart.data.total_cents) : 'No disponible'
 }
 
 /** Names of the cart lines whose items the server reported as no longer available. */

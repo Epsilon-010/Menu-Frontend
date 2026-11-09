@@ -2,6 +2,7 @@ import { QrCodeIcon } from '@phosphor-icons/react'
 import { useState, type FormEvent } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { accountRole, GUEST_NAME_MAX_LENGTH, homePathFor, QrJoinError } from '../features/auth/api.ts'
+import { joinedWithQr } from '../features/auth/guestMarker.ts'
 import { useAuth } from '../features/auth/useAuth.ts'
 import { buttonClass } from '../shared/ui/classes.ts'
 import { Field, TextInput } from '../shared/ui/Field.tsx'
@@ -16,7 +17,8 @@ export function JoinTablePage() {
   const [error, setError] = useState<string | null>(null)
   const [joining, setJoining] = useState(false)
 
-  if (state.status === 'authenticated' && accountRole(state.account) === 'guest') {
+  // Only this table's guest goes straight to the menu; a guest of another table may join this one.
+  if (state.status === 'authenticated' && accountRole(state.account) === 'guest' && joinedWithQr(token)) {
     return <Navigate to={homePathFor('guest')} replace />
   }
 

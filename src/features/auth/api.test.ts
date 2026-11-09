@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { accountRole, homePathFor, qrLogin, QrJoinError, type Account } from './api.ts'
+import { joinedWithQr } from './guestMarker.ts'
 
 function problem(status: number, detail: string): Response {
   return new Response(JSON.stringify({ type: 'about:blank', title: 'Problem', status, detail }), {
@@ -35,7 +36,41 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+function stubStorage() {
+  const entries = new Map<string, string>()
+  vi.stubGlobal('window', {
+    localStorage: {
+      getItem: (key: string) => entries.get(key) ?? null,
+      setItem: (key: string, value: string) => entries.set(key, value),
+      removeItem: (key: string) => entries.delete(key),
+    },
+  })
+}
+
 describe('qrLogin', () => {
+  it('remembers the QR the guest joined with', async () => {
+    stubStorage()
+    stubFetch(new Response(JSON.stringify({ expires_in: 900, role: 'guest' }), { status: 200 }))
+
+    await qrLogin('qr-a')
+
+    expect(joinedWithQr('qr-a')).toBe(true)
+    expect(joinedWithQr('qr-b')).toBe(false)
+  })
+
+  it('keeps the current table when joining another one fails', async () => {
+    stubStorage()
+    stubFetch(
+      new Response(JSON.stringify({ expires_in: 900, role: 'guest' }), { status: 200 }),
+      problem(409, 'This visit is full'),
+    )
+
+    await qrLogin('qr-a')
+    await qrLogin('qr-b').catch(() => null)
+
+    expect(joinedWithQr('qr-a')).toBe(true)
+  })
+
   it('joins with the token and the trimmed name, and leaves out an empty name', async () => {
     const calls = stubFetch(
       new Response(JSON.stringify({ expires_in: 900, role: 'guest' }), { status: 200 }),

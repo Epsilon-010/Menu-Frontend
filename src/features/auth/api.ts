@@ -1,4 +1,5 @@
 import { apiFetch, publicFetch, type Role, type SessionInfo } from '../../shared/api/http.ts'
+import { rememberGuestQr } from './guestMarker.ts'
 
 /**
  * Staff accounts carry `user`; table tablets carry `table`; guests who scanned the table's QR carry
@@ -100,7 +101,11 @@ export async function qrLogin(token: string, name?: string): Promise<SessionInfo
   } catch {
     throw new QrJoinError(OFFLINE)
   }
-  if (response.ok) return (await response.json()) as SessionInfo
+  if (response.ok) {
+    // Before the session is shown: the join page redirects as soon as this guest is the signed-in account.
+    rememberGuestQr(token)
+    return (await response.json()) as SessionInfo
+  }
 
   if (response.status === 429) throw new QrJoinError('Demasiados intentos. Espera unos minutos e inténtalo de nuevo.', 429)
   const body = (await response.json().catch(() => null)) as { detail?: unknown } | null

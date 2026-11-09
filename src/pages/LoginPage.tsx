@@ -57,7 +57,8 @@ function ModeTab({ selected, onSelect, icon, children }: ModeTabProps) {
       onClick={onSelect}
       className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold ${MOTION} ${state}`}
     >
-      {icon}
+      {/* The three tabs only fit a narrow phone without their icons. */}
+      <span className="hidden sm:inline-flex">{icon}</span>
       {children}
     </button>
   )

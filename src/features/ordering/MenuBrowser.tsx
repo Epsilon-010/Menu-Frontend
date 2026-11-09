@@ -111,21 +111,27 @@ interface CategoryNavProps {
 }
 
 /** Rounded chips that jump to each section of the page. */
-function ChipsNav({ categories, stickyTop }: CategoryNavProps) {
+function ChipsNav({ categories, current, stickyTop }: CategoryNavProps) {
   return (
     // The bar has its own background: without it the cards scroll visibly behind and between the chips.
     <nav aria-label="Categorías del menú" className={`sticky ${stickyTop} z-20 -mx-4 overflow-x-auto bg-canvas/90 px-4 pb-2 backdrop-blur-md`}>
       <ul className="flex w-max gap-2">
-        {categories.map((category) => (
-          <li key={category.id}>
-            <a
-              href={`#${sectionId(category.id)}`}
-              className={`inline-flex rounded-lg border border-line bg-surface/90 px-3 py-2 text-sm font-semibold text-ink-soft backdrop-blur-md hover:bg-brand hover:text-brand-ink active:scale-[0.98] ${MOTION}`}
-            >
-              {category.name}
-            </a>
-          </li>
-        ))}
+        {categories.map((category) => {
+          const active = sectionId(category.id) === current
+          return (
+            <li key={category.id}>
+              <a
+                href={`#${sectionId(category.id)}`}
+                aria-current={active ? 'true' : undefined}
+                className={`inline-flex items-center rounded-lg border px-3 py-2 text-sm font-semibold active:scale-[0.98] pointer-coarse:min-h-11 ${MOTION} ${
+                  active ? 'border-brand bg-brand text-brand-ink' : 'border-line bg-surface/90 text-ink-soft backdrop-blur-md hover:border-line-strong hover:text-ink'
+                }`}
+              >
+                {category.name}
+              </a>
+            </li>
+          )
+        })}
       </ul>
     </nav>
   )
@@ -221,7 +227,7 @@ export function MenuBrowser({
   const withItems = categories.filter((category) => category.items.length > 0)
   const ids = withItems.map((category) => category.id)
   const [chosen, setChosen] = useState<string | null>(null)
-  const activeSection = useActiveSection(ids, layout.navigation === 'sections')
+  const activeSection = useActiveSection(ids, layout.navigation === 'sections' || layout.navigation === 'chips')
 
   if (withItems.length === 0) {
     return (
@@ -233,7 +239,8 @@ export function MenuBrowser({
 
   const spacing = densitySpacing(layout.density)
   // Below the floating page bar the category bar starts at the very top, so no card scrolls into view around that bar.
-  const stickyTop = belowFixedBar ? 'top-0 pt-20' : 'top-0 pt-2'
+  // The padding only matters once stuck: at rest the negative margin slides it behind the hero, so it leaves no blank band.
+  const stickyTop = belowFixedBar ? 'top-0 pt-20 -mt-20' : 'top-0 pt-2'
   const scrollMargin = belowFixedBar ? 'scroll-mt-32' : 'scroll-mt-16'
   const section = (category: MenuCategory): ReactNode => (
     <section key={category.id} id={sectionId(category.id)} className={`${scrollMargin} space-y-4`}>

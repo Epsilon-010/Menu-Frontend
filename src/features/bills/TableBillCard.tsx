@@ -152,9 +152,6 @@ export function TableBillCard({
           >
             {busy ? 'Abriendo…' : 'Abrir mesa'}
           </Button>
-          <p className="min-w-0 flex-1 text-sm text-pretty text-muted">
-            No hace falta abrirla: el primer comensal que escanea el QR la abre. Al cobrar se cierra la sesión de todos.
-          </p>
         </div>
       )}
 

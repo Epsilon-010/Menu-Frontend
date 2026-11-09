@@ -80,7 +80,7 @@ export function ItemRow({ item, categories, modifierGroups, isFirst, isLast, act
           {item.description && <p className="line-clamp-1 text-sm text-muted">{item.description}</p>}
         </div>
 
-        <p className="font-mono text-sm font-medium text-ink">{formatMoney(item.price_cents)}</p>
+        <p className="text-sm font-semibold text-ink tabular-nums">{formatMoney(item.price_cents)}</p>
 
         <div className="flex flex-wrap items-center gap-1">
           <Button

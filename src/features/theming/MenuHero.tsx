@@ -96,5 +96,6 @@ export function MenuHero({ theme, imageUrls, businessName }: MenuHeroProps) {
   }
   closeColumn()
 
-  return <header className="space-y-4">{parts}</header>
+  // Above the category bar, whose top padding rests behind the end of this header.
+  return <header className="relative z-30 space-y-4">{parts}</header>
 }

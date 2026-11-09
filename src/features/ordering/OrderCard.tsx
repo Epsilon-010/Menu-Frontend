@@ -40,7 +40,7 @@ export function OrderCard({ order, showPrices = true, itemActions, footer }: Ord
               {item.modifiers.length > 0 && <p className="text-muted">{modifierSummary(item.modifiers, showPrices)}</p>}
               {item.note && <p className="text-muted">{item.note}</p>}
               {item.status === 'cancelled' ? (
-                <p className="text-sm font-medium text-red-700">{rejectionNote(item)}</p>
+                <p className="text-sm font-medium text-danger">{rejectionNote(item)}</p>
               ) : (
                 <Badge tone={itemStatusTone(item.status)}>{itemStatusLabel(item.status)}</Badge>
               )}

@@ -62,7 +62,7 @@ function PresetCard({ preset, selected, onApply }: PresetCardProps) {
         </div>
       </div>
       <div className="flex flex-1 flex-col gap-1 border-t border-line bg-surface p-3">
-        <span className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+        <span className="flex items-center gap-2 text-sm font-semibold text-ink">
           {preset.name}
           {selected && <CheckCircleIcon weight="fill" aria-label="En uso" className="h-4 w-4 text-action" />}
         </span>

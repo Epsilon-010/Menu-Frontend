@@ -105,7 +105,7 @@ export function SendConfirmation({ liveCart, onSend, onSent, onClose }: SendConf
                       </p>
                       {line.modifiers.length > 0 && <p className="text-muted">{modifierSummary(line.modifiers)}</p>}
                       {line.note && <p className="text-muted">{line.note}</p>}
-                      {!line.available && <p className="text-amber-800">Ya no está disponible, no se enviará</p>}
+                      {!line.available && <p className="text-warning">Ya no está disponible, no se enviará</p>}
                     </div>
                     <span
                       className={`shrink-0 tabular-nums ${line.available ? 'text-ink' : 'text-faint line-through'}`}

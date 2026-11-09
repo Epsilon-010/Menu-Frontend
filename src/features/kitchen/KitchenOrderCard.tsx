@@ -151,7 +151,8 @@ export function KitchenOrderCard({ order, now, late, onAct }: KitchenOrderCardPr
             {allChosen ? 'Quitar selección' : 'Seleccionar todo'}
           </Button>
         </div>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {/* Only with something chosen: an idle ticket shows its dishes, not three disabled buttons. */}
+        {chosen.length > 0 && <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <Button
             variant="secondary"
             size="md"
@@ -183,7 +184,7 @@ export function KitchenOrderCard({ order, now, late, onAct }: KitchenOrderCardPr
           >
             Rechazar{count}
           </Button>
-        </div>
+        </div>}
       </div>
 
       {!rejecting && error && <ErrorText>{error}</ErrorText>}

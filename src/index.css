@@ -59,6 +59,8 @@
   --color-badge-ink: var(--color-zinc-700);
   --color-cart: var(--color-zinc-950);
   --color-cart-ink: var(--color-white);
+  --color-danger: var(--color-red-700);
+  --color-warning: var(--color-amber-800);
 }
 
 @layer base {

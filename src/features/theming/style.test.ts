@@ -50,7 +50,9 @@ describe('themeVariables', () => {
       '--color-badge-ink': '#92400e',
       '--color-cart': '#18181b',
       '--color-cart-ink': '#ffffff',
-      'color-scheme': 'light',
+      '--color-danger': '#b91c1c',
+      '--color-warning': '#92400e',
+      colorScheme: 'light',
     })
     // Derived tones sit between the text and the surface, so they follow any palette.
     expect(variables['--color-ink-soft']).toBe(mixColors('#18181b', '#ffffff', 0.8))
@@ -60,7 +62,7 @@ describe('themeVariables', () => {
 
   it('every value is a plain color or keyword: nothing else can reach a style', () => {
     for (const [name, value] of Object.entries(themeVariables({ ...LIGHT, mode: 'dark' }))) {
-      expect(name).toMatch(/^(--color-[a-z-]+|color-scheme)$/)
+      expect(name).toMatch(/^(--color-[a-z-]+|colorScheme)$/)
       expect(value).toMatch(/^(#[0-9a-f]{6}|light|dark)$/)
     }
   })

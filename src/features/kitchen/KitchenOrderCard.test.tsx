@@ -57,7 +57,9 @@ describe('the kitchen ticket', () => {
 
     expect(html).toContain('Dish a')
     expect(html).not.toContain('Size:')
-    expect(html).toContain('Empezar')
+    expect(html).toContain('Seleccionar todo')
+    // The actions only appear once a dish is chosen.
+    expect(html).not.toContain('Empezar')
   })
 
   it('names the state of each dish in words and says when the ticket is late', () => {

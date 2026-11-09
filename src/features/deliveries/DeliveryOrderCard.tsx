@@ -70,7 +70,7 @@ export function DeliveryOrderCard({ order, now, late, view, onDeliver }: Deliver
         title={
           // Each half stays on one line; the counter only drops below the table when both cannot fit.
           <>
-            <span className="whitespace-nowrap">
+            <span className="break-words">
               {order.table_name} · Orden #{order.number}
             </span>{' '}
             <span className="whitespace-nowrap font-normal text-muted">· {deliveryProgress(order)}</span>

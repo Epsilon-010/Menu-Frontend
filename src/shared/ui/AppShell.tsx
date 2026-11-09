@@ -38,7 +38,8 @@ function navLinkClass({ isActive }: { isActive: boolean }): string {
 const BAR_BREAKPOINTS = {
   narrow: { list: 'sm:flex', signOut: 'sm:block', compact: 'sm:hidden' },
   wide: { list: 'lg:flex', signOut: 'lg:block', compact: 'lg:hidden' },
-  widest: { list: '2xl:flex', signOut: '2xl:block', compact: '2xl:hidden' },
+  // The side rail takes over on wide screens: the floating bar never holds the links.
+  rail: { list: '', signOut: '', compact: 'xl:hidden' },
 }
 
 /** The two lines of the menu toggle rotate into an X instead of swapping icons. */
@@ -67,8 +68,22 @@ export function AppShell({
 }: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const hasMenu = nav.length > 0 || onSignOut !== undefined
-  // A long navigation (the admin's eleven sections) only fits in the bar on very wide screens; shorter ones earlier.
-  const bar = nav.length > 8 ? BAR_BREAKPOINTS.widest : nav.length > 4 ? BAR_BREAKPOINTS.wide : BAR_BREAKPOINTS.narrow
+  // A long navigation (the admin's eleven sections) gets a side rail on wide screens instead of hiding behind the toggle.
+  const hasRail = nav.length > 8
+  const bar = hasRail ? BAR_BREAKPOINTS.rail : nav.length > 4 ? BAR_BREAKPOINTS.wide : BAR_BREAKPOINTS.narrow
+  const brandMark = logoUrl ? (
+    <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-lg object-contain" />
+  ) : (
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand text-brand-ink">
+      <ForkKnifeIcon size={16} weight="bold" aria-hidden />
+    </span>
+  )
+  const brandText = (
+    <div className="min-w-0 leading-tight">
+      <p className="truncate text-sm font-semibold text-ink">{business}</p>
+      <p className="truncate text-xs text-muted">{identity}</p>
+    </div>
+  )
 
   useEffect(() => {
     if (!menuOpen) return
@@ -88,23 +103,45 @@ export function AppShell({
         Saltar al contenido
       </a>
 
-      <header className={`${fixedBar ? 'fixed' : 'absolute'} inset-x-0 top-4 z-40 flex justify-center px-4`}>
+      {hasRail && (
+        <aside className="fixed inset-y-4 left-4 z-40 hidden w-60 flex-col gap-2 rounded-2xl border border-line bg-surface p-2 shadow-sm xl:flex">
+          <div className="flex min-w-0 items-center gap-3 p-2">
+            {brandMark}
+            {brandText}
+          </div>
+          <nav aria-label="Secciones" className="min-h-0 flex-1 overflow-y-auto">
+            <ul className="space-y-1">
+              {nav.map((item) => (
+                <li key={item.to}>
+                  <NavLink
+                    to={item.to}
+                    end={item.end}
+                    className={(link) => `${navLinkClass(link)} w-full`}
+                  >
+                    {item.icon}
+                    {item.label}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          {onSignOut && (
+            <button type="button" onClick={onSignOut} disabled={signingOut} className={`${buttonClass('ghost')} w-full justify-start`}>
+              <SignOutIcon size={16} aria-hidden />
+              {signingOut ? 'Cerrando sesión…' : signOutLabel}
+            </button>
+          )}
+        </aside>
+      )}
+
+      <header className={`${fixedBar ? 'fixed' : 'absolute'} inset-x-0 top-4 z-40 flex justify-center px-4 ${hasRail ? 'xl:hidden' : ''}`}>
         <nav
           aria-label="Principal"
           className="flex max-w-full items-center gap-2 rounded-2xl border border-line bg-surface/80 p-2 shadow-sm backdrop-blur-md"
         >
           <div className="flex min-w-0 items-center gap-3 pr-2">
-            {logoUrl ? (
-              <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-lg object-contain" />
-            ) : (
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand text-brand-ink">
-                <ForkKnifeIcon size={16} weight="bold" aria-hidden />
-              </span>
-            )}
-            <div className="min-w-0 leading-tight">
-              <p className="truncate text-sm font-semibold text-ink">{business}</p>
-              <p className="truncate text-xs text-muted">{identity}</p>
-            </div>
+            {brandMark}
+            {brandText}
           </div>
 
           {nav.length > 0 && (
@@ -149,7 +186,7 @@ export function AppShell({
         <div
           id="mobile-menu"
           inert={!menuOpen}
-          className={`fixed inset-0 z-30 bg-canvas/95 px-6 pt-24 backdrop-blur-xl transition-opacity duration-500 ease-smooth ${bar.compact} ${
+          className={`fixed inset-0 z-30 overflow-y-auto bg-canvas/95 px-6 pt-24 pb-8 backdrop-blur-xl transition-opacity duration-500 ease-smooth ${bar.compact} ${
             menuOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
           }`}
         >
@@ -195,9 +232,11 @@ export function AppShell({
         </div>
       )}
 
-      <main id="main" className={`mx-auto ${width} px-4 pt-24 pb-16 sm:px-6`}>
-        {children}
-      </main>
+      <div className={hasRail ? 'xl:pl-64' : undefined}>
+        <main id="main" className={`mx-auto ${width} px-4 pt-24 pb-16 sm:px-6 ${hasRail ? 'xl:pt-8' : ''}`}>
+          {children}
+        </main>
+      </div>
     </div>
   )
 }

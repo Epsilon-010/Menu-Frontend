@@ -61,9 +61,9 @@ function CartArea({ cart, ordering, onSend }: CartAreaProps) {
   )
 }
 
-function OrdersArea({ orders }: { orders: Loadable<Order[]> }) {
+function OrdersArea({ orders, onRetry }: { orders: Loadable<Order[]>; onRetry: () => void }) {
   if (orders.status === 'loading') return <ListSkeleton rows={2} label="Cargando las órdenes" />
-  if (orders.status === 'error') return null
+  if (orders.status === 'error') return <LoadError message={orders.message} onRetry={onRetry} />
   if (orders.data.length === 0) {
     return (
       <EmptyState icon={<ReceiptIcon size={24} aria-hidden />} title="Aún no hay órdenes enviadas">
@@ -166,7 +166,7 @@ export function MenuPage() {
             <h2 id="orders-title" className="text-xl font-semibold tracking-tight text-ink">
               Órdenes de esta mesa
             </h2>
-            <OrdersArea orders={orders} />
+            <OrdersArea orders={orders} onRetry={ordering.retryCart} />
             {/* Shown while there is something to pay, or to cancel a request already made. */}
             {orders.status === 'loaded' &&
               (hasSomethingToPay(orders.data) ||
@@ -227,6 +227,13 @@ export function MenuPage() {
           <Card className="p-4">
             <CartArea cart={cart} ordering={ordering} onSend={openConfirmation} />
           </Card>
+          {/* The status of what was sent, without scrolling past the whole menu. */}
+          {orders.status === 'loaded' && orders.data.length > 0 && (
+            <section aria-label="Órdenes de esta mesa" className="space-y-4 pt-4">
+              <h3 className="text-lg font-semibold tracking-tight text-ink">Órdenes de esta mesa</h3>
+              <OrdersArea orders={orders} onRetry={ordering.retryCart} />
+            </section>
+          )}
         </div>
       </div>
 

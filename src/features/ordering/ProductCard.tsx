@@ -40,7 +40,7 @@ function AddButton({ name, cards, onClick }: AddButtonProps) {
   const { style, shape } = cards.add_button
   return (
     <Button
-      variant="secondary"
+      variant="primary"
       icon={style === 'text' ? undefined : <PlusIcon size={16} aria-hidden />}
       aria-label={style === 'icon' ? `Agregar ${name}` : undefined}
       onClick={onClick}

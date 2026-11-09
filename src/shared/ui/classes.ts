@@ -1,5 +1,5 @@
 /** Class recipes shared by the UI components (kept apart so components files only export components). */
-import { MOTION } from '../../components/ui/styles.ts'
+import { FOCUS_RING, MOTION } from '../../components/ui/styles.ts'
 import { buttonVariants } from '../../components/ui/variants.ts'
 
 /** Shared motion: weighted deceleration, colors and transform only. */
@@ -14,7 +14,9 @@ export function buttonClass(variant: ButtonVariant = 'secondary', size: ButtonSi
 }
 
 export const CONTROL = [
-  'w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink shadow-xs placeholder:text-faint',
-  'hover:border-line-strong focus:border-ink focus:outline-none disabled:bg-canvas disabled:text-faint disabled:shadow-none',
+  // 16px on phones: iOS zooms the whole page into any smaller input.
+  'w-full rounded-lg border border-line bg-surface px-3 py-2 text-base text-ink shadow-xs placeholder:text-faint sm:text-sm pointer-coarse:min-h-11',
+  'hover:border-line-strong focus:border-ink disabled:bg-canvas disabled:text-faint disabled:shadow-none',
+  FOCUS_RING,
   MOTION,
 ].join(' ')

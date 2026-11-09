@@ -37,7 +37,7 @@ export function KitchenBoard() {
     <div className="space-y-8">
       <SectionHeader
         title="Cocina"
-        description={`Las órdenes llegan en cuanto una mesa las envía, de la más antigua a la más reciente. Trabaja en cualquiera: selecciona platillos para empezarlos, márcalos como listos o rechaza los que no puedas preparar. Se resaltan las comandas que esperan más de ${lateMinutes} min.`}
+        description={`De la más antigua a la más reciente. Se resaltan las que esperan más de ${lateMinutes} min.`}
         action={<SoundToggle enabled={sound.enabled} onToggle={sound.toggle} announces="órdenes nuevas" />}
       />
 

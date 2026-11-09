@@ -13,13 +13,13 @@ export const buttonVariants = cva(
       variant: {
         primary: 'bg-action text-action-ink shadow-sm hover:bg-action-hover',
         secondary: 'border border-line bg-surface text-ink shadow-xs hover:border-line-strong hover:bg-subtle',
-        danger: 'border border-red-200 bg-surface text-red-700 shadow-xs hover:border-red-300 hover:bg-red-50',
+        danger: 'border border-danger/30 bg-surface text-danger shadow-xs hover:border-danger/50 hover:bg-danger/10',
         ghost: 'text-ink-soft hover:bg-subtle hover:text-ink',
       },
       size: {
-        md: 'px-3 py-2 text-base',
-        sm: 'px-3 py-2 text-sm',
-        icon: 'size-9 p-2',
+        md: 'px-3 py-2 text-base pointer-coarse:min-h-11',
+        sm: 'px-3 py-2 text-sm pointer-coarse:min-h-11',
+        icon: 'size-9 p-2 pointer-coarse:size-11',
       },
     },
     defaultVariants: { variant: 'secondary', size: 'sm' },
@@ -55,7 +55,7 @@ export const toggleGroupVariants = cva('items-stretch gap-1 rounded-xl border bo
 
 export const toggleGroupItemVariants = cva(
   [
-    'inline-flex min-w-0 items-center justify-center gap-2 rounded-lg px-3 py-1 text-center text-sm font-semibold select-none',
+    'inline-flex min-w-0 items-center justify-center gap-2 rounded-lg px-3 py-1 text-center text-sm font-semibold select-none pointer-coarse:min-h-11',
     'text-muted hover:text-ink active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0',
     'data-[state=on]:bg-surface data-[state=on]:text-ink data-[state=on]:shadow-sm',
     MOTION,

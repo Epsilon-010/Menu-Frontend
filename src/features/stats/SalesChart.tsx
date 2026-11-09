@@ -74,7 +74,7 @@ export function SalesChart({ days }: { days: DayValue[] }) {
               return (
                 <g key={tick}>
                   <line x1={0} x2={PLOT_WIDTH} y1={y} y2={y} className={tick === 0 ? 'stroke-line-strong' : 'stroke-line'} strokeWidth={1} />
-                  <text x={-8} y={y} dy="0.32em" textAnchor="end" className="fill-muted text-[11px]">
+                  <text x={-8} y={y} dy="0.32em" textAnchor="end" className="fill-muted text-xs">
                     {axisMoney(tick)}
                   </text>
                 </g>
@@ -95,7 +95,7 @@ export function SalesChart({ days }: { days: DayValue[] }) {
                     <path d={topRounded(bar.x, bar.pending.y, bar.width, bar.pending.height)} fill={PENDING_COLOR} />
                   )}
                   {labelled.has(index) && (
-                    <text x={bar.x + bar.width / 2} y={PLOT_HEIGHT + 18} textAnchor="middle" className="fill-muted text-[11px]">
+                    <text x={bar.x + bar.width / 2} y={PLOT_HEIGHT + 18} textAnchor="middle" className="fill-muted text-xs">
                       {shortDay(bar.date)}
                     </text>
                   )}

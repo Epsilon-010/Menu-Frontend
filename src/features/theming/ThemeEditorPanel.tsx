@@ -335,7 +335,7 @@ export function ThemeEditorPanel() {
     <div className="space-y-4">
       <SectionHeader
         title="Diseño"
-        description={<span role="status">{statusText(saved, dirty)}</span>}
+        description={<span role="status" className={dirty ? 'font-semibold text-warning' : undefined}>{statusText(saved, dirty)}</span>}
         action={
           <div className="flex flex-wrap gap-2">
             <Button disabled={busy !== null || !dirty} onClick={() => void handleSave()}>

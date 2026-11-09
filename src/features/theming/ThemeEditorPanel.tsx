@@ -8,10 +8,12 @@ import {
   TextAaIcon,
 } from '@phosphor-icons/react'
 import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
+import { useBlocker } from 'react-router'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs.tsx'
 import { cn } from '../../lib/utils.ts'
 import { Button } from '../../shared/ui/Button.tsx'
 import { ErrorText, ListSkeleton, LoadError, SuccessText } from '../../shared/ui/Feedback.tsx'
+import { ConfirmDialog } from '../../shared/ui/RowActions.tsx'
 import { Card, SectionHeader } from '../../shared/ui/Section.tsx'
 import { useAuth } from '../auth/useAuth.ts'
 import {
@@ -46,6 +48,7 @@ import { ThemePreview } from './ThemePreview.tsx'
 import { CardControls } from './CardControls.tsx'
 import { LayoutControls } from './LayoutControls.tsx'
 import { ThemeHistory } from './ThemeHistory.tsx'
+import { leavesWithUnsavedChanges } from './ThemeEditorPanel.leaving.ts'
 import { TypographyControls } from './TypographyControls.tsx'
 
 type EditorSection = 'templates' | 'colors' | 'brand' | 'typography' | 'layout' | 'cards' | 'versions'
@@ -181,6 +184,22 @@ export function ThemeEditorPanel() {
     }
   }, [historyKey])
 
+  const dirty = load.status === 'loaded' && draft !== null && !sameTheme(draft, load.saved.draft)
+  const blocker = useBlocker(({ currentLocation, nextLocation }) =>
+    leavesWithUnsavedChanges(dirty, currentLocation.pathname, nextLocation.pathname),
+  )
+
+  // Closing or reloading the tab is outside the router: only the browser's own prompt can ask.
+  useEffect(() => {
+    if (!dirty) return
+    function warn(event: BeforeUnloadEvent) {
+      event.preventDefault()
+      event.returnValue = '' // older tablet browsers only ask when this is set
+    }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [dirty])
+
   if (load.status === 'loading' || (load.status === 'loaded' && draft === null)) {
     return <ListSkeleton rows={3} label="Cargando el diseño del menú" />
   }
@@ -197,7 +216,6 @@ export function ThemeEditorPanel() {
   }
   const { saved } = load
   const theme = draft as Theme
-  const dirty = !sameTheme(theme, saved.draft)
   const imageUrls = { ...saved.image_urls, ...localUrls }
 
   function edit(next: Theme) {
@@ -402,6 +420,19 @@ export function ThemeEditorPanel() {
           </TabsContent>
         </Card>
       </Tabs>
+
+      <ConfirmDialog
+        open={blocker.state === 'blocked'}
+        onCancel={() => blocker.reset?.()}
+        title="¿Salir sin guardar?"
+        cancelLabel="Seguir editando"
+        confirmLabel="Salir sin guardar"
+        confirmVariant="danger"
+        onConfirm={() => blocker.proceed?.()}
+        busy={false}
+      >
+        Tienes cambios sin guardar en el diseño. Si sales ahora, se pierden.
+      </ConfirmDialog>
     </div>
   )
 }

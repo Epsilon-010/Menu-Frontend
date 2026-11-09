@@ -1,10 +1,44 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { apiFetch, REQUEST_TIMEOUT_MS } from './http.ts'
+import { apiFetch, publicFetch, REQUEST_TIMEOUT_MS } from './http.ts'
 
 afterEach(() => {
   vi.unstubAllGlobals()
   // Each test loads a fresh module: no refresh in flight or listener leaks into the next one.
   vi.resetModules()
+})
+
+describe('publicFetch', () => {
+  it('gives sign in, QR join and sign out a deadline, so they cannot hang forever', async () => {
+    const seen: (AbortSignal | null | undefined)[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init?: RequestInit) => {
+        seen.push(init?.signal)
+        return new Response('{}', { status: 200 })
+      }),
+    )
+
+    await publicFetch('/auth/logout', { method: 'POST' })
+
+    expect(seen[0]).toBeInstanceOf(AbortSignal)
+  })
+
+  it('still sends what the caller asked for', async () => {
+    const calls: { url: string; init?: RequestInit }[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        calls.push({ url, init })
+        return new Response('{}', { status: 200 })
+      }),
+    )
+
+    await publicFetch('/auth/login', { method: 'POST', body: '{"a":1}' })
+
+    expect(calls[0].url).toBe('/api/v1/auth/login')
+    expect(calls[0].init?.method).toBe('POST')
+    expect(calls[0].init?.body).toBe('{"a":1}')
+  })
 })
 
 describe('apiFetch', () => {

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router'
 import type { Role } from '../../shared/api/http.ts'
-import { Skeleton } from '../../shared/ui/Feedback.tsx'
+import { LoadError, Skeleton } from '../../shared/ui/Feedback.tsx'
 import { ForcedPasswordScreen } from '../account/ForcedPasswordScreen.tsx'
 import { accountRole, homePathFor } from './api.ts'
 import { useAuth } from './useAuth.ts'
@@ -32,6 +32,13 @@ export function RequireRole({ roles, children }: RequireRoleProps) {
   const location = useLocation()
 
   if (state.status === 'loading') return <SessionSkeleton />
+  if (state.status === 'unavailable') {
+    return (
+      <main className="mx-auto max-w-lg px-4 pt-24">
+        <LoadError message="No se pudo comprobar tu sesión. Revisa tu conexión e inténtalo de nuevo." onRetry={state.retry} />
+      </main>
+    )
+  }
   if (state.status === 'visit-ended' && roles.includes('guest')) return <VisitEndedScreen reason={state.reason} />
   if (state.status === 'anonymous' || state.status === 'visit-ended') {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />

@@ -1,4 +1,4 @@
-import { apiFetch, publicFetch, type Role, type SessionInfo } from '../../shared/api/http.ts'
+import { apiFetch, publicFetch, SessionUnavailableError, type Role, type SessionInfo } from '../../shared/api/http.ts'
 import { rememberGuestQr } from './guestMarker.ts'
 
 /**
@@ -115,9 +115,11 @@ export async function qrLogin(token: string, name?: string): Promise<SessionInfo
   throw new QrJoinError('El servidor no pudo completar la acción. Inténtalo de nuevo en un momento.', response.status)
 }
 
+/** The signed-in account, or null only when the server confirms there is no session. Any other failure throws. */
 export async function fetchAccount(): Promise<Account | null> {
   const response = await apiFetch('/auth/me')
-  if (!response.ok) return null
+  if (response.status === 401) return null
+  if (!response.ok) throw new SessionUnavailableError()
   return (await response.json()) as Account
 }
 

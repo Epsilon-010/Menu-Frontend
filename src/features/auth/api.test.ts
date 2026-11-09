@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { accountRole, homePathFor, qrLogin, QrJoinError, type Account } from './api.ts'
+import { accountRole, fetchAccount, homePathFor, qrLogin, QrJoinError, type Account } from './api.ts'
 import { joinedWithQr } from './guestMarker.ts'
 
 function problem(status: number, detail: string): Response {
@@ -46,6 +46,34 @@ function stubStorage() {
     },
   })
 }
+
+describe('fetchAccount', () => {
+  const account = { user: null, table: { id: 't1', name: 'Mesa 1' }, guest: null, tenant: { id: 'b1', name: 'Demo' } }
+
+  it('returns the account of a live session', async () => {
+    stubFetch(new Response(JSON.stringify(account), { status: 200 }))
+
+    await expect(fetchAccount()).resolves.toEqual(account)
+  })
+
+  it('answers null only when the server confirms there is no session', async () => {
+    stubFetch(problem(401, 'Not authenticated'), problem(401, 'Refresh refused'))
+
+    await expect(fetchAccount()).resolves.toBeNull()
+  })
+
+  it('fails on a server error instead of reading it as signed out', async () => {
+    stubFetch(problem(500, 'boom'))
+
+    await expect(fetchAccount()).rejects.toThrow()
+  })
+
+  it('fails when the server never answers', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('network')))
+
+    await expect(fetchAccount()).rejects.toThrow()
+  })
+})
 
 describe('qrLogin', () => {
   it('remembers the QR the guest joined with', async () => {

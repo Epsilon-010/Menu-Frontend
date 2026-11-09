@@ -1,4 +1,5 @@
 /** Pure rules of the table screen, kept apart from React so they can be tested on their own. */
+import { createDraftIds } from '../../shared/api/idempotency.ts'
 import type { Cart, CartLine, Order, OrderItemStatus, OrderStatus } from './api.ts'
 
 export interface PersonLines<Line> {
@@ -117,21 +118,19 @@ export function clockTime(iso: string): string {
 }
 
 /**
- * Sends orders with a client id kept until one succeeds: a retry after a lost answer (or after
- * reviewing a changed cart) reuses it, so the table never sends the same order twice.
+ * Sends orders with a client id tied to the cart version the sender reviewed: a retry of that version after a lost
+ * answer reuses it, so the table never sends the same order twice, and any later round gets its own id, so it never
+ * replays an order the server already took.
  */
 export function createOrderSender(
   submit: (id: string, cartVersion: number) => Promise<Order>,
   newId: () => string = () => crypto.randomUUID(),
 ) {
-  let draftId = newId()
+  const drafts = createDraftIds(newId)
   return {
-    get draftId(): string {
-      return draftId
-    },
     async send(cartVersion: number): Promise<Order> {
-      const order = await submit(draftId, cartVersion)
-      draftId = newId()
+      const order = await submit(drafts.idFor(String(cartVersion)), cartVersion)
+      drafts.reset()
       return order
     },
   }

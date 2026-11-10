@@ -151,6 +151,18 @@ export function withSectionChanged(sections: readonly MenuSection[], id: string,
   )
 }
 
+/**
+ * The featured ids after checking or unchecking one product. Ids no longer on the menu are dropped, so a deleted
+ * product never counts toward the limit nor blocks new picks; never over the limit nor repeated.
+ */
+export function withFeaturedItem(itemIds: readonly string[], itemId: string, on: boolean, onMenu: ReadonlySet<string>): string[] {
+  const live = itemIds.filter((id) => onMenu.has(id) && id !== itemId)
+  if (!on) return live
+  const kept = itemIds.filter((id) => onMenu.has(id))
+  if (kept.includes(itemId)) return kept
+  return live.length >= MAX_FEATURED_ITEMS ? kept : [...live, itemId]
+}
+
 /** The picked products still on the menu, in the order the admin chose. */
 export function featuredItems(section: { item_ids: readonly string[] }, categories: readonly MenuCategory[]): MenuItem[] {
   const byId = new Map(categories.flatMap((category) => category.items.map((entry) => [entry.id, entry] as const)))

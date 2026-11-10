@@ -10,6 +10,7 @@ import {
   newSection,
   normalizeSections,
   sectionSummary,
+  withFeaturedItem,
   withSectionAdded,
   withSectionChanged,
   withSectionMoved,
@@ -122,6 +123,46 @@ describe('featuredItems', () => {
   })
 
   it('caps the products at the limit', () => {
-    expect(MAX_FEATURED_ITEMS).toBe(12)
+    const many = Array.from({ length: 15 }, (_, index) => `i${index}`)
+    const [section] = normalizeSections([featured('f', many), MENU])
+    expect(section).toMatchObject({ type: 'featured', item_ids: many.slice(0, MAX_FEATURED_ITEMS) })
+  })
+})
+
+describe('the section limit', () => {
+  it('keeps at most the limit of sections', () => {
+    const many = Array.from({ length: MAX_SECTIONS + 5 }, (_, index) => text(`t${index}`))
+    const page = normalizeSections([MENU, ...many])
+    expect(page).toHaveLength(MAX_SECTIONS)
+    expect(page[0]).toEqual(MENU)
+  })
+
+  it('makes room for the menu when a full page lost it', () => {
+    const full = Array.from({ length: MAX_SECTIONS }, (_, index) => text(`t${index}`))
+    const page = normalizeSections(full)
+    expect(page).toHaveLength(MAX_SECTIONS)
+    expect(page.at(-1)).toEqual(MENU)
+    expect(page.at(-2)).toEqual(text(`t${MAX_SECTIONS - 2}`))
+  })
+})
+
+describe('withFeaturedItem', () => {
+  const onMenu = new Set(['i1', 'i2', 'i3'])
+
+  it('adds at the end and removes a product', () => {
+    expect(withFeaturedItem(['i1'], 'i2', true, onMenu)).toEqual(['i1', 'i2'])
+    expect(withFeaturedItem(['i1', 'i2'], 'i1', false, onMenu)).toEqual(['i2'])
+  })
+
+  it('drops products no longer on the menu, so they never block new picks', () => {
+    const stale = Array.from({ length: MAX_FEATURED_ITEMS }, (_, index) => `gone${index}`)
+    expect(withFeaturedItem(stale, 'i3', true, onMenu)).toEqual(['i3'])
+  })
+
+  it('never goes over the limit nor repeats a product', () => {
+    const full = Array.from({ length: MAX_FEATURED_ITEMS }, (_, index) => `m${index}`)
+    const menu = new Set([...full, 'extra'])
+    expect(withFeaturedItem(full, 'extra', true, menu)).toEqual(full)
+    expect(withFeaturedItem(['i1'], 'i1', true, onMenu)).toEqual(['i1'])
   })
 })

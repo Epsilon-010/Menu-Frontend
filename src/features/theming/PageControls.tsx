@@ -55,6 +55,7 @@ import {
   newSection,
   SECTION_TEXT,
   sectionSummary,
+  withFeaturedItem,
   withSectionAdded,
   withSectionChanged,
   withSectionMoved,
@@ -252,9 +253,11 @@ function ProductPicker({ section, onChange }: { section: FeaturedSection; onChan
       active = false
     }
   }, [])
-  const picked = section.item_ids
+  // Only products still on the menu count: a deleted one has no checkbox and must not use up the limit.
+  const onMenu = new Set(menu?.flatMap((category) => category.items.map((item) => item.id)) ?? [])
+  const picked = menu === null ? section.item_ids : section.item_ids.filter((id) => onMenu.has(id))
   const full = picked.length >= MAX_FEATURED_ITEMS
-  const toggle = (itemId: string, on: boolean) => onChange(on ? [...picked, itemId] : picked.filter((id) => id !== itemId))
+  const toggle = (itemId: string, on: boolean) => onChange(withFeaturedItem(section.item_ids, itemId, on, onMenu))
 
   return (
     <fieldset className="space-y-2">

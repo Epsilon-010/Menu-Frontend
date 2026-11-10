@@ -47,7 +47,7 @@ async function failureOf(promise: Promise<unknown>): Promise<ThemeError> {
 }
 
 const THEME: Theme = {
-  schema_version: 5,
+  schema_version: 6,
   colors: DEFAULT_LIGHT_COLORS,
   brand: DEFAULT_BRAND,
   typography: DEFAULT_TYPOGRAPHY,

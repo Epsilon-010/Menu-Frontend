@@ -125,7 +125,52 @@ export interface ThemeLayout {
   header_blocks: HeaderBlock[]
   /** Per category id: its own product view, columns and card template; any other category uses the general ones. */
   categories: Record<string, CategoryLayout>
+  /** The menu page, top to bottom: exactly one `menu`, at most one `hero`. */
+  sections: MenuSection[]
 }
+
+export type SectionType = 'hero' | 'menu' | 'featured' | 'text' | 'divider'
+export type FeaturedView = 'carousel' | 'grid'
+export type TextSectionAlign = 'left' | 'center'
+export type TextSectionStyle = 'plain' | 'highlight'
+
+/** The header: banner, name, tagline and welcome, as `header_blocks` and the `show_*` flags say. */
+export interface HeroSection {
+  id: string
+  type: 'hero'
+}
+
+/** The categories with their navigation and per-category designs. */
+export interface MenuCategoriesSection {
+  id: string
+  type: 'menu'
+}
+
+/** Products the admin picked; ones that no longer exist or are unavailable are not drawn. */
+export interface FeaturedSection {
+  id: string
+  type: 'featured'
+  title: string
+  item_ids: string[]
+  view: FeaturedView
+}
+
+/** A title and a plain-text paragraph (welcome, promo, notice). */
+export interface TextSection {
+  id: string
+  type: 'text'
+  title: string
+  body: string
+  align: TextSectionAlign
+  style: TextSectionStyle
+}
+
+export interface DividerSection {
+  id: string
+  type: 'divider'
+}
+
+export type MenuSection = HeroSection | MenuCategoriesSection | FeaturedSection | TextSection | DividerSection
 
 export type CardTemplate = 'vertical' | 'horizontal' | 'overlay'
 export type ImageAspect = 'square' | 'landscape' | 'wide'
@@ -167,7 +212,7 @@ export interface ThemeCards {
 }
 
 export interface Theme {
-  schema_version: 5
+  schema_version: 6
   colors: ThemeColors
   brand: ThemeBrand
   typography: Typography

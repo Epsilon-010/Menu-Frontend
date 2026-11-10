@@ -40,6 +40,10 @@ describe('the layout options', () => {
       cart: 'bar',
       header_blocks: ['banner', 'name', 'tagline', 'welcome'],
       categories: {},
+      sections: [
+        { id: '00000000-0000-4000-8000-000000000001', type: 'hero' },
+        { id: '00000000-0000-4000-8000-000000000002', type: 'menu' },
+      ],
     })
     // Two columns from a 624px menu: a 672px page minus its 48px padding, as before the layout existed.
     expect(gridColumnsClass(2)).toBe('@[39rem]:grid-cols-2')

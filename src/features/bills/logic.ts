@@ -1,6 +1,7 @@
 /** Pure rules of the waiter's corrections to sent orders, kept apart from React so they can be tested. */
 import { MAX_NOTE_LENGTH, MAX_QUANTITY, MIN_QUANTITY, type ModifierGroup, type OrderItem } from '../ordering/api.ts'
-import { selectionError } from '../ordering/modifiers.ts'
+import { parsePrice } from '../catalog/price.ts'
+import { dishLabel, selectionError } from '../ordering/modifiers.ts'
 import type { Bill, TableOverview } from './api.ts'
 
 /** A paid bill is frozen: its orders accept no new dishes. */
@@ -25,6 +26,62 @@ export function undeliveredDishes(bill: Pick<Bill, 'orders'>): number {
     }
   }
   return pending
+}
+
+/** What a payment covers: only the dishes that reached the table, or every dish of the bill. */
+export type ChargeScope = 'delivered' | 'all'
+
+/** One dish of the bill as the payment summary lists it. */
+export interface ChargeLine {
+  id: string
+  quantity: number
+  name: string
+  subtotal_cents: number
+  delivered: boolean
+}
+
+/** Every dish the bill still owes (cancelled ones are not charged), in the order they were sent. */
+export function chargeLines(bill: Pick<Bill, 'orders'>): ChargeLine[] {
+  const lines: ChargeLine[] = []
+  for (const order of bill.orders) {
+    for (const item of order.items) {
+      if (item.status === 'cancelled') continue
+      lines.push({
+        id: item.id,
+        quantity: item.quantity,
+        name: dishLabel(item.name, item.modifiers),
+        subtotal_cents: item.subtotal_cents,
+        delivered: item.status === 'delivered',
+      })
+    }
+  }
+  return lines
+}
+
+/** What the bill adds up to counting only the dishes that reached the table. */
+export function deliveredTotalCents(bill: Pick<Bill, 'orders'>): number {
+  return chargeLines(bill).reduce((total, line) => total + (line.delivered ? line.subtotal_cents : 0), 0)
+}
+
+/**
+ * Charging only what was delivered makes sense when something was delivered and something was not;
+ * otherwise the payment covers the whole bill.
+ */
+export function chargeScopeFor(bill: Pick<Bill, 'orders'>, wanted: ChargeScope): ChargeScope {
+  return wanted === 'delivered' && undeliveredDishes(bill) > 0 && deliveredTotalCents(bill) > 0 ? 'delivered' : 'all'
+}
+
+export function chargeTotalCents(bill: Pick<Bill, 'orders' | 'total_cents'>, scope: ChargeScope): number {
+  return scope === 'delivered' ? deliveredTotalCents(bill) : bill.total_cents
+}
+
+/**
+ * The change for a cash payment: cents to give back (0 or more), a negative amount when the cash does not
+ * cover the total, or null while nothing valid is typed.
+ */
+export function changeDueCents(received: string, totalCents: number): number | null {
+  const cents = parsePrice(received)
+  return cents === null ? null : cents - totalCents
 }
 
 /** Only dishes the kitchen has not started can be cancelled, and only while the bill is open. */

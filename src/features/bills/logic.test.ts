@@ -11,6 +11,11 @@ import {
   tableIdOf,
   tablesForWaiter,
   undeliveredDishes,
+  changeDueCents,
+  chargeLines,
+  chargeScopeFor,
+  chargeTotalCents,
+  deliveredTotalCents,
   withoutTable,
 } from './logic.ts'
 import { billDialogFor, billDialogReducer, NO_BILL_DIALOG } from './billDialog.ts'
@@ -171,6 +176,50 @@ describe('undeliveredDishes', () => {
   it('is zero once everything was delivered or cancelled', () => {
     expect(undeliveredDishes({ ...bill(null), orders: [{ ...ORDER, items: [dish('delivered'), dish('cancelled')] }] })).toBe(0)
     expect(undeliveredDishes(bill(null))).toBe(0)
+  })
+})
+
+describe('what a payment covers', () => {
+  const served = {
+    ...bill(null),
+    total_cents: 400,
+    orders: [
+      { ...ORDER, items: [dish('delivered'), { ...dish('preparing'), quantity: 2, subtotal_cents: 200 }, dish('cancelled')] },
+      { ...ORDER, id: 'o2', items: [dish('ready')] },
+    ],
+  }
+
+  it('lists every dish still owed and whether it reached the table', () => {
+    expect(chargeLines(served).map((line) => [line.quantity, line.subtotal_cents, line.delivered])).toEqual([
+      [1, 100, true],
+      [2, 200, false],
+      [1, 100, false],
+    ])
+  })
+
+  it('charges only what was delivered, or the whole bill', () => {
+    expect(deliveredTotalCents(served)).toBe(100)
+    expect(chargeTotalCents(served, 'delivered')).toBe(100)
+    expect(chargeTotalCents(served, 'all')).toBe(400)
+  })
+
+  it('only offers the delivered part when something arrived and something did not', () => {
+    expect(chargeScopeFor(served, 'delivered')).toBe('delivered')
+    expect(chargeScopeFor(served, 'all')).toBe('all')
+    const nothingArrived = { ...served, orders: [{ ...ORDER, items: [dish('queued')] }] }
+    expect(chargeScopeFor(nothingArrived, 'delivered')).toBe('all')
+    const allArrived = { ...served, orders: [{ ...ORDER, items: [dish('delivered'), dish('cancelled')] }] }
+    expect(chargeScopeFor(allArrived, 'delivered')).toBe('all')
+  })
+})
+
+describe('changeDueCents', () => {
+  it('is what to give back, negative when the cash falls short, null while nothing valid is typed', () => {
+    expect(changeDueCents('500', 23400)).toBe(26600)
+    expect(changeDueCents('234', 23400)).toBe(0)
+    expect(changeDueCents('200.50', 23400)).toBe(-3350)
+    expect(changeDueCents('', 23400)).toBeNull()
+    expect(changeDueCents('abc', 23400)).toBeNull()
   })
 })
 

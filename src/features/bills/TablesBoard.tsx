@@ -128,9 +128,9 @@ export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = 
     const bill = table.bill
     return {
       onOpen: () => act(() => openTable(table.table_id)),
-      onPay: (method: PaymentMethod, expectedTotalCents: number) =>
+      onPay: (method: PaymentMethod, expectedTotalCents: number, onlyDelivered: boolean) =>
         bill
-          ? act(() => registerPayment(bill.id, method, expectedTotalCents))
+          ? act(() => registerPayment(bill.id, method, expectedTotalCents, onlyDelivered))
           : Promise.resolve('Esta mesa no está abierta.'),
       onClose: () => (bill ? act(() => closeTable(bill.id)) : Promise.resolve(null)),
       onDismissRequest: () => (bill ? act(() => dismissBillRequest(bill.id)) : Promise.resolve(null)),

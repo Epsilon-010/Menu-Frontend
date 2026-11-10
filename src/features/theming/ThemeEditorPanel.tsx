@@ -3,6 +3,7 @@ import {
   ClockCounterClockwiseIcon,
   LayoutIcon,
   PaletteIcon,
+  RowsIcon,
   SquaresFourIcon,
   StorefrontIcon,
   TextAaIcon,
@@ -43,7 +44,9 @@ import {
   withDefaults,
   withPreset,
 } from './editor.ts'
+import { PageControls } from './PageControls.tsx'
 import { PresetGallery } from './PresetGallery.tsx'
+import { withSectionChanged } from './sections.ts'
 import { ThemePreview } from './ThemePreview.tsx'
 import { CardControls } from './CardControls.tsx'
 import { LayoutControls } from './LayoutControls.tsx'
@@ -51,14 +54,20 @@ import { ThemeHistory } from './ThemeHistory.tsx'
 import { leavesWithUnsavedChanges } from './ThemeEditorPanel.leaving.ts'
 import { TypographyControls } from './TypographyControls.tsx'
 
-type EditorSection = 'templates' | 'colors' | 'brand' | 'typography' | 'layout' | 'cards' | 'versions'
+type EditorSection = 'templates' | 'page' | 'colors' | 'brand' | 'typography' | 'layout' | 'cards' | 'versions'
 
 const SECTIONS: { id: EditorSection; label: string; description: string; icon: ReactNode }[] = [
   {
     id: 'templates',
     label: 'Plantillas',
-    description: 'Cambia colores, fuentes, distribución y tarjetas a la vez; tu nombre, logo e imágenes se conservan.',
+    description: 'Elige un diseño completo para empezar; tu nombre, logo e imágenes se conservan.',
     icon: <SquaresFourIcon size={16} aria-hidden />,
+  },
+  {
+    id: 'page',
+    label: 'Página',
+    description: 'Arma tu menú con secciones: destacados, textos, separadores y tus productos.',
+    icon: <RowsIcon size={16} aria-hidden />,
   },
   { id: 'colors', label: 'Colores', description: 'La paleta del menú, en modo claro u oscuro.', icon: <PaletteIcon size={16} aria-hidden /> },
   {
@@ -150,6 +159,8 @@ export function ThemeEditorPanel() {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [section, setSection] = useState<EditorSection>('templates')
+  // The page section being edited: picked in the "Página" panel or by clicking it in the preview.
+  const [pageSection, setPageSection] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
@@ -268,6 +279,23 @@ export function ThemeEditorPanel() {
     }
   }
 
+  async function uploadSectionImage(sectionId: string, file: File): Promise<string | null> {
+    try {
+      const publicId = await uploadThemeImage('section', file)
+      setLocalUrls((urls) => ({ ...urls, [publicId]: URL.createObjectURL(file) }))
+      // The admin may have kept editing while it uploaded: change only that section of the current draft.
+      setDraft((current) =>
+        current
+          ? { ...current, layout: { ...current.layout, sections: withSectionChanged(current.layout.sections, sectionId, { image_id: publicId }) } }
+          : current,
+      )
+      setNotice(null)
+      return null
+    } catch (caught) {
+      return messageOf(caught)
+    }
+  }
+
   // `theme` is the draft when the button was pressed; the controls stay usable while the request runs.
   async function save(): Promise<boolean> {
     try {
@@ -308,6 +336,17 @@ export function ThemeEditorPanel() {
   const panels: Record<EditorSection, ReactNode> = {
     templates: (
       <PresetGallery presets={saved.presets} selected={matchingPreset(theme, saved.presets)} onApply={applyPreset} />
+    ),
+    page: (
+      <PageControls
+        theme={theme}
+        imageUrls={imageUrls}
+        onChange={edit}
+        selectedId={pageSection}
+        onSelect={setPageSection}
+        onOpen={setSection}
+        onUploadImage={uploadSectionImage}
+      />
     ),
     colors: <ColorControls theme={theme} defaults={saved.defaults} onChange={edit} />,
     brand: (
@@ -407,7 +446,16 @@ export function ThemeEditorPanel() {
         </nav>
 
         <aside aria-label="Vista previa" className="order-last min-w-0 lg:sticky lg:top-24 lg:order-none">
-          <ThemePreview theme={theme} imageUrls={imageUrls} businessName={businessName} />
+          <ThemePreview
+            theme={theme}
+            imageUrls={imageUrls}
+            businessName={businessName}
+            selectedSection={section === 'page' ? pageSection : null}
+            onSelectSection={(id) => {
+              setPageSection(id)
+              setSection('page')
+            }}
+          />
         </aside>
 
         <Card className="@container min-w-0 lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto">

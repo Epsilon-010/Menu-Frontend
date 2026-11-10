@@ -1,6 +1,7 @@
 import { permutationOr } from './blocks.ts'
 import { CARD_TEMPLATES, cardTemplate, normalizeCards } from './cards.ts'
 import { normalizeBrand, normalizeColors } from './normalize.ts'
+import { DEFAULT_SECTIONS, normalizeSections } from './sections.ts'
 import { normalizeTypography } from './typography.ts'
 import type {
   CardTemplate,
@@ -42,6 +43,7 @@ export const DEFAULT_LAYOUT: ThemeLayout = {
   cart: 'bar',
   header_blocks: HEADER_BLOCKS,
   categories: {},
+  sections: DEFAULT_SECTIONS,
 }
 
 // Full class names (Tailwind only generates classes it sees written out). Measured on the menu's own width (beside
@@ -178,6 +180,7 @@ export function normalizeLayout(raw: unknown): ThemeLayout {
     cart: oneOf(value.cart, CART_STYLES, d.cart),
     header_blocks: permutationOr(value.header_blocks, HEADER_BLOCKS),
     categories: normalizeCategories(value.categories),
+    sections: normalizeSections(value.sections),
   }
 }
 

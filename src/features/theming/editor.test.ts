@@ -50,7 +50,7 @@ const LIGHT: ThemeColors = {
 const DARK: ThemeColors = { ...LIGHT, mode: 'dark', background: '#09090b', text: '#fafafa' }
 
 const THEME: Theme = {
-  schema_version: 5,
+  schema_version: 6,
   colors: LIGHT,
   brand: {
     name: '',
@@ -213,7 +213,7 @@ describe('reset, export and import', () => {
 
   it('resets everything but the brand to the default design (the first template)', () => {
     const theme = {
-      schema_version: 5,
+      schema_version: 6,
       colors: { ...LIGHT, primary: '#000000' },
       brand,
       typography: DEFAULT_TYPOGRAPHY,

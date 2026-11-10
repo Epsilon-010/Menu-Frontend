@@ -4,6 +4,7 @@ import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group.t
 import { formatMoney } from '../catalog/price.ts'
 import { fetchMenu, type MenuCategory } from '../ordering/api.ts'
 import { MenuBrowser } from '../ordering/MenuBrowser.tsx'
+import { MenuSections } from '../ordering/MenuSections.tsx'
 import type { ImageUrls, Theme } from './api.ts'
 import { MenuHero } from './MenuHero.tsx'
 import { ThemeScope } from './ThemeScope.tsx'
@@ -51,10 +52,15 @@ interface ThemePreviewProps {
   theme: Theme
   imageUrls: ImageUrls
   businessName: string
+  /** The page section being edited, outlined; clicking a section picks it (only while editing the page). */
+  selectedSection?: string | null
+  onSelectSection?: (id: string) => void
 }
 
+const noAdd = () => Promise.resolve(null)
+
 /** The table menu drawn with the draft, at tablet or phone size; nothing here reaches the tables. */
-export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewProps) {
+export function ThemePreview({ theme, imageUrls, businessName, selectedSection, onSelectSection }: ThemePreviewProps) {
   const [device, setDevice] = useState<Device>('phone')
   const [menu, setMenu] = useState<MenuCategory[] | null>(null)
   const [menuFailed, setMenuFailed] = useState(false)
@@ -115,9 +121,23 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
               <div className="flex min-h-0 flex-1">
                 <div className="min-w-0 flex-1 space-y-8 overflow-y-auto p-4">
                   {!layout.sticky_header && header}
-                  <MenuHero theme={theme} imageUrls={imageUrls} businessName={businessName} />
-                  {menu && <MenuBrowser categories={menu} onAdd={() => Promise.resolve(null)} layout={layout} cards={cards} belowFixedBar={false} />}
-                  {menuFailed && <p className="text-sm text-muted">No se pudo cargar el menú para la vista previa.</p>}
+                  <MenuSections
+                    sections={layout.sections}
+                    hero={<MenuHero theme={theme} imageUrls={imageUrls} businessName={businessName} />}
+                    menu={
+                      <>
+                        {menu && <MenuBrowser categories={menu} onAdd={noAdd} layout={layout} cards={cards} belowFixedBar={false} />}
+                        {menuFailed && <p className="text-sm text-muted">No se pudo cargar el menú para la vista previa.</p>}
+                      </>
+                    }
+                    categories={menu ?? []}
+                    layout={layout}
+                    cards={cards}
+                    onAdd={noAdd}
+                    imageUrls={imageUrls}
+                    selectedId={selectedSection}
+                    onSelect={onSelectSection}
+                  />
                 </div>
                 {sidePanel && (
                   <aside aria-label="Pedido de la mesa" className="w-64 shrink-0 border-l border-line bg-surface p-4">

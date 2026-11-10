@@ -2,7 +2,7 @@ import { BowlFoodIcon } from '@phosphor-icons/react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { MOTION } from '../../shared/ui/classes.ts'
 import { EmptyState } from '../../shared/ui/Feedback.tsx'
-import type { CategoryHeader, ThemeCards, ThemeLayout } from '../theming/api.ts'
+import type { CardTemplate, CategoryHeader, Density, ProductView, ThemeCards, ThemeLayout } from '../theming/api.ts'
 import { DEFAULT_CARDS } from '../theming/cards.ts'
 import {
   categoryArrangement,
@@ -52,7 +52,7 @@ function useActiveSection(ids: string[], enabled: boolean): string | null {
   return active
 }
 
-function CategoryHeading({ name, style }: { name: string; style: CategoryHeader }) {
+export function CategoryHeading({ name, style }: { name: string; style: CategoryHeader }) {
   if (style === 'band') return <h2 className="type-category rounded-xl bg-brand px-4 py-2 text-brand-ink">{name}</h2>
   if (style === 'underline') return <h2 className="type-category border-b-2 border-accent pb-2 text-secondary">{name}</h2>
   return (
@@ -61,6 +61,50 @@ function CategoryHeading({ name, style }: { name: string; style: CategoryHeader 
       {name}
     </h2>
   )
+}
+
+interface ProductListProps {
+  items: MenuItem[]
+  /** Names the carousel region for screen readers. */
+  label: string
+  view: ProductView
+  columns: number
+  template: CardTemplate
+  density: Density
+  cards: ThemeCards
+  onAdd: MenuBrowserProps['onAdd']
+}
+
+/** Product cards as a list, a carousel or a grid (a category's products, or the ones the admin featured). */
+export function ProductList({ items, label, view, columns, template, density, cards, onAdd }: ProductListProps) {
+  const { items: gap } = densitySpacing(density)
+  const card = (item: MenuItem) => (
+    <ProductCard
+      key={item.id}
+      item={item}
+      cards={cards}
+      template={template}
+      onAdd={(quantity, note, optionIds) => onAdd(item.id, quantity, note, optionIds)}
+    />
+  )
+  if (view === 'list') return <div className={`flex flex-col ${gap}`}>{items.map(card)}</div>
+  if (view === 'carousel') {
+    return (
+      <div
+        role="region"
+        aria-label={`${label}, desliza para ver más`}
+        tabIndex={0}
+        className={`-mx-4 flex snap-x snap-mandatory scroll-px-4 overflow-x-auto px-4 pb-2 ${gap}`}
+      >
+        {items.map((item) => (
+          <div key={item.id} className="w-[78%] max-w-80 shrink-0 snap-start @2xl:w-72">
+            {card(item)}
+          </div>
+        ))}
+      </div>
+    )
+  }
+  return <div className={`grid ${gap} ${gridColumnsClass(columns)}`}>{items.map(card)}</div>
 }
 
 interface ProductsProps {
@@ -72,35 +116,19 @@ interface ProductsProps {
 
 /** The products of one category: its own view, columns and card template when it has them, else the general ones. */
 function Products({ category, layout, cards, onAdd }: ProductsProps) {
-  const { items: gap } = densitySpacing(layout.density)
   const { product_view, columns, template } = categoryArrangement(layout, cards, category.id)
-  const card = (item: MenuItem) => (
-    <ProductCard
-      key={item.id}
-      item={item}
-      cards={cards}
+  return (
+    <ProductList
+      items={category.items}
+      label={category.name}
+      view={product_view}
+      columns={columns}
       template={template}
-      onAdd={(quantity, note, optionIds) => onAdd(item.id, quantity, note, optionIds)}
+      density={layout.density}
+      cards={cards}
+      onAdd={onAdd}
     />
   )
-  if (product_view === 'list') return <div className={`flex flex-col ${gap}`}>{category.items.map(card)}</div>
-  if (product_view === 'carousel') {
-    return (
-      <div
-        role="region"
-        aria-label={`${category.name}, desliza para ver más`}
-        tabIndex={0}
-        className={`-mx-4 flex snap-x snap-mandatory scroll-px-4 overflow-x-auto px-4 pb-2 ${gap}`}
-      >
-        {category.items.map((item) => (
-          <div key={item.id} className="w-[78%] max-w-80 shrink-0 snap-start @2xl:w-72">
-            {card(item)}
-          </div>
-        ))}
-      </div>
-    )
-  }
-  return <div className={`grid ${gap} ${gridColumnsClass(columns)}`}>{category.items.map(card)}</div>
 }
 
 interface CategoryNavProps {

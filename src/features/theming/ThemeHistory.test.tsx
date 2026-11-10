@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { Theme, ThemeVersion } from './api.ts'
 import { ThemeHistory } from './ThemeHistory.tsx'
 
-const THEME = { schema_version: 5 } as Theme
+const THEME = { schema_version: 6 } as Theme
 
 function version(number: number, publishedAt: string): ThemeVersion {
   return { id: `v${number}`, number, published_at: publishedAt, theme: THEME }

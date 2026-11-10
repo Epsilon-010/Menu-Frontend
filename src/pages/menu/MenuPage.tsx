@@ -7,6 +7,7 @@ import { BillRequestControl } from '../../features/ordering/BillRequestControl.t
 import { CartContents } from '../../features/ordering/CartContents.tsx'
 import { cartBarTotal, dishCount, hasSomethingToPay } from '../../features/ordering/logic.ts'
 import { MenuBrowser } from '../../features/ordering/MenuBrowser.tsx'
+import { MenuSections } from '../../features/ordering/MenuSections.tsx'
 import { OrderCard } from '../../features/ordering/OrderCard.tsx'
 import { SendConfirmation } from '../../features/ordering/SendConfirmation.tsx'
 import { useTableOrdering, type Loadable, type TableOrdering } from '../../features/ordering/useTableOrdering.ts'
@@ -155,12 +156,24 @@ export function MenuPage() {
     >
       <div className={`grid gap-8 pb-24 ${placement.grid}`}>
         <div className={`min-w-0 space-y-12 ${placement.main}`}>
-          {theme && <MenuHero theme={theme.theme} imageUrls={theme.image_urls} businessName={tenant.name} />}
-          {menu.status === 'loading' && <MenuSkeleton />}
-          {menu.status === 'error' && <LoadError message={menu.message} onRetry={ordering.retryMenu} />}
-          {menu.status === 'loaded' && (
-            <MenuBrowser categories={menu.data} onAdd={ordering.addLine} layout={layout} cards={cards} belowFixedBar={layout.sticky_header} />
-          )}
+          <MenuSections
+            sections={layout.sections}
+            hero={theme && <MenuHero theme={theme.theme} imageUrls={theme.image_urls} businessName={tenant.name} />}
+            menu={
+              <>
+                {menu.status === 'loading' && <MenuSkeleton />}
+                {menu.status === 'error' && <LoadError message={menu.message} onRetry={ordering.retryMenu} />}
+                {menu.status === 'loaded' && (
+                  <MenuBrowser categories={menu.data} onAdd={ordering.addLine} layout={layout} cards={cards} belowFixedBar={layout.sticky_header} />
+                )}
+              </>
+            }
+            categories={menu.status === 'loaded' ? menu.data : []}
+            layout={layout}
+            cards={cards}
+            onAdd={ordering.addLine}
+            imageUrls={theme?.image_urls}
+          />
 
           <section aria-labelledby="orders-title" className="space-y-4">
             <h2 id="orders-title" className="text-xl font-semibold tracking-tight text-ink">

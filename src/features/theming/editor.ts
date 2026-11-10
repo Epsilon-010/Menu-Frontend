@@ -3,7 +3,7 @@ import type {
   CategoryLayout,
   ColorField,
   FontId,
-  ImageSlot,
+  UploadSlot,
   FontRole,
   HeaderBlock,
   TextElement,
@@ -132,10 +132,15 @@ export function themeFileName(businessName: string, day: Date): string {
   return `${slug ? `${slug}-design` : 'menu-design'}-${date}.json`
 }
 
-const SLOT_NAMES: Record<ImageSlot, string> = { logo: 'el logo', banner: 'el banner', background: 'la imagen de fondo' }
+const SLOT_NAMES: Record<UploadSlot, string> = {
+  logo: 'el logo',
+  banner: 'el banner',
+  background: 'la imagen de fondo',
+  section: 'las fotos de la página',
+}
 
 /** The warning for images an import left out, or null when it kept them all. */
-export function removedImagesText(slots: ImageSlot[]): string | null {
+export function removedImagesText(slots: UploadSlot[]): string | null {
   if (slots.length === 0) return null
   const names = slots.map((slot) => SLOT_NAMES[slot])
   const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}`

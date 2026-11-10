@@ -152,8 +152,8 @@ export class OrderingError extends Error {
 }
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
-const OFFLINE = 'Could not reach the server. Check your connection and try again.'
-const SERVER_FAILED = 'The server could not complete that. Please try again in a moment.'
+const OFFLINE = 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.'
+const SERVER_FAILED = 'El servidor no pudo completar la acción. Inténtalo de nuevo en un momento.'
 
 async function errorFrom(response: Response): Promise<OrderingError> {
   const body = (await response.json().catch(() => null)) as {
@@ -167,7 +167,7 @@ async function errorFrom(response: Response): Promise<OrderingError> {
     const detail = body.detail
     return new OrderingError(detail.endsWith('.') ? detail : `${detail}.`, response.status, detail, ids)
   }
-  if (response.status === 422) return new OrderingError('Please check the fields and try again.', 422)
+  if (response.status === 422) return new OrderingError('Revisa los campos e inténtalo de nuevo.', 422)
   return new OrderingError(SERVER_FAILED, response.status)
 }
 

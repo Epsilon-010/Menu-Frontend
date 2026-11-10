@@ -4,9 +4,9 @@ import { withItemModifiers, type Order } from '../ordering/api.ts'
 export type PaymentMethod = 'cash' | 'card' | 'other'
 
 export const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
-  { value: 'cash', label: 'Cash' },
-  { value: 'card', label: 'Card' },
-  { value: 'other', label: 'Other' },
+  { value: 'cash', label: 'Efectivo' },
+  { value: 'card', label: 'Tarjeta' },
+  { value: 'other', label: 'Otro' },
 ]
 
 /** A table's visit, from opening the table until its payment. */
@@ -27,7 +27,7 @@ export interface Bill {
 export interface TableOverview {
   table_id: string
   table_name: string
-  /** Null while the table is closed: its QR lets nobody in. */
+  /** Null while nobody is sitting there; the first QR scan (or the waiter) opens the next visit. */
   bill: Bill | null
 }
 
@@ -42,16 +42,26 @@ export class BillError extends Error {
   }
 }
 
+/** The bill's total is not the one the waiter saw: nothing was charged and the new total needs a look. */
+export class BillChangedError extends BillError {
+  constructor() {
+    super('La cuenta cambió. Revisa el nuevo total y confirma de nuevo.', 409)
+  }
+}
+
+/** The server's detail for that case, as `errorFrom` passes it on. */
+const BILL_CHANGED_DETAIL = 'The bill changed, review it.'
+
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
-const OFFLINE = 'Could not reach the server. Check your connection and try again.'
-const SERVER_FAILED = 'The server could not complete that. Please try again in a moment.'
+const OFFLINE = 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.'
+const SERVER_FAILED = 'El servidor no pudo completar la acción. Inténtalo de nuevo en un momento.'
 
 async function errorFrom(response: Response): Promise<BillError> {
   const body = (await response.json().catch(() => null)) as { detail?: unknown } | null
   if (typeof body?.detail === 'string' && response.status < 500) {
     return new BillError(body.detail.endsWith('.') ? body.detail : `${body.detail}.`, response.status)
   }
-  if (response.status === 422) return new BillError('Please check the fields and try again.', 422)
+  if (response.status === 422) return new BillError('Revisa los campos e inténtalo de nuevo.', 422)
   return new BillError(SERVER_FAILED, response.status)
 }
 
@@ -81,14 +91,25 @@ export async function listTableBills(): Promise<TableOverview[]> {
   return tables.map((table) => (table.bill ? { ...table, bill: billFrom(table.bill) } : table))
 }
 
-/** Opens the table so its QR lets guests in. Idempotent: an open table answers with its bill. */
+/** Opens the table by hand (the first QR scan also opens it). Idempotent: an open table answers with its bill. */
 export async function openTable(tableId: string): Promise<Bill> {
   return billFrom((await (await send('/bills', json({ table_id: tableId }))).json()) as Bill)
 }
 
-/** Registers the payment, which closes the bill and ends every guest session at the table. */
-export async function registerPayment(billId: string, method: PaymentMethod): Promise<Bill> {
-  return billFrom((await (await send(`/bills/${billId}/payment`, json({ method }))).json()) as Bill)
+/**
+ * Registers the payment, which closes the bill and ends every guest session at the table. `expectedTotalCents` is the
+ * total the waiter saw: if the bill no longer matches it, nothing is charged and this throws BillChangedError.
+ */
+export async function registerPayment(billId: string, method: PaymentMethod, expectedTotalCents: number): Promise<Bill> {
+  try {
+    const body = { method, expected_total_cents: expectedTotalCents }
+    return billFrom((await (await send(`/bills/${billId}/payment`, json(body))).json()) as Bill)
+  } catch (error) {
+    if (error instanceof BillError && error.status === 409 && error.message === BILL_CHANGED_DETAIL) {
+      throw new BillChangedError()
+    }
+    throw error
+  }
 }
 
 /** Closes a table that has no orders (a bill with orders is closed by its payment). */

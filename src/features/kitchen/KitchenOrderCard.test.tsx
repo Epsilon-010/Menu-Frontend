@@ -57,7 +57,25 @@ describe('the kitchen ticket', () => {
 
     expect(html).toContain('Dish a')
     expect(html).not.toContain('Size:')
-    expect(html).toContain('Start')
+    expect(html).toContain('Seleccionar todo')
+    // The actions only appear once a dish is chosen.
+    expect(html).not.toContain('Empezar')
+  })
+
+  it('names the state of each dish in words and says when the ticket is late', () => {
+    const html = renderToStaticMarkup(
+      <KitchenOrderCard
+        order={order([dish('a', 'queued'), dish('b', 'preparing')])}
+        now={NOW}
+        late
+        onAct={() => Promise.resolve(null)}
+      />,
+    )
+
+    expect(html).toContain('En cola')
+    expect(html).toContain('En preparación')
+    expect(html).toContain('Retrasada')
+    expect(html).toContain('type="checkbox"')
   })
 })
 
@@ -76,5 +94,22 @@ describe('the delivery card', () => {
     expect(html).toContain('Size: Large · Extras: Cheese, Avocado')
     expect(html).toContain('Dish b')
     expect(html).not.toContain('$')
+  })
+
+  it('puts the ready dishes in their own group with a deliver button each', () => {
+    const html = renderToStaticMarkup(
+      <DeliveryOrderCard
+        order={order([dish('a', 'ready'), dish('b', 'ready'), dish('c', 'queued')])}
+        now={NOW}
+        late={false}
+        view="all"
+        onDeliver={() => Promise.resolve(null)}
+      />,
+    )
+
+    expect(html).toContain('Listos para llevar (2)')
+    expect(html.match(/>Entregar</g)).toHaveLength(2)
+    expect(html).toContain('Entregar todos los listos (2)')
+    expect(html).toContain('En cola')
   })
 })

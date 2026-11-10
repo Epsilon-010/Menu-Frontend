@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { FOCUS_RING } from '../../components/ui/styles.ts'
 import { buttonClass, MOTION, type ButtonSize, type ButtonVariant } from './classes.ts'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -24,13 +25,13 @@ interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export function IconButton({ label, icon, tone = 'default', className = '', type = 'button', ...props }: IconButtonProps) {
-  const colors = tone === 'danger' ? 'text-muted hover:bg-red-50 hover:text-red-700' : 'text-muted hover:bg-subtle hover:text-ink'
+  const colors = tone === 'danger' ? 'text-muted hover:bg-danger/10 hover:text-danger' : 'text-muted hover:bg-subtle hover:text-ink'
   return (
     <button
       type={type}
       aria-label={label}
       title={label}
-      className={`inline-flex items-center justify-center rounded-lg p-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 ${MOTION} ${colors} ${className}`}
+      className={`inline-flex items-center justify-center rounded-lg p-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 pointer-coarse:min-h-11 pointer-coarse:min-w-11 ${MOTION} ${FOCUS_RING} ${colors} ${className}`}
       {...props}
     >
       {icon}

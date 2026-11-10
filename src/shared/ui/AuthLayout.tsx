@@ -11,16 +11,16 @@ export function AuthLayout({ children }: { children: ReactNode }) {
         </span>
         <div className="max-w-[680px] space-y-4">
           <h1 className="bg-gradient-to-r from-white to-[#9B9B9B] bg-clip-text text-5xl font-semibold tracking-tight text-transparent">
-            Every table orders on its own.
+            Cada mesa pide por su cuenta.
             <br />
-            The kitchen hears it at once.
+            La cocina se entera al instante.
           </h1>
           <p className="max-w-[680px] text-lg text-zinc-400">
-            Guests build their order from the tablet, the kitchen releases each dish when it is ready and the waiter
-            brings it to the right table.
+            Los comensales arman su orden desde la tablet, la cocina libera cada platillo en cuanto está listo y el mesero
+            lo lleva a la mesa correcta.
           </p>
         </div>
-        <p className="text-sm text-zinc-500">Menu for restaurants</p>
+        <p className="text-sm text-zinc-500">Menú para restaurantes</p>
       </section>
 
       <section className="flex items-center justify-center px-4 py-12 sm:px-6">{children}</section>

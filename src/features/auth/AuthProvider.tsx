@@ -15,6 +15,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: 'loading' })
   // The role of the current session, read by the session-ended listener (which never re-subscribes).
   const roleRef = useRef<Role | null>(null)
+  const [checkKey, setCheckKey] = useState(0)
 
   const authenticate = useCallback((account: AuthState & { status: 'authenticated' }) => {
     const role = accountRole(account.account)
@@ -24,20 +25,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // On page load ask who we are: the cookies carry the session, and an expired access
-  // cookie is renewed through the refresh cookie by apiFetch.
+  // cookie is renewed through the refresh cookie by apiFetch. Only a confirmed 401 ends it.
   useEffect(() => {
     let active = true
-    fetchAccount()
-      .catch(() => null)
-      .then((account) => {
+    fetchAccount().then(
+      (account) => {
         if (!active) return
         if (account) authenticate({ status: 'authenticated', account })
         else setState(endedState())
-      })
+      },
+      () => {
+        if (!active) return
+        setState({
+          status: 'unavailable',
+          retry: () => {
+            setState({ status: 'loading' })
+            setCheckKey((key) => key + 1)
+          },
+        })
+      },
+    )
     return () => {
       active = false
     }
-  }, [authenticate])
+  }, [authenticate, checkKey])
 
   useEffect(
     () =>
@@ -52,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const startSession = useCallback(
     async (session: Promise<SessionInfo>): Promise<Role> => {
       const { role } = await session
-      const account = await fetchAccount()
+      const account = await fetchAccount().catch(() => null)
       if (!account) throw new LoginError('unavailable')
       authenticate({ status: 'authenticated', account })
       return role

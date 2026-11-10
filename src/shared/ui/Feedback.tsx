@@ -1,10 +1,11 @@
 import { CheckCircleIcon, WarningCircleIcon } from '@phosphor-icons/react'
 import type { ReactNode } from 'react'
+import { badgeVariants } from '../../components/ui/variants.ts'
 
 /** Inline error next to what failed: says what went wrong and what to do. */
 export function ErrorText({ children }: { children: ReactNode }) {
   return (
-    <p role="alert" className="flex items-start gap-2 text-sm text-red-700">
+    <p role="alert" className="flex items-start gap-2 text-sm text-danger">
       <WarningCircleIcon size={16} className="mt-0.5 shrink-0" aria-hidden />
       <span>{children}</span>
     </p>
@@ -23,16 +24,14 @@ export function SuccessText({ children }: { children: ReactNode }) {
 type BadgeTone = 'neutral' | 'warning' | 'success'
 
 const BADGE_TONES: Record<BadgeTone, string> = {
-  neutral: 'bg-subtle text-ink-soft',
-  warning: 'bg-amber-100 text-amber-800',
-  success: 'bg-emerald-100 text-emerald-800',
+  neutral: badgeVariants({ variant: 'default' }),
+  warning: badgeVariants({ variant: 'warning' }),
+  success: badgeVariants({ variant: 'success' }),
 }
 
 export function Badge({ tone = 'neutral', children }: { tone?: BadgeTone; children: ReactNode }) {
   return (
-    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${BADGE_TONES[tone]}`}>
-      {children}
-    </span>
+    <span className={BADGE_TONES[tone]}>{children}</span>
   )
 }
 
@@ -94,7 +93,7 @@ export function LoadError({ message, onRetry }: LoadErrorProps) {
         onClick={onRetry}
         className="rounded-lg px-3 py-2 text-sm font-semibold text-red-800 transition duration-300 ease-smooth hover:bg-red-100 active:scale-[0.98]"
       >
-        Try again
+        Reintentar
       </button>
     </div>
   )

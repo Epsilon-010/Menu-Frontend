@@ -56,6 +56,6 @@ describe('changePassword', () => {
 
     expect(error).toBeInstanceOf(PasswordChangeError)
     expect((error as PasswordChangeError).status).toBe(429)
-    expect((error as PasswordChangeError).message).toBe('Too many attempts. Wait a few minutes and try again.')
+    expect((error as PasswordChangeError).message).toBe('Demasiados intentos. Espera unos minutos e inténtalo de nuevo.')
   })
 })

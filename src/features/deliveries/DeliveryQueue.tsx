@@ -1,6 +1,8 @@
 import { CallBellIcon } from '@phosphor-icons/react'
-import { useState } from 'react'
-import { Select } from '../../shared/ui/Field.tsx'
+import { useId, useState } from 'react'
+import { Label } from '../../components/ui/label.tsx'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select.tsx'
+import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group.tsx'
 import { EmptyState, ListSkeleton, LoadError } from '../../shared/ui/Feedback.tsx'
 import { SectionHeader } from '../../shared/ui/Section.tsx'
 import { SoundToggle } from '../../shared/ui/SoundToggle.tsx'
@@ -9,6 +11,9 @@ import { QueueNotice } from '../kitchen/QueueNotice.tsx'
 import type { QueueState } from '../kitchen/useStaffQueue.ts'
 import { DeliveryOrderCard } from './DeliveryOrderCard.tsx'
 import { deliveryTables, filterByTable, type DeliveryView } from './logic.ts'
+
+/** The "every table" choice; table ids are UUIDs, so it never collides with one. */
+const ALL_TABLES = 'all'
 
 interface DeliveryQueueProps {
   list: QueueState
@@ -29,53 +34,71 @@ export function DeliveryQueue({ list, now, lateMinutes, notice, onDismissNotice,
   const orders = list.status === 'loaded' ? list.orders : []
   const tables = deliveryTables(orders)
   const shown = filterByTable(orders, tableId)
+  const ids = useId()
+  const selectedName =
+    tableId === null ? 'Todas las mesas' : (tables.find((table) => table.id === tableId)?.name ?? 'Mesa seleccionada')
 
   return (
     <div className="space-y-6">
       <SectionHeader
-        title="Ready to deliver"
-        description={`Dishes appear here as soon as the kitchen marks them ready, inside their order. Orders waiting over ${lateMinutes} min are highlighted.`}
-        action={<SoundToggle enabled={sound.enabled} onToggle={sound.toggle} announces="dishes ready to take" />}
+        title="Listos para entregar"
+        description={`Los platillos aparecen aquí, dentro de su orden, en cuanto la cocina los marca como listos. Se resaltan las órdenes que esperan más de ${lateMinutes} min.`}
+        action={<SoundToggle enabled={sound.enabled} onToggle={sound.toggle} announces="platillos listos para llevar" />}
       />
 
-      <div className="flex flex-wrap gap-4">
-        <label className="flex items-center gap-2 text-sm text-zinc-700">
-          Show
-          <Select value={view} onChange={(event) => setView(event.target.value as DeliveryView)} className="w-auto">
-            <option value="all">Whole order</option>
-            <option value="ready">Only ready dishes</option>
-          </Select>
-        </label>
-        <label className="flex items-center gap-2 text-sm text-zinc-700">
-          Table
-          <Select
-            value={tableId ?? ''}
-            onChange={(event) => setTableId(event.target.value === '' ? null : event.target.value)}
-            className="w-auto"
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="space-y-2">
+          <span id={`${ids}-view`} className="block text-sm font-medium text-ink-soft">
+            Mostrar
+          </span>
+          <ToggleGroup
+            type="single"
+            value={view}
+            aria-labelledby={`${ids}-view`}
+            // Pressing the chosen option again would clear it; the filter always has a value.
+            onValueChange={(next) => next && setView(next as DeliveryView)}
           >
-            <option value="">All tables</option>
-            {tableId !== null && !tables.some((table) => table.id === tableId) && (
-              <option value={tableId}>Selected table</option>
-            )}
-            {tables.map((table) => (
-              <option key={table.id} value={table.id}>
-                {table.name}
-              </option>
-            ))}
+            <ToggleGroupItem value="all" className="min-h-11">
+              Toda la orden
+            </ToggleGroupItem>
+            <ToggleGroupItem value="ready" className="min-h-11">
+              Solo platillos listos
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+        <div className="w-56 space-y-2">
+          <Label id={`${ids}-table`} htmlFor={`${ids}-table-control`}>
+            Mesa
+          </Label>
+          <Select value={tableId ?? ALL_TABLES} onValueChange={(next) => setTableId(next === ALL_TABLES ? null : next)}>
+            <SelectTrigger id={`${ids}-table-control`} className="min-h-11">
+              <SelectValue>{selectedName}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_TABLES}>Todas las mesas</SelectItem>
+              {tableId !== null && !tables.some((table) => table.id === tableId) && (
+                <SelectItem value={tableId}>Mesa seleccionada</SelectItem>
+              )}
+              {tables.map((table) => (
+                <SelectItem key={table.id} value={table.id}>
+                  {table.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
-        </label>
+        </div>
       </div>
 
       {notice && <QueueNotice message={notice} onDismiss={onDismissNotice} />}
 
-      {list.status === 'loading' && <ListSkeleton rows={2} label="Loading dishes ready to deliver" />}
+      {list.status === 'loading' && <ListSkeleton rows={2} label="Cargando platillos listos para entregar" />}
       {list.status === 'error' && <LoadError message={list.message} onRetry={onRetry} />}
       {list.status === 'loaded' &&
         (shown.length === 0 ? (
-          <EmptyState icon={<CallBellIcon size={24} aria-hidden />} title="Nothing to deliver right now">
+          <EmptyState icon={<CallBellIcon size={24} aria-hidden />} title="Nada que entregar por ahora">
             {tableId === null
-              ? 'When the kitchen marks a dish ready, its order shows up here.'
-              : 'This table has no dishes ready. Choose All tables to see the rest.'}
+              ? 'Cuando la cocina marca un platillo como listo, su orden aparece aquí.'
+              : 'Esta mesa no tiene platillos listos. Elige Todas las mesas para ver el resto.'}
           </EmptyState>
         ) : (
           <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">

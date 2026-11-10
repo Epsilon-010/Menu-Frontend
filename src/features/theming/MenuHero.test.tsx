@@ -9,7 +9,7 @@ import { DEFAULT_TYPOGRAPHY } from './typography.ts'
 const BANNER = 'tenants/t/banners/b'
 
 const THEME = {
-  schema_version: 4,
+  schema_version: 5,
   colors: { gradient: { enabled: false, from: '#000000', to: '#ffffff', angle: 135 } },
   brand: {
     name: 'Tacos El Primo',
@@ -48,5 +48,30 @@ describe('the top of the menu', () => {
     expect(html).not.toContain('Since 1990')
     expect(html).not.toContain('Order from your table')
     expect(html).toContain('Tacos El Primo')
+  })
+})
+
+describe('the order of the top of the menu', () => {
+  // The image tag itself: React may also add a preload link for it at the top.
+  const marks = { banner: '<img src="https://img.test/b.jpg"', name: 'Tacos El Primo', tagline: 'Since 1990', welcome: 'Order from your table' }
+  const drawn = (html: string) =>
+    (Object.keys(marks) as (keyof typeof marks)[]).sort((a, b) => html.indexOf(marks[a]) - html.indexOf(marks[b]))
+
+  it('is banner, name, tagline and welcome by default, the tagline right under the name', () => {
+    const html = render({})
+    expect(drawn(html)).toEqual(['banner', 'name', 'tagline', 'welcome'])
+    expect(html).toMatch(/Tacos El Primo<\/h1><p class="text-base text-muted">Since 1990<\/p><\/div>/)
+  })
+
+  it('follows the theme order', () => {
+    const html = render({ header_blocks: ['welcome', 'tagline', 'banner', 'name'] })
+    expect(drawn(html)).toEqual(['welcome', 'tagline', 'banner', 'name'])
+  })
+
+  it('still hides the parts the layout turns off', () => {
+    const html = render({ header_blocks: ['tagline', 'welcome', 'name', 'banner'], show_tagline: false, show_banner: false })
+    expect(html).not.toContain('Since 1990')
+    expect(html).not.toContain('https://img.test/b.jpg')
+    expect(html.indexOf('Order from your table')).toBeLessThan(html.indexOf('Tacos El Primo'))
   })
 })

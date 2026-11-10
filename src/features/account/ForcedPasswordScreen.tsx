@@ -22,14 +22,14 @@ export function ForcedPasswordScreen() {
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-2">
           <AuthLogo />
-          <h2 className="text-2xl font-semibold tracking-tight text-zinc-950">Choose your password</h2>
+          <h2 className="text-2xl font-semibold tracking-tight text-zinc-950">Elige tu contraseña</h2>
           <p className="text-sm text-zinc-500">
-            You signed in with a temporary password. Pick your own to start using the panel.
+            Iniciaste sesión con una contraseña temporal. Elige la tuya para empezar a usar el panel.
           </p>
         </div>
-        <ChangePasswordForm currentLabel="Temporary password" submitLabel="Save and continue" />
+        <ChangePasswordForm currentLabel="Contraseña temporal" submitLabel="Guardar y continuar" />
         <Button variant="ghost" disabled={signingOut} onClick={() => void handleSignOut()}>
-          Sign out
+          Cerrar sesión
         </Button>
       </div>
     </AuthLayout>

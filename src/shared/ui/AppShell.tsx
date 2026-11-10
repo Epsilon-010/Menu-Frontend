@@ -38,6 +38,8 @@ function navLinkClass({ isActive }: { isActive: boolean }): string {
 const BAR_BREAKPOINTS = {
   narrow: { list: 'sm:flex', signOut: 'sm:block', compact: 'sm:hidden' },
   wide: { list: 'lg:flex', signOut: 'lg:block', compact: 'lg:hidden' },
+  // The side rail takes over on wide screens: the floating bar never holds the links.
+  rail: { list: '', signOut: '', compact: 'xl:hidden' },
 }
 
 /** The two lines of the menu toggle rotate into an X instead of swapping icons. */
@@ -59,15 +61,29 @@ export function AppShell({
   nav = [],
   onSignOut,
   signingOut = false,
-  signOutLabel = 'Sign out',
+  signOutLabel = 'Cerrar sesión',
   fixedBar = true,
   width = 'max-w-5xl',
   children,
 }: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const hasMenu = nav.length > 0 || onSignOut !== undefined
-  // A long navigation (the admin's) only fits in the bar on wide screens; shorter ones from tablets up.
-  const bar = nav.length > 4 ? BAR_BREAKPOINTS.wide : BAR_BREAKPOINTS.narrow
+  // A long navigation (the admin's eleven sections) gets a side rail on wide screens instead of hiding behind the toggle.
+  const hasRail = nav.length > 8
+  const bar = hasRail ? BAR_BREAKPOINTS.rail : nav.length > 4 ? BAR_BREAKPOINTS.wide : BAR_BREAKPOINTS.narrow
+  const brandMark = logoUrl ? (
+    <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-lg object-contain" />
+  ) : (
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand text-brand-ink">
+      <ForkKnifeIcon size={16} weight="bold" aria-hidden />
+    </span>
+  )
+  const brandText = (
+    <div className="min-w-0 leading-tight">
+      <p className="truncate text-sm font-semibold text-ink">{business}</p>
+      <p className="truncate text-xs text-muted">{identity}</p>
+    </div>
+  )
 
   useEffect(() => {
     if (!menuOpen) return
@@ -84,26 +100,48 @@ export function AppShell({
         href="#main"
         className="sr-only rounded-lg bg-action px-3 py-2 text-sm font-semibold text-action-ink focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50"
       >
-        Skip to content
+        Saltar al contenido
       </a>
 
-      <header className={`${fixedBar ? 'fixed' : 'absolute'} inset-x-0 top-4 z-40 flex justify-center px-4`}>
+      {hasRail && (
+        <aside className="fixed inset-y-4 left-4 z-40 hidden w-60 flex-col gap-2 rounded-2xl border border-line bg-surface p-2 shadow-sm xl:flex">
+          <div className="flex min-w-0 items-center gap-3 p-2">
+            {brandMark}
+            {brandText}
+          </div>
+          <nav aria-label="Secciones" className="min-h-0 flex-1 overflow-y-auto">
+            <ul className="space-y-1">
+              {nav.map((item) => (
+                <li key={item.to}>
+                  <NavLink
+                    to={item.to}
+                    end={item.end}
+                    className={(link) => `${navLinkClass(link)} w-full`}
+                  >
+                    {item.icon}
+                    {item.label}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          {onSignOut && (
+            <button type="button" onClick={onSignOut} disabled={signingOut} className={`${buttonClass('ghost')} w-full justify-start`}>
+              <SignOutIcon size={16} aria-hidden />
+              {signingOut ? 'Cerrando sesión…' : signOutLabel}
+            </button>
+          )}
+        </aside>
+      )}
+
+      <header className={`${fixedBar ? 'fixed' : 'absolute'} inset-x-0 top-4 z-40 flex justify-center px-4 ${hasRail ? 'xl:hidden' : ''}`}>
         <nav
-          aria-label="Main"
+          aria-label="Principal"
           className="flex max-w-full items-center gap-2 rounded-2xl border border-line bg-surface/80 p-2 shadow-sm backdrop-blur-md"
         >
           <div className="flex min-w-0 items-center gap-3 pr-2">
-            {logoUrl ? (
-              <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-lg object-contain" />
-            ) : (
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand text-brand-ink">
-                <ForkKnifeIcon size={16} weight="bold" aria-hidden />
-              </span>
-            )}
-            <div className="min-w-0 leading-tight">
-              <p className="truncate text-sm font-semibold text-ink">{business}</p>
-              <p className="truncate text-xs text-muted">{identity}</p>
-            </div>
+            {brandMark}
+            {brandText}
           </div>
 
           {nav.length > 0 && (
@@ -124,7 +162,7 @@ export function AppShell({
             <div className={`hidden ${bar.signOut}`}>
               <button type="button" onClick={onSignOut} disabled={signingOut} className={buttonClass('ghost')}>
                 <SignOutIcon size={16} aria-hidden />
-                {signingOut ? 'Signing out…' : signOutLabel}
+                {signingOut ? 'Cerrando sesión…' : signOutLabel}
               </button>
             </div>
           )}
@@ -132,7 +170,7 @@ export function AppShell({
           {hasMenu && (
             <button
               type="button"
-              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
               aria-expanded={menuOpen}
               aria-controls="mobile-menu"
               onClick={() => setMenuOpen((open) => !open)}
@@ -148,7 +186,7 @@ export function AppShell({
         <div
           id="mobile-menu"
           inert={!menuOpen}
-          className={`fixed inset-0 z-30 bg-canvas/95 px-6 pt-24 backdrop-blur-xl transition-opacity duration-500 ease-smooth ${bar.compact} ${
+          className={`fixed inset-0 z-30 overflow-y-auto bg-canvas/95 px-6 pt-24 pb-8 backdrop-blur-xl transition-opacity duration-500 ease-smooth ${bar.compact} ${
             menuOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
           }`}
         >
@@ -186,7 +224,7 @@ export function AppShell({
                   className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-lg font-semibold text-ink-soft hover:bg-subtle ${MOTION}`}
                 >
                   <SignOutIcon size={20} aria-hidden />
-                  {signingOut ? 'Signing out…' : signOutLabel}
+                  {signingOut ? 'Cerrando sesión…' : signOutLabel}
                 </button>
               </li>
             )}
@@ -194,9 +232,11 @@ export function AppShell({
         </div>
       )}
 
-      <main id="main" className={`mx-auto ${width} px-4 pt-24 pb-16 sm:px-6`}>
-        {children}
-      </main>
+      <div className={hasRail ? 'xl:pl-64' : undefined}>
+        <main id="main" className={`mx-auto ${width} px-4 pt-24 pb-16 sm:px-6 ${hasRail ? 'xl:pt-8' : ''}`}>
+          {children}
+        </main>
+      </div>
     </div>
   )
 }

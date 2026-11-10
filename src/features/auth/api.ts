@@ -1,4 +1,5 @@
-import { apiFetch, publicFetch, type Role, type SessionInfo } from '../../shared/api/http.ts'
+import { apiFetch, publicFetch, SessionUnavailableError, type Role, type SessionInfo } from '../../shared/api/http.ts'
+import { rememberGuestQr } from './guestMarker.ts'
 
 /**
  * Staff accounts carry `user`; table tablets carry `table`; guests who scanned the table's QR carry
@@ -68,7 +69,7 @@ export function tableLogin(code: string, pin: string): Promise<SessionInfo> {
 /** Longest guest name the API accepts (shown next to what the guest adds to the cart). */
 export const GUEST_NAME_MAX_LENGTH = 30
 
-const OFFLINE = 'Could not reach the server. Check your connection and try again.'
+const OFFLINE = 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.'
 
 /** A failed QR join, with a message ready to show to the guest. */
 export class QrJoinError extends Error {
@@ -85,8 +86,8 @@ function sentence(text: string): string {
 }
 
 /**
- * Joins the table's open visit as a guest with the token printed in its QR. The API sets the
- * session cookies; it answers 409 while no waiter has opened the table.
+ * Joins the table's visit (the first scan opens it) as a guest with the token printed in its QR. The API sets the
+ * session cookies; it answers 409 when the visit already has the most guests it allows.
  */
 export async function qrLogin(token: string, name?: string): Promise<SessionInfo> {
   const trimmed = name?.trim() ?? ''
@@ -100,19 +101,25 @@ export async function qrLogin(token: string, name?: string): Promise<SessionInfo
   } catch {
     throw new QrJoinError(OFFLINE)
   }
-  if (response.ok) return (await response.json()) as SessionInfo
+  if (response.ok) {
+    // Before the session is shown: the join page redirects as soon as this guest is the signed-in account.
+    rememberGuestQr(token)
+    return (await response.json()) as SessionInfo
+  }
 
-  if (response.status === 429) throw new QrJoinError('Too many attempts. Wait a few minutes and try again.', 429)
+  if (response.status === 429) throw new QrJoinError('Demasiados intentos. Espera unos minutos e inténtalo de nuevo.', 429)
   const body = (await response.json().catch(() => null)) as { detail?: unknown } | null
   if (typeof body?.detail === 'string' && response.status < 500) {
     throw new QrJoinError(sentence(body.detail), response.status)
   }
-  throw new QrJoinError('The server could not complete that. Please try again in a moment.', response.status)
+  throw new QrJoinError('El servidor no pudo completar la acción. Inténtalo de nuevo en un momento.', response.status)
 }
 
+/** The signed-in account, or null only when the server confirms there is no session. Any other failure throws. */
 export async function fetchAccount(): Promise<Account | null> {
   const response = await apiFetch('/auth/me')
-  if (!response.ok) return null
+  if (response.status === 401) return null
+  if (!response.ok) throw new SessionUnavailableError()
   return (await response.json()) as Account
 }
 

@@ -1,23 +1,49 @@
-import { BellRingingIcon, ChairIcon, CheckIcon, DoorOpenIcon, MoneyIcon, XCircleIcon } from '@phosphor-icons/react'
-import { useState } from 'react'
+import {
+  BellRingingIcon,
+  ChairIcon,
+  CheckIcon,
+  CircleIcon,
+  CreditCardIcon,
+  DoorOpenIcon,
+  MoneyIcon,
+  WalletIcon,
+  XCircleIcon,
+} from '@phosphor-icons/react'
+import { useReducer, type ReactNode } from 'react'
+import { Badge } from '../../components/ui/badge.tsx'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog.tsx'
+import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group.tsx'
+import { cn } from '../../lib/utils.ts'
 import { Button } from '../../shared/ui/Button.tsx'
-import { MOTION } from '../../shared/ui/classes.ts'
-import { Badge, ErrorText } from '../../shared/ui/Feedback.tsx'
+import { ErrorText } from '../../shared/ui/Feedback.tsx'
 import { useRowAction } from '../../shared/ui/useRowAction.ts'
 import { formatMoney } from '../catalog/price.ts'
 import { OrderCard } from '../ordering/OrderCard.tsx'
 import { clockTime } from '../ordering/logic.ts'
 import { PAYMENT_METHODS, type NewOrderDish, type PaymentMethod, type TableOverview } from './api.ts'
+import { billDialogFor, billDialogReducer, NO_BILL_DIALOG } from './billDialog.ts'
 import { AddDishControl, CancelDishControl } from './DishCorrections.tsx'
 import { acceptsNewDishes, canCancelDish, hasSomethingToCharge, tableCardId } from './logic.ts'
 
-type Mode = { kind: 'view' } | { kind: 'pay'; method: PaymentMethod } | { kind: 'confirm-close' }
+const METHOD_ICONS: Record<PaymentMethod, ReactNode> = {
+  cash: <MoneyIcon size={18} aria-hidden />,
+  card: <CreditCardIcon size={18} aria-hidden />,
+  other: <WalletIcon size={18} aria-hidden />,
+}
 
 interface TableBillCardProps {
   table: TableOverview
   /** Each action resolves to an error message, or null when it was done. */
   onOpen: () => Promise<string | null>
-  onPay: (method: PaymentMethod) => Promise<string | null>
+  /** `expectedTotalCents` is the total on screen when the waiter confirmed. */
+  onPay: (method: PaymentMethod, expectedTotalCents: number) => Promise<string | null>
   onClose: () => Promise<string | null>
   /** The waiter attended the table that asked for the bill. */
   onDismissRequest: () => Promise<string | null>
@@ -36,13 +62,21 @@ export function TableBillCard({
   onCancelDish,
   onAddDish,
 }: TableBillCardProps) {
-  const [mode, setMode] = useState<Mode>({ kind: 'view' })
-  const { busy, error, run: runAction } = useRowAction()
+  const [dialog, dispatch] = useReducer(billDialogReducer, NO_BILL_DIALOG)
+  const { busy, run: runAction } = useRowAction()
   const { bill } = table
+  const billId = bill?.id ?? null
   const requestedAt = bill?.bill_requested_at ?? null
+  const { mode, error } = billDialogFor(dialog, billId)
 
-  function run(action: () => Promise<string | null>) {
-    return runAction(action, () => setMode({ kind: 'view' }))
+  async function run(action: () => Promise<string | null>) {
+    const failure = await runAction(action)
+    dispatch({ type: 'settled', billId, error: failure })
+  }
+
+  /** Closing a confirmation while it is being saved would hide its outcome. */
+  function closeDialog() {
+    if (!busy) dispatch({ type: 'dismiss' })
   }
 
   return (
@@ -50,54 +84,77 @@ export function TableBillCard({
       id={tableCardId(table.table_id)}
       tabIndex={-1}
       aria-busy={busy}
-      className={`scroll-mt-24 space-y-4 rounded-2xl border bg-white p-4 focus:outline-none ${
-        requestedAt ? 'border-amber-300 ring-2 ring-amber-200' : 'border-zinc-200'
-      }`}
+      className={cn(
+        'scroll-mt-24 space-y-4 rounded-2xl border bg-surface p-4 shadow-xs focus:outline-none sm:p-6',
+        requestedAt ? 'border-amber-300 ring-2 ring-amber-200' : 'border-line',
+      )}
     >
       <header className="flex flex-wrap items-center gap-4">
         <span
-          className={`flex h-10 w-10 items-center justify-center rounded-lg ${bill ? 'bg-zinc-950 text-white' : 'bg-zinc-100 text-zinc-500'}`}
+          className={cn(
+            'flex size-12 shrink-0 items-center justify-center rounded-xl',
+            bill ? 'bg-action text-action-ink' : 'bg-subtle text-muted',
+          )}
         >
-          <ChairIcon size={20} aria-hidden />
+          <ChairIcon size={24} aria-hidden />
         </span>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-semibold text-zinc-950">{table.table_name}</h2>
-            {bill ? <Badge tone="success">Open</Badge> : <Badge>Closed</Badge>}
-            {requestedAt && <Badge tone="warning">Bill requested</Badge>}
+            <h2 className="text-lg font-semibold tracking-tight text-ink">{table.table_name}</h2>
+            {bill ? (
+              <Badge variant="success">
+                <CircleIcon size={8} weight="fill" aria-hidden />
+                Abierta
+              </Badge>
+            ) : (
+              <Badge variant="outline">Cerrada</Badge>
+            )}
+            {requestedAt && (
+              <Badge variant="warning">
+                <BellRingingIcon size={14} aria-hidden />
+                Pidió la cuenta
+              </Badge>
+            )}
           </div>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted">
             {bill
-              ? `Opened at ${clockTime(bill.opened_at)} · ${bill.orders.length} ${bill.orders.length === 1 ? 'order' : 'orders'}`
-              : 'Guests cannot join with the QR until you open it.'}
+              ? `Abierta a las ${clockTime(bill.opened_at)} · ${bill.orders.length} ${bill.orders.length === 1 ? 'orden' : 'órdenes'}`
+              : 'Se abre sola cuando alguien escanea su QR.'}
           </p>
         </div>
-        {bill && <p className="text-lg font-semibold text-zinc-950 tabular-nums">{formatMoney(bill.total_cents)}</p>}
+        {bill && <p className="text-2xl font-semibold tracking-tight text-ink tabular-nums">{formatMoney(bill.total_cents)}</p>}
       </header>
 
       {requestedAt && (
-        <div className="flex flex-wrap items-center gap-4 rounded-xl bg-amber-50 p-3">
-          <p className="flex flex-1 items-center gap-2 text-sm text-amber-900">
-            <BellRingingIcon size={16} aria-hidden />
-            Asked for the bill at {clockTime(requestedAt)}.
+        <div className="flex flex-wrap items-center gap-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
+          <p className="flex flex-1 items-center gap-2 text-sm font-medium text-amber-900">
+            <BellRingingIcon size={18} aria-hidden />
+            Pidió la cuenta a las {clockTime(requestedAt)}.
           </p>
           <Button
             variant="secondary"
+            className="min-h-11"
             icon={<CheckIcon size={16} aria-hidden />}
             disabled={busy}
             onClick={() => void run(onDismissRequest)}
           >
-            Attended
+            Atendida
           </Button>
         </div>
       )}
 
       {!bill && (
-        <div className="space-y-2">
-          <Button variant="primary" icon={<DoorOpenIcon size={16} aria-hidden />} disabled={busy} onClick={() => void run(onOpen)}>
-            {busy ? 'Opening…' : 'Open table'}
+        <div className="flex flex-wrap items-center gap-4">
+          <Button
+            variant="secondary"
+            size="md"
+            className="min-h-11"
+            icon={<DoorOpenIcon size={20} aria-hidden />}
+            disabled={busy}
+            onClick={() => void run(onOpen)}
+          >
+            {busy ? 'Abriendo…' : 'Abrir mesa'}
           </Button>
-          <p className="text-xs text-zinc-500">Once open, the table QR lets guests in until the bill is paid.</p>
         </div>
       )}
 
@@ -118,90 +175,109 @@ export function TableBillCard({
         </div>
       )}
 
-      {bill && mode.kind === 'view' && (
-        <div className="flex flex-wrap gap-2">
+      {bill && (
+        <div className="flex flex-wrap gap-2 border-t border-line pt-4">
           {hasSomethingToCharge(bill) ? (
             <Button
               variant="primary"
-              icon={<MoneyIcon size={16} aria-hidden />}
+              size="md"
+              className="min-h-12 w-full sm:w-auto"
+              icon={<MoneyIcon size={20} aria-hidden />}
               disabled={busy}
-              onClick={() => setMode({ kind: 'pay', method: 'cash' })}
+              onClick={() => dispatch({ type: 'open', billId: bill.id, mode: { kind: 'pay', method: 'cash' } })}
             >
-              Register payment
+              Registrar pago
             </Button>
           ) : (
             <Button
               variant="secondary"
-              icon={<XCircleIcon size={16} aria-hidden />}
+              size="md"
+              className="min-h-12 w-full sm:w-auto"
+              icon={<XCircleIcon size={20} aria-hidden />}
               disabled={busy}
-              onClick={() => setMode({ kind: 'confirm-close' })}
+              onClick={() => dispatch({ type: 'open', billId: bill.id, mode: { kind: 'confirm-close' } })}
             >
-              Close table
+              Cerrar mesa
             </Button>
           )}
         </div>
       )}
 
-      {bill && mode.kind === 'pay' && (
-        <div className="space-y-4 rounded-xl bg-amber-50 p-4">
-          <p className="text-sm text-amber-900">
-            Charge <span className="font-semibold tabular-nums">{formatMoney(bill.total_cents)}</span> for{' '}
-            {table.table_name}. Registering it closes the bill and signs every guest at the table out.
-          </p>
-          <fieldset className="space-y-2">
-            <legend className="text-sm font-medium text-zinc-700">Payment method</legend>
-            <div className="flex flex-wrap gap-2">
-              {PAYMENT_METHODS.map((option) => {
-                const selected = mode.method === option.value
-                return (
-                  <label
-                    key={option.value}
-                    className={`cursor-pointer rounded-lg border px-3 py-2 text-sm font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-zinc-950 ${MOTION} ${
-                      selected ? 'border-zinc-950 bg-zinc-950 text-white' : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name={`method-${bill.id}`}
-                      value={option.value}
-                      checked={selected}
-                      onChange={() => setMode({ kind: 'pay', method: option.value })}
-                      className="sr-only"
-                    />
+      {bill && (
+        <Dialog open={mode.kind === 'pay'} onOpenChange={(open) => !open && closeDialog()}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Cobrar {table.table_name}</DialogTitle>
+              <DialogDescription>
+                Al registrar el pago se cierra la cuenta y se cierra la sesión de todos los comensales de la mesa.
+              </DialogDescription>
+            </DialogHeader>
+            <p className="text-4xl font-semibold tracking-tight text-ink tabular-nums">{formatMoney(bill.total_cents)}</p>
+            <div className="space-y-2">
+              <span id={`method-${bill.id}`} className="block text-sm font-medium text-ink-soft">
+                Método de pago
+              </span>
+              <ToggleGroup
+                type="single"
+                width="full"
+                value={mode.kind === 'pay' ? mode.method : undefined}
+                disabled={busy}
+                aria-labelledby={`method-${bill.id}`}
+                // Pressing the chosen method again would clear it; a payment always has a method.
+                onValueChange={(next) => next && dispatch({ type: 'method', method: next as PaymentMethod })}
+              >
+                {PAYMENT_METHODS.map((option) => (
+                  <ToggleGroupItem key={option.value} value={option.value} className="min-h-11 text-base">
+                    {METHOD_ICONS[option.value]}
                     {option.label}
-                  </label>
-                )
-              })}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
             </div>
-          </fieldset>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="primary" disabled={busy} onClick={() => void run(() => onPay(mode.method))}>
-              {busy ? 'Registering…' : `Register ${formatMoney(bill.total_cents)} paid`}
-            </Button>
-            <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-              Cancel
-            </Button>
-          </div>
-        </div>
+            {error && <ErrorText>{error}</ErrorText>}
+            <DialogFooter>
+              <Button variant="ghost" size="md" className="min-h-11" disabled={busy} onClick={closeDialog}>
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                className="min-h-11"
+                disabled={busy}
+                onClick={() => {
+                  if (mode.kind === 'pay') void run(() => onPay(mode.method, bill.total_cents))
+                }}
+              >
+                {busy ? 'Registrando…' : `Registrar pago de ${formatMoney(bill.total_cents)}`}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
 
-      {bill && mode.kind === 'confirm-close' && (
-        <div className="flex flex-wrap items-center gap-4 rounded-xl bg-amber-50 p-4">
-          <p className="flex-1 text-sm text-amber-900">
-            Close {table.table_name}? Its QR stops letting guests in and anyone who joined is signed out.
-          </p>
-          <div className="flex gap-2">
-            <Button variant="primary" disabled={busy} onClick={() => void run(onClose)}>
-              {busy ? 'Closing…' : 'Close table'}
-            </Button>
-            <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-              Cancel
-            </Button>
-          </div>
-        </div>
+      {bill && (
+        <Dialog open={mode.kind === 'confirm-close'} onOpenChange={(open) => !open && closeDialog()}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>¿Cerrar {table.table_name}?</DialogTitle>
+              <DialogDescription>
+                Se cierra la sesión de quien haya entrado; el próximo que escanee el QR abre una visita nueva.
+              </DialogDescription>
+            </DialogHeader>
+            {error && <ErrorText>{error}</ErrorText>}
+            <DialogFooter>
+              <Button variant="ghost" size="md" className="min-h-11" disabled={busy} onClick={closeDialog}>
+                Cancelar
+              </Button>
+              <Button variant="primary" size="md" className="min-h-11" disabled={busy} onClick={() => void run(onClose)}>
+                {busy ? 'Cerrando…' : 'Cerrar mesa'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
 
-      {error && <ErrorText>{error}</ErrorText>}
+      {mode.kind === 'view' && error && <ErrorText>{error}</ErrorText>}
     </section>
   )
 }

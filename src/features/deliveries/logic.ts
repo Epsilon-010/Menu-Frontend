@@ -29,12 +29,12 @@ export function splitDelivery(order: StaffOrder): DeliveryGroups {
 export function deliveryProgress(order: StaffOrder): string {
   const owed = order.items.filter((item) => item.status !== 'cancelled')
   const delivered = owed.filter((item) => item.status === 'delivered').length
-  return `${delivered} of ${owed.length} delivered`
+  return `${delivered} de ${owed.length} entregados`
 }
 
 /** Like "Table 1 · Order #12 · 2 of 5 delivered". */
 export function deliveryCounter(order: StaffOrder): string {
-  return `${order.table_name} · Order #${order.number} · ${deliveryProgress(order)}`
+  return `${order.table_name} · Orden #${order.number} · ${deliveryProgress(order)}`
 }
 
 export function hasReady(order: StaffOrder): boolean {
@@ -97,11 +97,45 @@ export function newRejections(
             table_name: table.table_name,
             order_number: order.number,
             name: dishLabel(item.name, item.modifiers),
-            note: rejectionNote(item) ?? 'Rejected',
+            note: rejectionNote(item) ?? 'Rechazado',
           })
         }
       }
     }
   }
   return { seen, rejections }
+}
+
+/** A delivered order as the waiter's note: what already reached the table and how many dishes are still owed. */
+export interface DeliveredNote {
+  order_id: string
+  table_name: string
+  order_number: number
+  sent_at: string
+  /** Like "2 × Tacos (Meat: Pastor)". */
+  delivered: string[]
+  /** Dishes not delivered yet, by quantity; rejected ones are not owed. */
+  pending: number
+}
+
+/** Orders of the open tables with at least one delivered dish, completed ones included, newest first. */
+export function deliveredNotes(tables: TableOverview[]): DeliveredNote[] {
+  const notes: DeliveredNote[] = []
+  for (const table of tables) {
+    for (const order of table.bill?.orders ?? []) {
+      const delivered = order.items.filter((item) => item.status === 'delivered')
+      if (delivered.length === 0) continue
+      notes.push({
+        order_id: order.id,
+        table_name: table.table_name,
+        order_number: order.number,
+        sent_at: order.created_at,
+        delivered: delivered.map((item) => `${item.quantity} × ${dishLabel(item.name, item.modifiers)}`),
+        pending: order.items
+          .filter((item) => item.status !== 'delivered' && item.status !== 'cancelled')
+          .reduce((total, item) => total + item.quantity, 0),
+      })
+    }
+  }
+  return notes.sort((a, b) => b.sent_at.localeCompare(a.sent_at))
 }

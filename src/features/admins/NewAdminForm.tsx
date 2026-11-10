@@ -40,17 +40,17 @@ export function NewAdminForm({ onCreate }: NewAdminFormProps) {
     <Card className="p-6">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-1">
-          <h2 className="font-semibold text-zinc-950">Add an admin</h2>
+          <h2 className="font-semibold text-zinc-950">Agregar un administrador</h2>
           <p className="text-sm text-zinc-500">
-            You get a temporary password to hand them. They sign in with their email and must pick their own password.
+            Recibes una contraseña temporal para entregársela. Inicia sesión con su email y debe elegir su propia contraseña.
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Full name">
+          <Field label="Nombre completo">
             <TextInput
               required
               maxLength={120}
-              placeholder="Manager"
+              placeholder="Gerente"
               autoComplete="off"
               value={draft.full_name}
               onChange={(event) => setDraft({ ...draft, full_name: event.target.value })}
@@ -61,7 +61,7 @@ export function NewAdminForm({ onCreate }: NewAdminFormProps) {
               required
               type="email"
               maxLength={254}
-              placeholder="manager@example.com"
+              placeholder="gerente@ejemplo.com"
               autoComplete="off"
               value={draft.email}
               onChange={(event) => setDraft({ ...draft, email: event.target.value })}
@@ -70,7 +70,7 @@ export function NewAdminForm({ onCreate }: NewAdminFormProps) {
         </div>
         {error && <ErrorText>{error}</ErrorText>}
         <Button type="submit" variant="primary" icon={<PlusIcon size={16} aria-hidden />} disabled={saving}>
-          {saving ? 'Adding…' : 'Add admin'}
+          {saving ? 'Agregando…' : 'Agregar administrador'}
         </Button>
       </form>
     </Card>

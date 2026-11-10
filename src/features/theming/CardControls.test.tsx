@@ -10,40 +10,79 @@ function render(cards: Partial<ThemeCards> = {}, layout: Partial<ThemeLayout> = 
   return renderToStaticMarkup(<CardControls theme={theme} onChange={() => undefined} />)
 }
 
-/** The opening <select> tag of the control with that label. */
-function select(html: string, label: string): string {
-  const at = html.indexOf(`>${label}</`)
+/** The markup of the control with that label: from its label to the next label. */
+function control(html: string, label: string): string {
+  const at = html.indexOf(`>${label}</label>`)
   if (at < 0) throw new Error(`No control labeled ${label}`)
-  const start = html.indexOf('<select', at)
-  return html.slice(start, html.indexOf('>', start) + 1)
+  const end = html.indexOf('<label', at)
+  return html.slice(at, end < 0 ? undefined : end)
 }
 
+/** The text a select list shows for its chosen option (the trigger's value). */
+function chosen(html: string, label: string): string {
+  const markup = control(html, label)
+  const start = markup.indexOf('<button')
+  const trigger = markup.slice(start, markup.indexOf('</button>', start))
+  return trigger.replace(/<[^>]+>/g, '').trim()
+}
+
+const disabled = (markup: string) => markup.includes(' disabled=""')
+
 describe('card controls', () => {
-  it('offer every option group, with the three templates', () => {
+  it('offer every option group, showing the chosen template and description lines', () => {
     const html = render()
-    const labels = ['Card template', 'Fit', 'Corners', 'Shadow', 'Border', 'Inner spacing', 'Description lines', 'Price']
-    for (const label of [...labels, 'Content', 'Button shape', 'On hover', 'When cards appear']) {
-      expect(html).toContain(`>${label}</`)
+    const labels = ['Plantilla de tarjeta', 'Ajuste', 'Esquinas', 'Sombra', 'Borde', 'Espacio interior', 'Líneas de descripción', 'Precio']
+    for (const label of [...labels, 'Contenido', 'Forma del botón', 'Al pasar el cursor', 'Al aparecer las tarjetas']) {
+      expect(html).toContain(`>${label}</label>`)
     }
-    expect(html).toContain('>Vertical: image on top</option>')
-    expect(html).toContain('>Full image with the text over it</option>')
-    expect(html).toContain('>Hide the description</option>')
+    expect(chosen(html, 'Plantilla de tarjeta')).toBe('Vertical: imagen arriba')
+    expect(chosen(render({ template: 'overlay' }), 'Plantilla de tarjeta')).toBe('Imagen completa con el texto encima')
+    expect(chosen(render({ description_lines: 0 }), 'Líneas de descripción')).toBe('Ocultar la descripción')
+  })
+
+  it('show a few short options as a segmented control with the chosen one on', () => {
+    const side = control(render({ template: 'horizontal', image: { aspect: 'landscape', fit: 'cover', position: 'right' } }), 'Lado')
+    expect(side).toContain('role="radiogroup"')
+    for (const option of ['Izquierda', 'Derecha']) expect(side).toContain(`>${option}</button>`)
+    expect(side).toMatch(/data-state="on"[^>]*>Derecha<\/button>/)
+  })
+
+  it('use a select list when the options would not fit side by side', () => {
+    expect(control(render({ shadow: 'md' }), 'Sombra')).not.toContain('role="radiogroup"')
+    expect(control(render(), 'Forma')).not.toContain('role="radiogroup"')
   })
 
   it('enable the image side only for horizontal cards and the darkening only for the overlay', () => {
-    expect(select(render(), 'Side')).toContain(' disabled=""')
-    expect(select(render({ template: 'horizontal' }), 'Side')).not.toContain(' disabled=""')
-    expect(select(render({ template: 'horizontal' }), 'Shape')).toContain(' disabled=""')
-    expect(select(render({}, { product_view: 'list' }), 'Side')).not.toContain(' disabled=""')
-    expect(render()).not.toContain('Darkening under the text')
-    expect(render({ template: 'overlay', overlay_opacity: 45 })).toContain('Darkening under the text: 45%')
+    expect(disabled(control(render(), 'Lado'))).toBe(true)
+    expect(disabled(control(render({ template: 'horizontal' }), 'Lado'))).toBe(false)
+    expect(disabled(control(render({ template: 'horizontal' }), 'Forma'))).toBe(true)
+    expect(disabled(control(render({}, { product_view: 'list' }), 'Lado'))).toBe(false)
+    expect(render()).not.toContain('Oscurecer bajo el texto')
+    expect(render({ template: 'overlay', overlay_opacity: 45 })).toContain('Oscurecer bajo el texto: 45%')
     // List rows are never overlays, so the darkening would change nothing there.
-    expect(render({ template: 'overlay' }, { product_view: 'list' })).not.toContain('Darkening under the text')
+    expect(render({ template: 'overlay' }, { product_view: 'list' })).not.toContain('Oscurecer bajo el texto')
   })
 
   it('say the list view always draws rows, and disable the border color without a border', () => {
-    expect(render({}, { product_view: 'list' })).toContain('The list view always draws horizontal rows')
-    expect(select(render({ border: { width: 'none', color: 'border' } }), 'Border color')).toContain(' disabled=""')
-    expect(select(render(), 'Border color')).not.toContain(' disabled=""')
+    expect(render({}, { product_view: 'list' })).toContain('La vista de lista siempre dibuja filas horizontales')
+    expect(disabled(control(render({ border: { width: 'none', color: 'border' } }), 'Color del borde'))).toBe(true)
+    expect(disabled(control(render(), 'Color del borde'))).toBe(false)
+  })
+
+  it('list the parts of the card in the theme order, each with a drag handle and up and down buttons', () => {
+    const html = render({ blocks: ['add_button', 'image', 'heading', 'description', 'badges'] })
+    expect(html).toContain('Orden de la tarjeta')
+    const rows = [...html.matchAll(/aria-label="Arrastrar ([^"]+)"/g)].map((match) => match[1])
+    expect(rows).toEqual(['Botón de agregar', 'Imagen', 'Nombre y precio', 'Descripción', 'Etiquetas'])
+    // The first row cannot go up and the last cannot go down.
+    expect(html).toMatch(/aria-label="Subir Botón de agregar"[^>]*disabled=""/)
+    expect(html).toMatch(/aria-label="Bajar Etiquetas"[^>]*disabled=""/)
+    expect(html).not.toMatch(/aria-label="Subir Imagen"[^>]*disabled=""/)
+  })
+
+  it('say the image only moves in the vertical template', () => {
+    expect(render({ template: 'overlay' })).toContain('La imagen solo cambia de lugar con la plantilla vertical')
+    expect(render()).not.toContain('La imagen solo cambia de lugar con la plantilla vertical')
   })
 })
+

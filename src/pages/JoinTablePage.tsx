@@ -2,6 +2,7 @@ import { QrCodeIcon } from '@phosphor-icons/react'
 import { useState, type FormEvent } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { accountRole, GUEST_NAME_MAX_LENGTH, homePathFor, QrJoinError } from '../features/auth/api.ts'
+import { joinedWithQr } from '../features/auth/guestMarker.ts'
 import { useAuth } from '../features/auth/useAuth.ts'
 import { buttonClass } from '../shared/ui/classes.ts'
 import { Field, TextInput } from '../shared/ui/Field.tsx'
@@ -16,7 +17,8 @@ export function JoinTablePage() {
   const [error, setError] = useState<string | null>(null)
   const [joining, setJoining] = useState(false)
 
-  if (state.status === 'authenticated' && accountRole(state.account) === 'guest') {
+  // Only this table's guest goes straight to the menu; a guest of another table may join this one.
+  if (state.status === 'authenticated' && accountRole(state.account) === 'guest' && joinedWithQr(token)) {
     return <Navigate to={homePathFor('guest')} replace />
   }
 
@@ -31,7 +33,7 @@ export function JoinTablePage() {
       setError(
         caught instanceof QrJoinError
           ? caught.message
-          : 'Could not reach the server. Check your connection and try again.',
+          : 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.',
       )
       setJoining(false)
     }
@@ -44,21 +46,21 @@ export function JoinTablePage() {
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-950 text-white">
             <QrCodeIcon size={20} weight="bold" aria-hidden />
           </span>
-          <h1 className="text-2xl font-semibold tracking-tight text-balance text-zinc-950">Join your table</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-balance text-zinc-950">Únete a tu mesa</h1>
           <p className="text-sm text-pretty text-zinc-500">
-            Order from your phone. Everyone at the table shares the same order and sees what the others add.
+            Pide desde tu celular. Todos en la mesa comparten el mismo pedido y ven lo que agregan los demás.
           </p>
         </div>
 
         {state.status === 'loading' ? (
           <Skeleton className="h-20 w-full" />
         ) : (
-          <Field label="Your name (optional)" hint="Your name, shown next to what you add">
+          <Field label="Tu apodo (opcional)" hint="Aparece junto a lo que agregues">
             <TextInput
               type="text"
               autoComplete="given-name"
               maxLength={GUEST_NAME_MAX_LENGTH}
-              placeholder="Guest 1"
+              placeholder="Comensal 1"
               value={name}
               onChange={(event) => setName(event.target.value)}
               disabled={joining}
@@ -73,7 +75,7 @@ export function JoinTablePage() {
           disabled={joining || state.status === 'loading' || token === ''}
           className={`w-full ${buttonClass('primary', 'md')}`}
         >
-          {joining ? 'Joining…' : 'Join table'}
+          {joining ? 'Entrando…' : 'Unirme a la mesa'}
         </button>
       </form>
     </main>

@@ -9,7 +9,7 @@ export function parseLateMinutes(input: string): ParsedMinutes {
   if (!/^\d+$/.test(text) || value < MIN_LATE_ORDER_MINUTES || value > MAX_LATE_ORDER_MINUTES) {
     return {
       ok: false,
-      message: `Use a whole number of minutes from ${MIN_LATE_ORDER_MINUTES} to ${MAX_LATE_ORDER_MINUTES}.`,
+      message: `Usa un número entero de minutos de ${MIN_LATE_ORDER_MINUTES} a ${MAX_LATE_ORDER_MINUTES}.`,
     }
   }
   return { ok: true, value }

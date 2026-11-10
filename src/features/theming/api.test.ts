@@ -47,7 +47,7 @@ async function failureOf(promise: Promise<unknown>): Promise<ThemeError> {
 }
 
 const THEME: Theme = {
-  schema_version: 4,
+  schema_version: 5,
   colors: DEFAULT_LIGHT_COLORS,
   brand: DEFAULT_BRAND,
   typography: DEFAULT_TYPOGRAPHY,
@@ -118,7 +118,7 @@ describe('theme api', () => {
     const calls = stubFetch(jsonResponse(200, { ...SIGNATURE, allowed_formats: ['jpg', 'png', 'webp'] }))
     const file = new File(['<svg/>'], 'banner.svg', { type: 'image/svg+xml' })
     const error = await failureOf(uploadThemeImage('banner', file))
-    expect(error.message).toBe('Use a jpg, png, webp image.')
+    expect(error.message).toBe('Usa una imagen jpg, png, webp.')
     expect(calls).toHaveLength(1)
   })
 

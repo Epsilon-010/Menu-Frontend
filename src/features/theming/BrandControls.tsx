@@ -1,7 +1,7 @@
 import { ImageIcon, TrashIcon, UploadSimpleIcon } from '@phosphor-icons/react'
 import { useRef, useState, type ChangeEvent } from 'react'
 import { Button } from '../../shared/ui/Button.tsx'
-import { Field, Select, TextArea, TextInput } from '../../shared/ui/Field.tsx'
+import { Field, TextArea, TextInput } from '../../shared/ui/Field.tsx'
 import { ErrorText } from '../../shared/ui/Feedback.tsx'
 import {
   BACKGROUND_PATTERNS,
@@ -18,10 +18,23 @@ import {
   type LogoSize,
   type Theme,
 } from './api.ts'
+import { Choice, SliderField } from './Choice.tsx'
 import { ColorInput } from './ColorControls.tsx'
 import { withBrand } from './editor.ts'
 
-const SIZE_LABELS: Record<LogoSize | BannerHeight, string> = { sm: 'Small', md: 'Medium', lg: 'Large' }
+const SIZE_LABELS: Record<LogoSize | BannerHeight, string> = { sm: 'Pequeño', md: 'Mediano', lg: 'Grande' }
+const SIZES: (LogoSize | BannerHeight)[] = ['sm', 'md', 'lg']
+const LOGO_POSITION_LABELS: Record<LogoPosition, string> = { center: 'Centrado', left: 'A la izquierda' }
+const LOGO_POSITIONS: LogoPosition[] = ['center', 'left']
+const BACKGROUND_KINDS: BackgroundKind[] = ['none', 'pattern', 'image']
+const PATTERN_LABELS: Record<BackgroundPattern, string> = {
+  dots: 'Puntos',
+  grid: 'Cuadrícula',
+  stripes: 'Rayas',
+  waves: 'Ondas',
+  checks: 'Cuadros',
+  zigzag: 'Zigzag',
+}
 const ACCEPT: Record<ImageSlot, string> = {
   logo: 'image/png,image/jpeg,image/webp,image/svg+xml',
   banner: 'image/png,image/jpeg,image/webp',
@@ -59,16 +72,16 @@ function ImageSlotControl({ slot, label, imageUrl, hasImage, onUpload, onRemove 
           {imageUrl ? (
             <img src={imageUrl} alt="" className="h-full w-full object-contain" />
           ) : (
-            <ImageIcon size={20} className="text-faint" aria-label={hasImage ? 'Image saved' : 'No image'} />
+            <ImageIcon size={20} className="text-faint" aria-label={hasImage ? 'Imagen guardada' : 'Sin imagen'} />
           )}
         </div>
         <input ref={input} type="file" accept={ACCEPT[slot]} className="sr-only" onChange={(event) => void handleFile(event)} />
         <Button icon={<UploadSimpleIcon size={16} aria-hidden />} disabled={busy} onClick={() => input.current?.click()}>
-          {busy ? 'Uploading…' : hasImage ? 'Replace' : 'Upload'}
+          {busy ? 'Subiendo…' : hasImage ? 'Reemplazar' : 'Subir'}
         </Button>
         {hasImage && (
           <Button variant="ghost" icon={<TrashIcon size={16} aria-hidden />} disabled={busy} onClick={onRemove}>
-            Remove
+            Quitar
           </Button>
         )}
       </div>
@@ -90,18 +103,7 @@ function RangeField({
   unit: string
   onChange: (value: number) => void
 }) {
-  return (
-    <Field label={`${label}: ${value}${unit}`}>
-      <input
-        type="range"
-        min={0}
-        max={max}
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-        className="w-full accent-zinc-950"
-      />
-    </Field>
-  )
+  return <SliderField label={label} value={value} min={0} max={max} display={`${value}${unit}`} onChange={onChange} />
 }
 
 interface BrandControlsProps {
@@ -119,7 +121,7 @@ export function BrandControls({ theme, imageUrls, businessName, onChange, onUplo
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <Field label="Name on the menu" hint={`Leave it empty to show ${businessName}.`}>
+        <Field label="Nombre en el menú" hint={`Déjalo vacío para mostrar ${businessName}.`}>
           <TextInput
             maxLength={MAX_NAME_LENGTH}
             placeholder={businessName}
@@ -127,19 +129,19 @@ export function BrandControls({ theme, imageUrls, businessName, onChange, onUplo
             onChange={(event) => onChange(withBrand(theme, { name: event.target.value }))}
           />
         </Field>
-        <Field label="Tagline">
+        <Field label="Eslogan">
           <TextInput
             maxLength={MAX_TAGLINE_LENGTH}
-            placeholder="Tacos al pastor since 1990"
+            placeholder="Tacos al pastor desde 1990"
             value={brand.tagline}
             onChange={(event) => onChange(withBrand(theme, { tagline: event.target.value }))}
           />
         </Field>
-        <Field label="Welcome message">
+        <Field label="Mensaje de bienvenida">
           <TextArea
             rows={3}
             maxLength={MAX_WELCOME_LENGTH}
-            placeholder="Order from your table and we bring it to you."
+            placeholder="Pide desde tu mesa y te lo llevamos."
             value={brand.welcome_message}
             onChange={(event) => onChange(withBrand(theme, { welcome_message: event.target.value }))}
           />
@@ -150,36 +152,27 @@ export function BrandControls({ theme, imageUrls, businessName, onChange, onUplo
         <legend className="text-sm font-semibold text-ink">Logo</legend>
         <ImageSlotControl
           slot="logo"
-          label="Image (PNG, JPG, WebP or SVG)"
+          label="Imagen (PNG, JPG, WebP o SVG)"
           imageUrl={urlOf(brand.logo.image_id)}
           hasImage={brand.logo.image_id !== null}
           onUpload={onUpload}
           onRemove={() => onChange(withBrand(theme, { logo: { ...brand.logo, image_id: null } }))}
         />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Size">
-            <Select
-              value={brand.logo.size}
-              onChange={(event) => onChange(withBrand(theme, { logo: { ...brand.logo, size: event.target.value as LogoSize } }))}
-            >
-              {(['sm', 'md', 'lg'] as LogoSize[]).map((size) => (
-                <option key={size} value={size}>
-                  {SIZE_LABELS[size]}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Position">
-            <Select
-              value={brand.logo.position}
-              onChange={(event) =>
-                onChange(withBrand(theme, { logo: { ...brand.logo, position: event.target.value as LogoPosition } }))
-              }
-            >
-              <option value="center">Centered</option>
-              <option value="left">Left</option>
-            </Select>
-          </Field>
+        <div className="grid gap-4 @sm:grid-cols-2">
+          <Choice
+            label="Tamaño"
+            value={brand.logo.size}
+            options={SIZES}
+            labels={SIZE_LABELS}
+            onChange={(size) => onChange(withBrand(theme, { logo: { ...brand.logo, size } }))}
+          />
+          <Choice
+            label="Posición"
+            value={brand.logo.position}
+            options={LOGO_POSITIONS}
+            labels={LOGO_POSITION_LABELS}
+            onChange={(position) => onChange(withBrand(theme, { logo: { ...brand.logo, position } }))}
+          />
         </div>
       </fieldset>
 
@@ -187,34 +180,27 @@ export function BrandControls({ theme, imageUrls, businessName, onChange, onUplo
         <legend className="text-sm font-semibold text-ink">Banner</legend>
         <ImageSlotControl
           slot="banner"
-          label="Image (PNG, JPG or WebP)"
+          label="Imagen (PNG, JPG o WebP)"
           imageUrl={urlOf(brand.banner.image_id)}
           hasImage={brand.banner.image_id !== null}
           onUpload={onUpload}
           onRemove={() => onChange(withBrand(theme, { banner: { ...brand.banner, image_id: null } }))}
         />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Height">
-            <Select
-              value={brand.banner.height}
-              onChange={(event) =>
-                onChange(withBrand(theme, { banner: { ...brand.banner, height: event.target.value as BannerHeight } }))
-              }
-            >
-              {(['sm', 'md', 'lg'] as BannerHeight[]).map((height) => (
-                <option key={height} value={height}>
-                  {SIZE_LABELS[height]}
-                </option>
-              ))}
-            </Select>
-          </Field>
+        <div className="grid gap-4 @sm:grid-cols-2">
+          <Choice
+            label="Altura"
+            value={brand.banner.height}
+            options={SIZES}
+            labels={SIZE_LABELS}
+            onChange={(height) => onChange(withBrand(theme, { banner: { ...brand.banner, height } }))}
+          />
           <ColorInput
-            label="Overlay color"
+            label="Color del velo"
             value={brand.banner.overlay_color}
             onChange={(overlay_color) => onChange(withBrand(theme, { banner: { ...brand.banner, overlay_color } }))}
           />
           <RangeField
-            label="Overlay opacity"
+            label="Opacidad del velo"
             value={brand.banner.overlay_opacity}
             max={100}
             unit="%"
@@ -224,55 +210,45 @@ export function BrandControls({ theme, imageUrls, businessName, onChange, onUplo
       </fieldset>
 
       <fieldset className="space-y-4">
-        <legend className="text-sm font-semibold text-ink">Page background</legend>
-        <Field label="Show">
-          <Select
-            value={brand.background.kind}
-            onChange={(event) =>
-              onChange(withBrand(theme, { background: { ...brand.background, kind: event.target.value as BackgroundKind } }))
-            }
-          >
-            <option value="none">Only the background color</option>
-            <option value="pattern">A pattern</option>
-            <option value="image" disabled={brand.background.image_id === null}>
-              An image{brand.background.image_id === null ? ' (upload one first)' : ''}
-            </option>
-          </Select>
-        </Field>
+        <legend className="text-sm font-semibold text-ink">Fondo de la página</legend>
+        <Choice
+          label="Mostrar"
+          kind="select"
+          value={brand.background.kind}
+          options={BACKGROUND_KINDS}
+          labels={{
+            none: 'Solo el color de fondo',
+            pattern: 'Un patrón',
+            image: `Una imagen${brand.background.image_id === null ? ' (sube una primero)' : ''}`,
+          }}
+          disabledOptions={brand.background.image_id === null ? ['image'] : []}
+          onChange={(kind) => onChange(withBrand(theme, { background: { ...brand.background, kind } }))}
+        />
         <ImageSlotControl
           slot="background"
-          label="Background image (PNG, JPG or WebP)"
+          label="Imagen de fondo (PNG, JPG o WebP)"
           imageUrl={urlOf(brand.background.image_id)}
           hasImage={brand.background.image_id !== null}
           onUpload={onUpload}
           onRemove={() => onChange(withBrand(theme, { background: { ...brand.background, image_id: null, kind: 'none' } }))}
         />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Pattern">
-            <Select
-              value={brand.background.pattern}
-              onChange={(event) =>
-                onChange(
-                  withBrand(theme, { background: { ...brand.background, pattern: event.target.value as BackgroundPattern } }),
-                )
-              }
-            >
-              {BACKGROUND_PATTERNS.map((pattern) => (
-                <option key={pattern} value={pattern}>
-                  {pattern[0].toUpperCase() + pattern.slice(1)}
-                </option>
-              ))}
-            </Select>
-          </Field>
+        <div className="grid gap-4 @sm:grid-cols-2">
+          <Choice
+            label="Patrón"
+            value={brand.background.pattern}
+            options={BACKGROUND_PATTERNS}
+            labels={PATTERN_LABELS}
+            onChange={(pattern) => onChange(withBrand(theme, { background: { ...brand.background, pattern } }))}
+          />
           <RangeField
-            label="Opacity"
+            label="Opacidad"
             value={brand.background.opacity}
             max={100}
             unit="%"
             onChange={(opacity) => onChange(withBrand(theme, { background: { ...brand.background, opacity } }))}
           />
           <RangeField
-            label="Blur (image)"
+            label="Desenfoque (imagen)"
             value={brand.background.blur}
             max={MAX_BLUR}
             unit="px"

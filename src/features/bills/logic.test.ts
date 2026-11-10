@@ -12,6 +12,7 @@ import {
   tablesForWaiter,
   withoutTable,
 } from './logic.ts'
+import { billDialogFor, billDialogReducer, NO_BILL_DIALOG } from './billDialog.ts'
 
 function dish(status: OrderItem['status']): OrderItem {
   return {
@@ -72,11 +73,11 @@ describe('acceptsNewDishes', () => {
 
 describe('dishDraftError', () => {
   it('needs a dish, 1 to 50 of them and a note up to 200 characters', () => {
-    expect(dishDraftError('', 1, '')).toBe('Choose a dish.')
-    expect(dishDraftError('m1', 0, '')).toBe('Choose a quantity from 1 to 50.')
-    expect(dishDraftError('m1', 51, '')).toBe('Choose a quantity from 1 to 50.')
-    expect(dishDraftError('m1', 1.5, '')).toBe('Choose a quantity from 1 to 50.')
-    expect(dishDraftError('m1', 2, 'x'.repeat(201))).toBe('Keep the note under 200 characters.')
+    expect(dishDraftError('', 1, '')).toBe('Elige un platillo.')
+    expect(dishDraftError('m1', 0, '')).toBe('Elige una cantidad de 1 a 50.')
+    expect(dishDraftError('m1', 51, '')).toBe('Elige una cantidad de 1 a 50.')
+    expect(dishDraftError('m1', 1.5, '')).toBe('Elige una cantidad de 1 a 50.')
+    expect(dishDraftError('m1', 2, 'x'.repeat(201))).toBe('La nota debe tener menos de 200 caracteres.')
     expect(dishDraftError('m1', 2, 'No onion')).toBeNull()
   })
 
@@ -88,9 +89,9 @@ describe('dishDraftError', () => {
       max_select: 1,
       options: [{ id: 'x1', name: 'Large', price_cents: 1500, available: true }],
     }
-    expect(dishDraftError('m1', 1, '', [size], [])).toBe('Choose 1 option for Size.')
+    expect(dishDraftError('m1', 1, '', [size], [])).toBe('Elige 1 opción de Size.')
     expect(dishDraftError('m1', 1, '', [size], ['x1'])).toBeNull()
-    expect(dishDraftError('', 1, '', [size], [])).toBe('Choose a dish.')
+    expect(dishDraftError('', 1, '', [size], [])).toBe('Elige un platillo.')
   })
 })
 
@@ -159,5 +160,58 @@ describe('hasSomethingToCharge', () => {
   it('is false for a bill of $0, which is closed instead of paid', () => {
     expect(hasSomethingToCharge({ total_cents: 0 })).toBe(false)
     expect(hasSomethingToCharge({ total_cents: 2500 })).toBe(true)
+  })
+})
+
+describe('billDialogReducer', () => {
+  const pay = { kind: 'pay', method: 'cash' } as const
+  const opened = billDialogReducer(NO_BILL_DIALOG, { type: 'open', billId: 'b1', mode: pay })
+  const failed = billDialogReducer(opened, { type: 'settled', billId: 'b1', error: 'Rejected.' })
+
+  it('opens the payment dialog', () => {
+    expect(billDialogFor(opened, 'b1').mode).toEqual(pay)
+  })
+
+  it('keeps the dialog open with its error when the payment fails', () => {
+    expect(billDialogFor(failed, 'b1')).toMatchObject({ mode: pay, error: 'Rejected.' })
+  })
+
+  it('clears the payment error when the dialog closes', () => {
+    expect(billDialogFor(billDialogReducer(failed, { type: 'dismiss' }), 'b1')).toMatchObject({
+      mode: { kind: 'view' },
+      error: null,
+    })
+  })
+
+  it('does not bring back an old error when the dialog opens again', () => {
+    const again = billDialogReducer(failed, { type: 'open', billId: 'b1', mode: pay })
+
+    expect(billDialogFor(again, 'b1').error).toBeNull()
+  })
+
+  it('closes the dialog when the action works', () => {
+    expect(billDialogFor(billDialogReducer(opened, { type: 'settled', billId: 'b1', error: null }), 'b1').mode).toEqual({
+      kind: 'view',
+    })
+  })
+
+  it('remembers the chosen method', () => {
+    const next = billDialogReducer(opened, { type: 'method', method: 'card' })
+
+    expect(billDialogFor(next, 'b1').mode).toEqual({ kind: 'pay', method: 'card' })
+  })
+
+  it('closes the open dialog and drops its error when the table gets another bill', () => {
+    expect(billDialogFor(failed, 'b2')).toMatchObject({ mode: { kind: 'view' }, error: null })
+  })
+
+  it('closes the open dialog when the bill is gone', () => {
+    expect(billDialogFor(opened, null).mode).toEqual({ kind: 'view' })
+  })
+
+  it('shows the failure of an action outside any dialog', () => {
+    const failedOpen = billDialogReducer(NO_BILL_DIALOG, { type: 'settled', billId: null, error: 'Offline.' })
+
+    expect(billDialogFor(failedOpen, null)).toMatchObject({ mode: { kind: 'view' }, error: 'Offline.' })
   })
 })

@@ -16,8 +16,8 @@ describe('a page that fails while rendering', () => {
 
   it('shows a neutral screen with a reload button', () => {
     const html = renderToStaticMarkup(<RouteErrorScreen onReload={() => {}} />)
-    expect(html).toContain('Something went wrong')
-    expect(html).toContain('Reload')
+    expect(html).toContain('Algo salió mal')
+    expect(html).toContain('Recargar')
     expect(html).toContain('role="alert"')
   })
 })

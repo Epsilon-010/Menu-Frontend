@@ -42,15 +42,15 @@ describe('StatsReport', () => {
   it('shows collected and not-collected-yet apart, with the average ticket', () => {
     const page = text(renderToStaticMarkup(<StatsReport stats={statistics()} />))
 
-    expect(page).toContain('Collected $150.00 2 paid bills')
-    expect(page).toContain('Average ticket $75.00')
-    expect(page).toContain('Ordered, not collected yet $40.00 1 order on open bills')
+    expect(page).toContain('Cobrado $150.00 2 cuentas pagadas')
+    expect(page).toContain('Ticket promedio $75.00')
+    expect(page).toContain('Pedido, aún sin cobrar $40.00 1 orden en cuentas abiertas')
   })
 
   it('lists methods, tables and products with their amounts', () => {
     const page = text(renderToStaticMarkup(<StatsReport stats={statistics()} />))
 
-    expect(page).toContain('Card 1 $50.00')
+    expect(page).toContain('Tarjeta 1 $50.00')
     expect(page).toContain('Mesa 1 2 $150.00 $40.00')
     expect(page).toContain('Pastor 3 $60.00 $30.00')
   })
@@ -58,9 +58,9 @@ describe('StatsReport', () => {
   it('shows times as median with the average beside it, and a dash when nothing was measured', () => {
     const page = text(renderToStaticMarkup(<StatsReport stats={statistics()} />))
 
-    expect(page).toContain('Waiting in the queue 2 min Median · average 6 min · 3 measured')
-    expect(page).toContain('Preparation — Nothing measured yet')
-    expect(page).toContain('Order total time 12 min 30 s')
+    expect(page).toContain('Espera en la cola 2 min Mediana · promedio 6 min · 3 mediciones')
+    expect(page).toContain('Preparación — Nada medido aún')
+    expect(page).toContain('Tiempo total de la orden 12 min 30 s')
     expect(page).toContain('Pastor 2 min / 6 min — —')
   })
 
@@ -69,8 +69,8 @@ describe('StatsReport', () => {
       renderToStaticMarkup(<StatsReport stats={statistics({ products: [], tables: [] })} />),
     )
 
-    expect(page).toContain('Nothing ordered in this range.')
-    expect(page).toContain('No orders in this range.')
+    expect(page).toContain('No se pidió nada en este rango.')
+    expect(page).toContain('No hay órdenes en este rango.')
   })
 })
 
@@ -78,12 +78,12 @@ describe('SalesChart', () => {
   it('draws one stacked bar per day with a legend for both series', () => {
     const html = renderToStaticMarkup(<SalesChart days={statistics().days} />)
 
-    expect(html).toContain('Collected')
-    expect(html).toContain('Ordered, not collected yet')
+    expect(html).toContain('Cobrado')
+    expect(html).toContain('Pedido, aún sin cobrar')
     expect(html.match(new RegExp(`fill="${COLLECTED_COLOR}"`, 'g'))).toHaveLength(1)
     expect(html.match(new RegExp(`fill="${PENDING_COLOR}"`, 'g'))).toHaveLength(1)
-    expect(text(html)).toContain('Oct 20')
-    expect(text(html)).toContain('Oct 21')
+    expect(text(html)).toContain('20 oct')
+    expect(text(html)).toContain('21 oct')
   })
 
   it('draws no bars for a range without sales', () => {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { DEFAULT_CARDS } from './cards.ts'
 import {
   CART_STYLES,
   CATEGORY_HEADERS,
@@ -7,6 +8,7 @@ import {
   NAVIGATIONS,
   PRODUCT_VIEWS,
   cartPlacement,
+  categoryArrangement,
   currentCategoryId,
   densitySpacing,
   gridColumnsClass,
@@ -36,6 +38,8 @@ describe('the layout options', () => {
       show_tagline: true,
       show_welcome: true,
       cart: 'bar',
+      header_blocks: ['banner', 'name', 'tagline', 'welcome'],
+      categories: {},
     })
     // Two columns from a 624px menu: a 672px page minus its 48px padding, as before the layout existed.
     expect(gridColumnsClass(2)).toBe('@[39rem]:grid-cols-2')
@@ -108,6 +112,72 @@ describe('a layout from the server', () => {
       }),
     ).toEqual(DEFAULT_LAYOUT)
     expect(normalizeLayout({ navigation: 'sidebar' })).toEqual({ ...DEFAULT_LAYOUT, navigation: 'sidebar' })
+  })
+})
+
+const BREAKFAST = '0b6c1a52-7a0e-4f4e-9d77-0d2a8c6e1f11'
+const DRINKS = '5e0f7c33-1b8d-4c2a-a1f9-3d6b2e9c4a22'
+
+describe('the order of the menu header', () => {
+  it('is kept when it lists every block once', () => {
+    const header_blocks = ['welcome', 'name', 'banner', 'tagline'] as const
+    expect(normalizeLayout({ ...DEFAULT_LAYOUT, header_blocks }).header_blocks).toEqual(header_blocks)
+  })
+
+  it('falls back to the default order when missing or not exactly one of each block', () => {
+    const fallback = ['banner', 'name', 'tagline', 'welcome']
+    for (const header_blocks of [
+      undefined,
+      'banner',
+      ['banner', 'name', 'tagline'],
+      ['banner', 'name', 'tagline', 'tagline'],
+      ['banner', 'name', 'tagline', 'logo'],
+      ['banner', 'name', 'tagline', 'welcome', 'banner'],
+    ]) {
+      expect(normalizeLayout({ ...DEFAULT_LAYOUT, header_blocks }).header_blocks).toEqual(fallback)
+    }
+  })
+})
+
+describe('layouts per category', () => {
+  const own = { product_view: 'list', columns: 1, card_template: 'horizontal' } as const
+
+  it('are kept when complete and valid', () => {
+    const categories = { [BREAKFAST]: own, [DRINKS]: { product_view: 'grid', columns: 4, card_template: 'overlay' } }
+    expect(normalizeLayout({ ...DEFAULT_LAYOUT, categories }).categories).toEqual(categories)
+  })
+
+  it('drop any entry that is incomplete or unknown, and a missing or odd map becomes empty', () => {
+    expect(normalizeLayout({ ...DEFAULT_LAYOUT, categories: undefined }).categories).toEqual({})
+    expect(normalizeLayout({ ...DEFAULT_LAYOUT, categories: [own] }).categories).toEqual({})
+    expect(normalizeLayout({ ...DEFAULT_LAYOUT, categories: 'grid' }).categories).toEqual({})
+    const categories = {
+      [BREAKFAST]: own,
+      a: { product_view: 'masonry', columns: 1, card_template: 'horizontal' },
+      b: { product_view: 'grid', columns: 5, card_template: 'vertical' },
+      c: { product_view: 'grid', columns: 2, card_template: 'minimal' },
+      d: { product_view: 'grid', columns: 2 },
+      e: null,
+    }
+    expect(normalizeLayout({ ...DEFAULT_LAYOUT, categories }).categories).toEqual({ [BREAKFAST]: own })
+    expect(normalizeLayout(JSON.parse(`{"categories": {"__proto__": ${JSON.stringify(own)}}}`)).categories).toEqual({})
+  })
+
+  it('give a category its own view, columns and template; any other category follows the general layout', () => {
+    const layout = { ...DEFAULT_LAYOUT, categories: { [BREAKFAST]: own } }
+    expect(categoryArrangement(layout, DEFAULT_CARDS, BREAKFAST)).toEqual({ product_view: 'list', columns: 1, template: 'horizontal' })
+    expect(categoryArrangement(layout, DEFAULT_CARDS, DRINKS)).toEqual({ product_view: 'grid', columns: 2, template: 'vertical' })
+    expect(categoryArrangement(layout, DEFAULT_CARDS, 'constructor')).toEqual({ product_view: 'grid', columns: 2, template: 'vertical' })
+    // A list still draws horizontal rows, whatever the category's template.
+    const list = { ...layout, categories: { [BREAKFAST]: { ...own, card_template: 'overlay' as const } } }
+    expect(categoryArrangement(list, DEFAULT_CARDS, BREAKFAST).template).toBe('horizontal')
+  })
+
+  it('widen the page for a category of the menu with a four-column grid', () => {
+    const layout = { ...DEFAULT_LAYOUT, categories: { [DRINKS]: { product_view: 'grid', columns: 4, card_template: 'vertical' } as const } }
+    expect(menuWidthClass(layout, [BREAKFAST, DRINKS])).toBe('max-w-7xl')
+    // A deleted category's layout changes nothing.
+    expect(menuWidthClass(layout, [BREAKFAST])).toBe('max-w-5xl')
   })
 })
 

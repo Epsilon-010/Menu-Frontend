@@ -10,12 +10,12 @@ export function NotFoundPage() {
       </span>
       <div className="max-w-md space-y-2">
         <p className="font-mono text-sm text-zinc-500">404</p>
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">This page is not on the menu</h1>
-        <p className="text-zinc-500">The link may be old or mistyped. Go back and pick another page.</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">Esta página no está en el menú</h1>
+        <p className="text-zinc-500">Puede que el enlace sea viejo o tenga un error. Regresa y elige otra página.</p>
       </div>
       <Link to="/" className={buttonClass('primary', 'md')}>
         <ArrowLeftIcon size={16} aria-hidden />
-        Back to the start
+        Volver al inicio
       </Link>
     </main>
   )

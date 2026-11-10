@@ -18,6 +18,7 @@ import {
   type Order,
 } from './api.ts'
 import { createOrderSender, lineDraftKey, needsCartReload, unavailableNames } from './logic.ts'
+import { menuAfterFailure, menuAfterLoad, scheduleMenuRefresh } from './menuFreshness.ts'
 import { useTableEvents } from './useTableEvents.ts'
 
 export type Loadable<T> = { status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded'; data: T }
@@ -29,7 +30,7 @@ export type SendResult =
   | { kind: 'failed'; message: string }
 
 export function messageOf(error: unknown): string {
-  return error instanceof OrderingError ? error.message : 'Something went wrong. Please try again.'
+  return error instanceof OrderingError ? error.message : 'Algo salió mal. Inténtalo de nuevo.'
 }
 
 /**
@@ -38,7 +39,6 @@ export function messageOf(error: unknown): string {
  */
 export function useTableOrdering() {
   const [menu, setMenu] = useState<Loadable<MenuCategory[]>>({ status: 'loading' })
-  const [menuKey, setMenuKey] = useState(0)
   const [cart, setCart] = useState<Loadable<Cart>>({ status: 'loading' })
   const [orders, setOrders] = useState<Loadable<Order[]>>({ status: 'loading' })
   // When the table asked for the bill (null: not asked), shared by every device at the table.
@@ -49,6 +49,7 @@ export function useTableOrdering() {
   const cartApplied = useRef(0)
   const ordersRequests = useRef(0)
   const billRequests = useRef(0)
+  const menuRequests = useRef(0)
   const shownVersion = useRef<number | null>(null)
   // One draft id per menu item being added, kept until that add succeeds.
   const lineDrafts = useRef(new Map<string, DraftIds>())
@@ -117,19 +118,21 @@ export function useTableOrdering() {
     void reloadBillRequest()
   }, [reloadCart, reloadOrders, reloadBillRequest])
 
-  useEffect(() => {
-    let active = true
-    fetchMenu()
-      .then((data) => {
-        if (active) setMenu({ status: 'loaded', data })
-      })
-      .catch((error: unknown) => {
-        if (active) setMenu({ status: 'error', message: messageOf(error) })
-      })
-    return () => {
-      active = false
+  const reloadMenu = useCallback(async () => {
+    menuRequests.current += 1
+    const id = menuRequests.current
+    try {
+      const data = await fetchMenu()
+      if (id === menuRequests.current) setMenu((current) => menuAfterLoad(current, data))
+    } catch (error) {
+      if (id === menuRequests.current) setMenu((current) => menuAfterFailure(current, messageOf(error)))
     }
-  }, [menuKey])
+  }, [])
+
+  useEffect(() => {
+    void reloadMenu()
+    return scheduleMenuRefresh(() => void reloadMenu())
+  }, [reloadMenu])
 
   // The live hook loads the cart and orders on mount and again on every (re)connection.
   useTableEvents({
@@ -143,7 +146,7 @@ export function useTableOrdering() {
 
   function retryMenu() {
     setMenu({ status: 'loading' })
-    setMenuKey((key) => key + 1)
+    void reloadMenu()
   }
 
   function retryCart() {
@@ -200,9 +203,11 @@ export function useTableOrdering() {
       const lines = cart.status === 'loaded' ? cart.data.lines : []
       const names = unavailableNames(lines, error.unavailableItemIds)
       void reloadCart()
+      // The menu on screen is behind the server: stop offering what can no longer be ordered.
+      void reloadMenu()
       return names.length > 0
-        ? `${names.join(', ')} ${names.length === 1 ? 'is' : 'are'} no longer available. Remove ${names.length === 1 ? 'it' : 'them'} and try again.`
-        : 'That item is no longer available.'
+        ? `${names.join(', ')} ya no ${names.length === 1 ? 'está disponible' : 'están disponibles'}. ${names.length === 1 ? 'Quítalo' : 'Quítalos'} e inténtalo de nuevo.`
+        : 'Ese producto ya no está disponible.'
     }
     return messageOf(error)
   }

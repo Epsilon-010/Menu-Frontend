@@ -10,7 +10,7 @@ import { parseLateMinutes } from './logic.ts'
 type LoadState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded' }
 
 function messageOf(error: unknown): string {
-  return error instanceof OrdersError ? error.message : 'Something went wrong. Please try again.'
+  return error instanceof OrdersError ? error.message : 'Algo salió mal. Intenta de nuevo.'
 }
 
 /** Admin section for how orders are handled: when an order counts as late in the kitchen and delivery queues. */
@@ -62,11 +62,11 @@ export function OrderSettingsPanel() {
   return (
     <div className="space-y-8">
       <SectionHeader
-        title="Orders"
-        description="The kitchen and the waiters see how long each order has waited. Orders waiting longer than this are highlighted on their screens."
+        title="Órdenes"
+        description="La cocina y los meseros ven cuánto ha esperado cada orden. Las órdenes que esperan más que esto se resaltan en sus pantallas."
       />
 
-      {load.status === 'loading' && <ListSkeleton rows={1} label="Loading order settings" />}
+      {load.status === 'loading' && <ListSkeleton rows={1} label="Cargando la configuración de órdenes" />}
       {load.status === 'error' && (
         <LoadError
           message={load.message}
@@ -80,8 +80,8 @@ export function OrderSettingsPanel() {
         <Card className="max-w-md p-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             <Field
-              label="Highlight orders waiting longer than (minutes)"
-              hint={`From ${MIN_LATE_ORDER_MINUTES} to ${MAX_LATE_ORDER_MINUTES} minutes.`}
+              label="Resaltar órdenes que esperan más de (minutos)"
+              hint={`De ${MIN_LATE_ORDER_MINUTES} a ${MAX_LATE_ORDER_MINUTES} minutos.`}
             >
               <TextInput
                 inputMode="numeric"
@@ -94,10 +94,10 @@ export function OrderSettingsPanel() {
               />
             </Field>
             <Button type="submit" variant="primary" disabled={saving}>
-              {saving ? 'Saving…' : 'Save'}
+              {saving ? 'Guardando…' : 'Guardar'}
             </Button>
             {error && <ErrorText>{error}</ErrorText>}
-            {saved && <SuccessText>Saved. The kitchen and waiter screens use it the next time they open.</SuccessText>}
+            {saved && <SuccessText>Guardado. Las pantallas de cocina y meseros lo usan la próxima vez que se abran.</SuccessText>}
           </form>
         </Card>
       )}

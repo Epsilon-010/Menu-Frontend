@@ -90,9 +90,9 @@ export function RegisterPage() {
       } else if (caught instanceof LoginError) {
         // The business exists; only loading the new session failed.
         drafts.reset()
-        setErrors({ form: 'Your business is ready, but it could not be opened here. Sign in with your email and password.' })
+        setErrors({ form: 'Tu negocio está listo, pero no se pudo abrir aquí. Inicia sesión con tu correo y tu contraseña.' })
       } else {
-        setErrors({ form: 'Something went wrong. Please try again.' })
+        setErrors({ form: 'Algo salió mal. Inténtalo de nuevo.' })
       }
     }
   }
@@ -108,21 +108,21 @@ export function RegisterPage() {
       <form onSubmit={handleSubmit} noValidate className="w-full max-w-sm space-y-6">
         <div className="space-y-2">
           <AuthLogo />
-          <p className="text-xs font-medium text-zinc-500">Step {step === 'credentials' ? 1 : 2} of 2</p>
+          <p className="text-xs font-medium text-zinc-500">Paso {step === 'credentials' ? 1 : 2} de 2</p>
           <h2 className="text-2xl font-semibold tracking-tight text-zinc-950">
-            {step === 'credentials' ? 'Create your business' : 'Name your business'}
+            {step === 'credentials' ? 'Crea tu negocio' : 'Ponle nombre a tu negocio'}
           </h2>
           <p className="text-sm text-zinc-500">
             {step === 'credentials'
-              ? 'You sign in as the manager with this email and password.'
-              : 'Guests see this name on the menu. You can add tables, staff and dishes right after.'}
+              ? 'Con este correo y esta contraseña inicias sesión como administrador.'
+              : 'Los comensales ven este nombre en el menú. Justo después puedes agregar mesas, personal y platillos.'}
           </p>
         </div>
 
         {step === 'credentials' ? (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Field label="Email">
+              <Field label="Correo electrónico">
                 <TextInput
                   type="email"
                   autoComplete="email"
@@ -137,7 +137,7 @@ export function RegisterPage() {
               {errors.email && <ErrorText>{errors.email}</ErrorText>}
             </div>
             <div className="space-y-2">
-              <Field label="Password" hint={`${PASSWORD_MIN_LENGTH} to ${PASSWORD_MAX_LENGTH} characters.`}>
+              <Field label="Contraseña" hint={`De ${PASSWORD_MIN_LENGTH} a ${PASSWORD_MAX_LENGTH} caracteres.`}>
                 <TextInput
                   type="password"
                   autoComplete="new-password"
@@ -152,13 +152,13 @@ export function RegisterPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            <Field label="Business name">
+            <Field label="Nombre del negocio">
               <TextInput
                 type="text"
                 autoComplete="organization"
                 autoFocus
                 maxLength={BUSINESS_NAME_MAX_LENGTH}
-                placeholder="Taqueria 1"
+                placeholder="Taquería 1"
                 aria-invalid={errors.business !== undefined}
                 value={businessName}
                 onChange={(event) => setBusinessName(event.target.value)}
@@ -176,7 +176,7 @@ export function RegisterPage() {
             disabled={submitting || state.status === 'loading'}
             className={`w-full ${buttonClass('primary', 'md')}`}
           >
-            {step === 'credentials' ? 'Continue' : submitting ? 'Creating your business…' : 'Create my business'}
+            {step === 'credentials' ? 'Continuar' : submitting ? 'Creando tu negocio…' : 'Crear mi negocio'}
           </button>
           {step === 'business' && (
             <Button
@@ -189,15 +189,15 @@ export function RegisterPage() {
                 setStep('credentials')
               }}
             >
-              Back
+              Atrás
             </Button>
           )}
         </div>
 
         <p className="text-center text-sm text-zinc-500">
-          Already have an account?{' '}
+          ¿Ya tienes una cuenta?{' '}
           <Link to="/login" className={LINK}>
-            Sign in
+            Inicia sesión
           </Link>
         </p>
       </form>

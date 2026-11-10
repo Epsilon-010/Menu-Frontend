@@ -9,7 +9,8 @@ import {
   TrashIcon,
 } from '@phosphor-icons/react'
 import { useState, type FormEvent } from 'react'
-import { Button, IconButton } from '../../shared/ui/Button.tsx'
+import { DropdownMenuItem, DropdownMenuSeparator } from '../../components/ui/dropdown-menu.tsx'
+import { Button } from '../../shared/ui/Button.tsx'
 import { TextInput } from '../../shared/ui/Field.tsx'
 import { Badge, ErrorText } from '../../shared/ui/Feedback.tsx'
 import { Card } from '../../shared/ui/Section.tsx'
@@ -17,6 +18,7 @@ import type { ModifierGroup } from '../modifiers/api.ts'
 import type { Category, CategoryChanges, CategoryWithItems } from './api.ts'
 import { ItemForm, type ItemFormValues } from './ItemForm.tsx'
 import { ItemRow, type ItemActions } from './ItemRow.tsx'
+import { ConfirmDialog, MoreActionsMenu, TooltipIconButton } from '../../shared/ui/RowActions.tsx'
 import { createDraftIds } from '../../shared/api/idempotency.ts'
 import { useRowAction } from '../../shared/ui/useRowAction.ts'
 
@@ -69,7 +71,7 @@ export function CategorySection({ category, categories, modifierGroups, isFirst,
   }
 
   const { items } = category
-  const count = items.length === 1 ? '1 item' : `${items.length} items`
+  const count = items.length === 1 ? '1 producto' : `${items.length} productos`
 
   return (
     <Card className="p-2">
@@ -77,7 +79,7 @@ export function CategorySection({ category, categories, modifierGroups, isFirst,
         {mode.kind === 'rename' ? (
           <form onSubmit={handleRename} className="flex flex-wrap items-center gap-2">
             <TextInput
-              aria-label="Category name"
+              aria-label="Nombre de la categoría"
               required
               maxLength={60}
               autoFocus
@@ -86,73 +88,75 @@ export function CategorySection({ category, categories, modifierGroups, isFirst,
               className="max-w-xs"
             />
             <Button type="submit" variant="primary" disabled={busy}>
-              Save
+              Guardar
             </Button>
             <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-              Cancel
+              Cancelar
             </Button>
           </form>
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className={`text-lg font-semibold ${category.is_visible ? 'text-zinc-950' : 'text-zinc-400'}`}>
+              <h2 className={`text-lg font-semibold ${category.is_visible ? 'text-ink' : 'text-faint'}`}>
                 {category.name}
               </h2>
-              <span className="text-sm text-zinc-500">{count}</span>
-              {!category.is_visible && <Badge tone="warning">Hidden</Badge>}
+              <span className="text-sm text-muted">{count}</span>
+              {!category.is_visible && <Badge tone="warning">Oculta</Badge>}
             </div>
             <div className="flex items-center gap-1">
-              <IconButton label="Move category up" icon={<CaretUpIcon size={16} />} disabled={busy || isFirst} onClick={() => void run(() => actions.move(-1))} />
-              <IconButton label="Move category down" icon={<CaretDownIcon size={16} />} disabled={busy || isLast} onClick={() => void run(() => actions.move(1))} />
-              <IconButton
-                label="Rename category"
-                icon={<PencilSimpleIcon size={16} />}
+              <TooltipIconButton
+                label="Cambiar nombre de la categoría"
+                icon={<PencilSimpleIcon size={16} aria-hidden />}
                 disabled={busy}
                 onClick={() => setMode({ kind: 'rename', name: category.name })}
               />
-              <IconButton
-                label={category.is_visible ? 'Hide category from the tables' : 'Show category on the tables'}
-                icon={category.is_visible ? <EyeIcon size={16} /> : <EyeSlashIcon size={16} />}
+              <TooltipIconButton
+                label={category.is_visible ? 'Ocultar categoría en las mesas' : 'Mostrar categoría en las mesas'}
+                icon={category.is_visible ? <EyeIcon size={16} aria-hidden /> : <EyeSlashIcon size={16} aria-hidden />}
                 disabled={busy}
                 onClick={() => void run(() => actions.update({ is_visible: !category.is_visible }))}
               />
-              <IconButton
-                label="Delete category"
-                tone="danger"
-                icon={<TrashIcon size={16} />}
-                disabled={busy}
-                onClick={() => setMode({ kind: 'confirm-delete' })}
-              />
+              <MoreActionsMenu label={`Más acciones de ${category.name}`} disabled={busy}>
+                <DropdownMenuItem disabled={isFirst} onSelect={() => void run(() => actions.move(-1))}>
+                  <CaretUpIcon size={16} aria-hidden />
+                  Subir categoría
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled={isLast} onSelect={() => void run(() => actions.move(1))}>
+                  <CaretDownIcon size={16} aria-hidden />
+                  Bajar categoría
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem tone="danger" onSelect={() => setMode({ kind: 'confirm-delete' })}>
+                  <TrashIcon size={16} aria-hidden />
+                  Eliminar categoría
+                </DropdownMenuItem>
+              </MoreActionsMenu>
             </div>
           </div>
         )}
 
-        {mode.kind === 'confirm-delete' && (
-          <div className="flex flex-wrap items-center gap-4 rounded-xl bg-red-50 p-4">
-            <p className="flex-1 text-sm text-red-800">
-              {items.length > 0
-                ? `${category.name} still has ${count}. Move or delete them first.`
-                : `Delete the ${category.name} category? This cannot be undone.`}
-            </p>
-            <div className="flex gap-2">
-              {items.length === 0 && (
-                <Button variant="danger" disabled={busy} onClick={() => void run(actions.remove, true)}>
-                  Delete category
-                </Button>
-              )}
-              <Button variant="ghost" disabled={busy} onClick={() => setMode({ kind: 'view' })}>
-                {items.length === 0 ? 'Keep it' : 'Got it'}
-              </Button>
-            </div>
-          </div>
-        )}
-        {error && <ErrorText>{error}</ErrorText>}
+        <ConfirmDialog
+          open={mode.kind === 'confirm-delete'}
+          onCancel={() => setMode({ kind: 'view' })}
+          title={items.length > 0 ? 'Esta categoría aún tiene productos' : 'Eliminar categoría'}
+          cancelLabel={items.length === 0 ? 'Conservarla' : 'Entendido'}
+          confirmLabel={items.length === 0 ? 'Eliminar categoría' : undefined}
+          confirmVariant="danger"
+          onConfirm={() => void run(actions.remove, true)}
+          busy={busy}
+          error={error}
+        >
+          {items.length > 0
+            ? `${category.name} todavía tiene ${count}. Muévelos o elimínalos primero.`
+            : `¿Eliminar la categoría ${category.name}? Esto no se puede deshacer.`}
+        </ConfirmDialog>
+        {error && mode.kind !== 'confirm-delete' && <ErrorText>{error}</ErrorText>}
       </header>
 
       {items.length === 0 ? (
-        <div className="flex items-center gap-3 rounded-lg bg-zinc-50 p-4 text-sm text-zinc-500">
+        <div className="flex items-center gap-3 rounded-lg bg-canvas p-4 text-sm text-muted">
           <BowlFoodIcon size={20} aria-hidden />
-          No items in this category yet. Add the first one below.
+          Esta categoría aún no tiene productos. Agrega el primero abajo.
         </div>
       ) : (
         <ul className="space-y-1">
@@ -173,7 +177,7 @@ export function CategorySection({ category, categories, modifierGroups, isFirst,
       <div className="p-2">
         {mode.kind === 'add-item' ? (
           <ItemForm
-            submitLabel="Add item"
+            submitLabel="Agregar producto"
             modifierGroups={modifierGroups}
             onSubmit={addItem}
             onCancel={() => {
@@ -183,7 +187,7 @@ export function CategorySection({ category, categories, modifierGroups, isFirst,
           />
         ) : (
           <Button variant="ghost" icon={<PlusIcon size={16} aria-hidden />} disabled={busy} onClick={() => setMode({ kind: 'add-item' })}>
-            Add item
+            Agregar producto
           </Button>
         )}
       </div>

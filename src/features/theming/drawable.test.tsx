@@ -10,7 +10,7 @@ import { DEFAULT_TYPOGRAPHY, googleFontsUrl, typographyVariables } from './typog
 
 function theme(changes: Record<string, unknown>): Theme {
   return {
-    schema_version: 4,
+    schema_version: 5,
     colors: DEFAULT_LIGHT_COLORS,
     brand: DEFAULT_BRAND,
     typography: DEFAULT_TYPOGRAPHY,

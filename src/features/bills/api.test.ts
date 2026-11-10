@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   addOrderDish,
+  BillChangedError,
   BillError,
   closeTable,
   dismissBillRequest,
@@ -62,14 +63,40 @@ describe('bills API', () => {
     const calls = stubFetch(ok({ id: 'b1' }), ok({ id: 'b1' }), new Response(null, { status: 204 }))
 
     await openTable('t1')
-    await registerPayment('b1', 'card')
+    await registerPayment('b1', 'card', 2500)
     await closeTable('b1')
 
     expect(calls.map((call) => [call.init?.method, call.url, call.init?.body ?? null])).toEqual([
       ['POST', '/api/v1/bills', JSON.stringify({ table_id: 't1' })],
-      ['POST', '/api/v1/bills/b1/payment', JSON.stringify({ method: 'card' })],
+      ['POST', '/api/v1/bills/b1/payment', JSON.stringify({ method: 'card', expected_total_cents: 2500 })],
       ['POST', '/api/v1/bills/b1/close', null],
     ])
+  })
+
+  it('reports a bill that changed after the waiter saw it, asking to review the total', async () => {
+    stubFetch(problem(409, 'The bill changed, review it'))
+
+    const error = await registerPayment('b1', 'cash', 2500).then(
+      () => null,
+      (caught: unknown) => caught,
+    )
+
+    expect(error).toBeInstanceOf(BillChangedError)
+    expect((error as BillChangedError).status).toBe(409)
+    expect((error as BillChangedError).message).toBe('La cuenta cambió. Revisa el nuevo total y confirma de nuevo.')
+  })
+
+  it('keeps any other payment conflict as it is', async () => {
+    stubFetch(problem(409, 'This bill has nothing to charge; close the table instead'))
+
+    const error = await registerPayment('b1', 'cash', 0).then(
+      () => null,
+      (caught: unknown) => caught,
+    )
+
+    expect(error).toBeInstanceOf(BillError)
+    expect(error).not.toBeInstanceOf(BillChangedError)
+    expect((error as BillError).message).toBe('This bill has nothing to charge; close the table instead.')
   })
 
   it('shows the server message when a table with orders is closed without paying', async () => {

@@ -53,11 +53,11 @@ export function SalesChart({ days }: { days: DayValue[] }) {
       <div className="flex flex-wrap gap-4 text-sm text-ink-soft" aria-hidden>
         <span className="flex items-center gap-2">
           <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: COLLECTED_COLOR }} />
-          Collected
+          Cobrado
         </span>
         <span className="flex items-center gap-2">
           <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: PENDING_COLOR }} />
-          Ordered, not collected yet
+          Pedido, aún sin cobrar
         </span>
       </div>
       <div className="relative" ref={container}>
@@ -65,7 +65,7 @@ export function SalesChart({ days }: { days: DayValue[] }) {
           viewBox={`0 0 ${width} ${HEIGHT}`}
           className="h-auto w-full"
           role="img"
-          aria-label="Sales per day: collected and ordered but not collected yet. The daily figures table below has the same numbers."
+          aria-label="Ventas por día: lo cobrado y lo pedido aún sin cobrar. La tabla de cifras diarias de abajo tiene los mismos números."
           onMouseLeave={() => setHovered(null)}
         >
           <g transform={`translate(${PLOT.left},${PLOT.top})`}>
@@ -74,7 +74,7 @@ export function SalesChart({ days }: { days: DayValue[] }) {
               return (
                 <g key={tick}>
                   <line x1={0} x2={PLOT_WIDTH} y1={y} y2={y} className={tick === 0 ? 'stroke-line-strong' : 'stroke-line'} strokeWidth={1} />
-                  <text x={-8} y={y} dy="0.32em" textAnchor="end" className="fill-muted text-[11px]">
+                  <text x={-8} y={y} dy="0.32em" textAnchor="end" className="fill-muted text-xs">
                     {axisMoney(tick)}
                   </text>
                 </g>
@@ -95,7 +95,7 @@ export function SalesChart({ days }: { days: DayValue[] }) {
                     <path d={topRounded(bar.x, bar.pending.y, bar.width, bar.pending.height)} fill={PENDING_COLOR} />
                   )}
                   {labelled.has(index) && (
-                    <text x={bar.x + bar.width / 2} y={PLOT_HEIGHT + 18} textAnchor="middle" className="fill-muted text-[11px]">
+                    <text x={bar.x + bar.width / 2} y={PLOT_HEIGHT + 18} textAnchor="middle" className="fill-muted text-xs">
                       {shortDay(bar.date)}
                     </text>
                   )}
@@ -124,11 +124,11 @@ export function SalesChart({ days }: { days: DayValue[] }) {
             <p className="font-semibold text-ink">{shortDay(active.date)}</p>
             <p className="mt-1 flex items-center gap-2 text-ink-soft">
               <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: COLLECTED_COLOR }} />
-              Collected <span className="ml-auto pl-3 font-medium text-ink tabular-nums">{formatMoney(active.collected_cents)}</span>
+              Cobrado <span className="ml-auto pl-3 font-medium text-ink tabular-nums">{formatMoney(active.collected_cents)}</span>
             </p>
             <p className="flex items-center gap-2 text-ink-soft">
               <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: PENDING_COLOR }} />
-              Not collected <span className="ml-auto pl-3 font-medium text-ink tabular-nums">{formatMoney(active.pending_cents)}</span>
+              Sin cobrar <span className="ml-auto pl-3 font-medium text-ink tabular-nums">{formatMoney(active.pending_cents)}</span>
             </p>
           </div>
         )}

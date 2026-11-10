@@ -98,6 +98,16 @@ export type ProductView = 'grid' | 'list' | 'carousel'
 export type Density = 'compact' | 'comfortable' | 'spacious'
 export type CategoryHeader = 'plain' | 'underline' | 'band'
 export type CartStyle = 'bar' | 'panel' | 'floating'
+/** The parts of the menu's top, drawn in the order the theme lists them (the logo goes with the name). */
+export type HeaderBlock = 'banner' | 'name' | 'tagline' | 'welcome'
+
+/** How one category shows its products instead of the general layout and card template. */
+export interface CategoryLayout {
+  product_view: ProductView
+  /** Grid columns on wide screens (1-4). */
+  columns: number
+  card_template: CardTemplate
+}
 
 export interface ThemeLayout {
   navigation: Navigation
@@ -111,6 +121,10 @@ export interface ThemeLayout {
   show_tagline: boolean
   show_welcome: boolean
   cart: CartStyle
+  /** A permutation of every header block; the `show_*` flags still hide some. */
+  header_blocks: HeaderBlock[]
+  /** Per category id: its own product view, columns and card template; any other category uses the general ones. */
+  categories: Record<string, CategoryLayout>
 }
 
 export type CardTemplate = 'vertical' | 'horizontal' | 'overlay'
@@ -128,6 +142,8 @@ export type ButtonShape = 'square' | 'rounded' | 'pill'
 export type CardHover = 'none' | 'lift' | 'grow'
 export type CardAnimation = 'none' | 'fade' | 'rise'
 export type BadgeShape = 'pill' | 'rounded'
+/** The parts of a product card; `heading` is the name with the price (placed by `price_position`). */
+export type CardBlock = 'image' | 'heading' | 'description' | 'badges' | 'add_button'
 
 export interface ThemeCards {
   /** Grid and carousel cards; list rows are always horizontal. */
@@ -146,10 +162,12 @@ export interface ThemeCards {
   /** % of the dark scrim under the text of the overlay template (30-90). */
   overlay_opacity: number
   badge_shape: BadgeShape
+  /** A permutation of every card block. Only the vertical template moves the image; the others keep it fixed. */
+  blocks: CardBlock[]
 }
 
 export interface Theme {
-  schema_version: 4
+  schema_version: 5
   colors: ThemeColors
   brand: ThemeBrand
   typography: Typography
@@ -239,15 +257,15 @@ export class ThemeError extends Error {
 }
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
-const OFFLINE = 'Could not reach the server. Check your connection and try again.'
-const SERVER_FAILED = 'The server could not complete that. Please try again in a moment.'
+const OFFLINE = 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.'
+const SERVER_FAILED = 'El servidor no pudo completar la acción. Inténtalo de nuevo en un momento.'
 
 async function errorFrom(response: Response): Promise<ThemeError> {
   const body = (await response.json().catch(() => null)) as { detail?: unknown } | null
   if (typeof body?.detail === 'string') {
     return new ThemeError(body.detail.endsWith('.') ? body.detail : `${body.detail}.`, response.status)
   }
-  if (response.status === 401) return new ThemeError('Your session ended. Sign in again to keep editing.', 401)
+  if (response.status === 401) return new ThemeError('Tu sesión terminó. Inicia sesión de nuevo para seguir editando.', 401)
   return new ThemeError(SERVER_FAILED, response.status)
 }
 
@@ -327,10 +345,10 @@ export async function uploadThemeImage(slot: ImageSlot, file: File): Promise<str
   const signature = (await (await send('/theme/images/signature', init)).json()) as UploadSignature
   const format = FORMAT_BY_TYPE[file.type]
   if (!format || !signature.allowed_formats.includes(format)) {
-    throw new ThemeError(`Use a ${signature.allowed_formats.join(', ')} image.`)
+    throw new ThemeError(`Usa una imagen ${signature.allowed_formats.join(', ')}.`)
   }
   if (file.size > signature.max_bytes) {
-    throw new ThemeError(`The image must be at most ${Math.floor(signature.max_bytes / (1024 * 1024))} MB.`)
+    throw new ThemeError(`La imagen debe pesar como máximo ${Math.floor(signature.max_bytes / (1024 * 1024))} MB.`)
   }
 
   const form = new FormData()
@@ -346,8 +364,8 @@ export async function uploadThemeImage(slot: ImageSlot, file: File): Promise<str
     // Cross-origin and without cookies: the signature is the only credential.
     upload = await fetch(signature.upload_url, { method: 'POST', body: form, credentials: 'omit' })
   } catch {
-    throw new ThemeError('Could not upload the image. Please try again.')
+    throw new ThemeError('No se pudo subir la imagen. Inténtalo de nuevo.')
   }
-  if (!upload.ok) throw new ThemeError('The image storage rejected the file. Please try another image.')
+  if (!upload.ok) throw new ThemeError('El almacenamiento de imágenes rechazó el archivo. Prueba con otra imagen.')
   return signature.public_id
 }

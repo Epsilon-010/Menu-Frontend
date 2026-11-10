@@ -15,7 +15,7 @@ interface ChangePasswordFormProps {
 }
 
 /** Current, new and repeated password. On success every other device is signed out; this one stays. */
-export function ChangePasswordForm({ currentLabel = 'Current password', submitLabel = 'Change password' }: ChangePasswordFormProps) {
+export function ChangePasswordForm({ currentLabel = 'Contraseña actual', submitLabel = 'Cambiar contraseña' }: ChangePasswordFormProps) {
   const { changePassword } = useAuth()
   const [draft, setDraft] = useState<PasswordDraft>(EMPTY)
   const [error, setError] = useState<string | null>(null)
@@ -37,7 +37,7 @@ export function ChangePasswordForm({ currentLabel = 'Current password', submitLa
       setError(
         caught instanceof PasswordChangeError
           ? caught.message
-          : 'Your password changed, but this page could not refresh. Reload it to continue.',
+          : 'Tu contraseña cambió, pero esta página no se pudo actualizar. Recárgala para continuar.',
       )
     } finally {
       setSaving(false)
@@ -56,7 +56,7 @@ export function ChangePasswordForm({ currentLabel = 'Current password', submitLa
           onChange={(event) => setDraft({ ...draft, current: event.target.value })}
         />
       </Field>
-      <Field label="New password" hint="At least 8 characters.">
+      <Field label="Nueva contraseña" hint="Al menos 8 caracteres.">
         <TextInput
           type="password"
           required
@@ -66,7 +66,7 @@ export function ChangePasswordForm({ currentLabel = 'Current password', submitLa
           onChange={(event) => setDraft({ ...draft, next: event.target.value })}
         />
       </Field>
-      <Field label="Repeat the new password">
+      <Field label="Repite la nueva contraseña">
         <TextInput
           type="password"
           required
@@ -77,9 +77,9 @@ export function ChangePasswordForm({ currentLabel = 'Current password', submitLa
         />
       </Field>
       {error && <ErrorText>{error}</ErrorText>}
-      {done && <SuccessText>Password changed. Your other devices were signed out.</SuccessText>}
+      {done && <SuccessText>Contraseña cambiada. Se cerró la sesión en tus otros dispositivos.</SuccessText>}
       <Button type="submit" variant="primary" disabled={saving}>
-        {saving ? 'Saving…' : submitLabel}
+        {saving ? 'Guardando…' : submitLabel}
       </Button>
     </form>
   )

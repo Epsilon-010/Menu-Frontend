@@ -57,8 +57,8 @@ describe('the options picker', () => {
     expect(inputs(html, 'radio')).toHaveLength(3)
     expect(inputs(html, 'checkbox')).toHaveLength(3)
     expect(html).toContain('Size')
-    expect(html).toContain('Choose 1')
-    expect(html).toContain('Optional, up to 2')
+    expect(html).toContain('Elige 1')
+    expect(html).toContain('Opcional, hasta 2')
   })
 
   it('labels paid options with their price and free ones with none', () => {
@@ -72,7 +72,7 @@ describe('the options picker', () => {
     const html = renderToStaticMarkup(<ModifierPicker groups={[SIZE]} selected={[]} onChange={() => {}} />)
     const [small, , huge] = inputs(html, 'radio')
 
-    expect(html).toContain('Sold out')
+    expect(html).toContain('Agotado')
     expect(huge).toContain('disabled')
     expect(small).not.toContain('disabled')
     expect(html).not.toContain('+$30.00')
@@ -102,9 +102,9 @@ describe('the add form of a menu card', () => {
     const html = renderToStaticMarkup(<AddLineForm item={TACO} onAdd={noop} onDone={() => {}} />)
     const submit = /<button type="submit"[^>]*>/.exec(html)?.[0] ?? ''
 
-    expect(html).toContain('Choose 1 option for Size')
+    expect(html).toContain('Elige 1 opción de Size')
     expect(submit).toContain('disabled=""')
-    expect(html).toContain('Add 1 · $25.00')
+    expect(html).toContain('Agregar 1 · $25.00')
   })
 
   it('shows the live total with the chosen options', () => {
@@ -113,9 +113,9 @@ describe('the add form of a menu card', () => {
     )
     const submit = /<button type="submit"[^>]*>/.exec(html)?.[0] ?? ''
 
-    expect(html).toContain('Add 1 · $50.00')
+    expect(html).toContain('Agregar 1 · $50.00')
     expect(submit).not.toContain('disabled=""')
-    expect(html).not.toContain('Choose 1 option for Size')
+    expect(html).not.toContain('Elige 1 opción de Size')
   })
 
   it('keeps an item without options as it was: no picker, the item price', () => {
@@ -123,8 +123,8 @@ describe('the add form of a menu card', () => {
     const submit = /<button type="submit"[^>]*>/.exec(html)?.[0] ?? ''
 
     expect(html).not.toContain('<fieldset')
-    expect(html).toContain('Add 1 · $30.00')
-    expect(html).toContain('Note for the kitchen (optional)')
+    expect(html).toContain('Agregar 1 · $30.00')
+    expect(html).toContain('Nota para la cocina (opcional)')
     expect(submit).not.toContain('disabled=""')
   })
 })
@@ -165,21 +165,21 @@ describe('a cart line with options', () => {
     const html = renderCart([line()])
 
     expect(html).toContain('Size: Large · Extras: Cheese')
-    expect(html).toContain('Edit options')
+    expect(html).toContain('Editar opciones')
   })
 
   it('does not offer editing when the item is no longer on the menu', () => {
     const html = renderCart([line()], [])
 
     expect(html).toContain('Size: Large · Extras: Cheese')
-    expect(html).not.toContain('Edit options')
+    expect(html).not.toContain('Editar opciones')
   })
 
   it('keeps a line without options as it was', () => {
     const html = renderCart([line({ id: 'l2', item_id: 'plain', name: 'Horchata', modifiers: [] })])
 
     expect(html).toContain('Horchata')
-    expect(html).not.toContain('Edit options')
+    expect(html).not.toContain('Editar opciones')
     expect(html).not.toContain('Size:')
   })
 
@@ -196,7 +196,7 @@ describe('a cart line with options', () => {
 
     expect(cheese).toContain('checked')
     expect(inputs(html, 'radio').some((input) => input.includes('checked'))).toBe(false)
-    expect(html).toContain('Choose 1 option for Size')
+    expect(html).toContain('Elige 1 opción de Size')
     expect(submit).toContain('disabled=""')
   })
 })

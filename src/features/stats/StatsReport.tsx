@@ -5,7 +5,7 @@ import type { Duration, Statistics } from './api.ts'
 import { formatDuration, shortDay } from './logic.ts'
 import { SalesChart } from './SalesChart.tsx'
 
-const METHOD_LABELS = { cash: 'Cash', card: 'Card', other: 'Other' } as const
+const METHOD_LABELS = { cash: 'Efectivo', card: 'Tarjeta', other: 'Otro' } as const
 
 function Tile({ label, value, detail }: { label: string; value: string; detail?: string }) {
   return (
@@ -74,7 +74,7 @@ function DurationTile({ label, duration }: { label: string; duration: Duration }
     <Tile
       label={label}
       value={formatDuration(duration.median_seconds)}
-      detail={duration.count === 0 ? 'Nothing measured yet' : `Median · average ${formatDuration(duration.average_seconds)} · ${duration.count} measured`}
+      detail={duration.count === 0 ? 'Nada medido aún' : `Mediana · promedio ${formatDuration(duration.average_seconds)} · ${duration.count} ${duration.count === 1 ? 'medición' : 'mediciones'}`}
     />
   )
 }
@@ -87,93 +87,93 @@ function durationCell(duration: Duration): string {
 export function StatsReport({ stats }: { stats: Statistics }) {
   const { totals, times } = stats
   const amountColumns = [
-    { header: 'Collected', cell: (row: { collected_cents: number }) => formatMoney(row.collected_cents), numeric: true },
-    { header: 'Not collected yet', cell: (row: { pending_cents: number }) => formatMoney(row.pending_cents), numeric: true },
+    { header: 'Cobrado', cell: (row: { collected_cents: number }) => formatMoney(row.collected_cents), numeric: true },
+    { header: 'Aún sin cobrar', cell: (row: { pending_cents: number }) => formatMoney(row.pending_cents), numeric: true },
   ]
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Tile label="Collected" value={formatMoney(totals.collected_cents)} detail={plural(totals.paid_bills, 'paid bill', 'paid bills')} />
-        <Tile label="Average ticket" value={formatMoney(totals.average_ticket_cents)} detail="Collected per paid bill" />
+        <Tile label="Cobrado" value={formatMoney(totals.collected_cents)} detail={plural(totals.paid_bills, 'cuenta pagada', 'cuentas pagadas')} />
+        <Tile label="Ticket promedio" value={formatMoney(totals.average_ticket_cents)} detail="Cobrado por cuenta pagada" />
         <Tile
-          label="Ordered, not collected yet"
+          label="Pedido, aún sin cobrar"
           value={formatMoney(totals.pending_cents)}
-          detail={`${plural(totals.pending_orders, 'order', 'orders')} on open bills`}
+          detail={`${plural(totals.pending_orders, 'orden', 'órdenes')} en cuentas abiertas`}
         />
-        <Tile label="Order total time" value={formatDuration(times.order.median_seconds)} detail={times.order.count === 0 ? 'No completed orders' : `Median of ${plural(times.order.count, 'completed order', 'completed orders')}`} />
+        <Tile label="Tiempo total de la orden" value={formatDuration(times.order.median_seconds)} detail={times.order.count === 0 ? 'No hay órdenes completadas' : `Mediana de ${plural(times.order.count, 'orden completada', 'órdenes completadas')}`} />
       </div>
 
-      <Block title="Sales per day" description="Collected is dated by the payment; not collected yet by when the order was sent.">
+      <Block title="Ventas por día" description="Lo cobrado cuenta en el día del pago; lo aún sin cobrar, en el día en que se envió la orden.">
         <SalesChart days={stats.days} />
         <details className="text-sm">
-          <summary className="cursor-pointer font-medium text-ink-soft">Daily figures</summary>
+          <summary className="cursor-pointer font-medium text-ink-soft">Cifras diarias</summary>
           <div className="mt-3">
             <Table
               rows={stats.days}
               rowKey={(day) => day.date}
-              empty="No days in this range."
-              columns={[{ header: 'Day', cell: (day) => shortDay(day.date) }, ...amountColumns]}
+              empty="No hay días en este rango."
+              columns={[{ header: 'Día', cell: (day) => shortDay(day.date) }, ...amountColumns]}
             />
           </div>
         </details>
       </Block>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Block title="Payment methods" description="Bills paid in this range.">
+        <Block title="Métodos de pago" description="Cuentas pagadas en este rango.">
           <Table
             rows={stats.payment_methods}
             rowKey={(row) => row.method}
-            empty="No payments."
+            empty="No hay pagos."
             columns={[
-              { header: 'Method', cell: (row) => METHOD_LABELS[row.method] },
-              { header: 'Bills', cell: (row) => row.bills, numeric: true },
-              { header: 'Amount', cell: (row) => formatMoney(row.amount_cents), numeric: true },
+              { header: 'Método', cell: (row) => METHOD_LABELS[row.method] },
+              { header: 'Cuentas', cell: (row) => row.bills, numeric: true },
+              { header: 'Monto', cell: (row) => formatMoney(row.amount_cents), numeric: true },
             ]}
           />
         </Block>
-        <Block title="Orders by table" description="Orders sent in this range, cancelled dishes left out.">
+        <Block title="Órdenes por mesa" description="Órdenes enviadas en este rango, sin contar los platillos cancelados.">
           <Table
             rows={stats.tables}
             rowKey={(row) => row.table_id}
-            empty="No orders in this range."
+            empty="No hay órdenes en este rango."
             columns={[
-              { header: 'Table', cell: (row) => row.name },
-              { header: 'Orders', cell: (row) => row.orders, numeric: true },
+              { header: 'Mesa', cell: (row) => row.name },
+              { header: 'Órdenes', cell: (row) => row.orders, numeric: true },
               ...amountColumns,
             ]}
           />
         </Block>
       </div>
 
-      <Block title="Best-selling products" description="Dishes ordered in this range, cancelled ones left out, most sold first.">
+      <Block title="Productos más vendidos" description="Platillos pedidos en este rango, sin contar los cancelados, del más vendido al menos vendido.">
         <Table
           rows={stats.products}
           rowKey={(row) => row.item_id}
-          empty="Nothing ordered in this range."
+          empty="No se pidió nada en este rango."
           columns={[
-            { header: 'Product', cell: (row) => row.name },
-            { header: 'Sold', cell: (row) => row.quantity, numeric: true },
+            { header: 'Producto', cell: (row) => row.name },
+            { header: 'Vendidos', cell: (row) => row.quantity, numeric: true },
             ...amountColumns,
           ]}
         />
       </Block>
 
-      <Block title="Times" description="Median, the typical case; a single forgotten order cannot move it. The average is shown beside it.">
+      <Block title="Tiempos" description="La mediana muestra el caso típico; una sola orden olvidada no la mueve. El promedio aparece junto a ella.">
         <div className="grid gap-4 sm:grid-cols-3">
-          <DurationTile label="Waiting in the queue" duration={times.queue} />
-          <DurationTile label="Preparation" duration={times.preparation} />
-          <DurationTile label="Waiting for delivery" duration={times.delivery} />
+          <DurationTile label="Espera en la cola" duration={times.queue} />
+          <DurationTile label="Preparación" duration={times.preparation} />
+          <DurationTile label="Espera de entrega" duration={times.delivery} />
         </div>
         <Table
           rows={times.products}
           rowKey={(row) => row.item_id}
-          empty="No dishes measured in this range."
+          empty="No hay platillos medidos en este rango."
           columns={[
-            { header: 'Product (median / average)', cell: (row) => row.name },
-            { header: 'Queue', cell: (row) => durationCell(row.queue), numeric: true },
-            { header: 'Preparation', cell: (row) => durationCell(row.preparation), numeric: true },
-            { header: 'Delivery', cell: (row) => durationCell(row.delivery), numeric: true },
+            { header: 'Producto (mediana / promedio)', cell: (row) => row.name },
+            { header: 'Cola', cell: (row) => durationCell(row.queue), numeric: true },
+            { header: 'Preparación', cell: (row) => durationCell(row.preparation), numeric: true },
+            { header: 'Entrega', cell: (row) => durationCell(row.delivery), numeric: true },
           ]}
         />
       </Block>

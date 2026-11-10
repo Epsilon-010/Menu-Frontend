@@ -35,8 +35,8 @@ export class TableError extends Error {
 }
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
-const OFFLINE = 'Could not reach the server. Check your connection and try again.'
-const SERVER_FAILED = 'The server could not complete that. Please try again in a moment.'
+const OFFLINE = 'No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.'
+const SERVER_FAILED = 'El servidor no pudo completar la acción. Intenta de nuevo en un momento.'
 const ALREADY_CREATED = 'This table was already created'
 
 async function errorFrom(response: Response): Promise<TableError> {
@@ -45,8 +45,8 @@ async function errorFrom(response: Response): Promise<TableError> {
   if (typeof body?.detail === 'string') {
     return new TableError(body.detail.endsWith('.') ? body.detail : `${body.detail}.`, response.status)
   }
-  if (response.status === 422) return new TableError('Please check the fields and try again.', 422)
-  if (response.status === 401) return new TableError('Your session ended. Sign in again to keep editing.', 401)
+  if (response.status === 422) return new TableError('Revisa los campos e intenta de nuevo.', 422)
+  if (response.status === 401) return new TableError('Tu sesión terminó. Inicia sesión de nuevo para seguir editando.', 401)
   return new TableError(SERVER_FAILED, response.status)
 }
 

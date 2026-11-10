@@ -1,4 +1,6 @@
 /** Pure rules of the table screen, kept apart from React so they can be tested on their own. */
+import { createDraftIds } from '../../shared/api/idempotency.ts'
+import { formatMoney } from '../catalog/price.ts'
 import type { Cart, CartLine, Order, OrderItemStatus, OrderStatus } from './api.ts'
 
 export interface PersonLines<Line> {
@@ -45,6 +47,17 @@ export function dishCount(cart: Cart): number {
   return cart.lines.reduce((count, line) => count + (line.available ? line.quantity : 0), 0)
 }
 
+/**
+ * What the cart bar shows as the total: the amount of a loaded cart, null while it loads (the bar draws a placeholder)
+ * and a note when it failed. Never $0.00 for a cart nobody has seen yet.
+ */
+export function cartBarTotal(
+  cart: { status: 'loading' } | { status: 'error' } | { status: 'loaded'; data: Pick<Cart, 'total_cents'> },
+): string | null {
+  if (cart.status === 'loading') return null
+  return cart.status === 'loaded' ? formatMoney(cart.data.total_cents) : 'No disponible'
+}
+
 /** Names of the cart lines whose items the server reported as no longer available. */
 export function unavailableNames(lines: Pick<CartLine, 'item_id' | 'name'>[], itemIds: string[]): string[] {
   const ids = new Set(itemIds)
@@ -61,19 +74,19 @@ export function lineDraftKey(itemId: string, quantity: number, note: string, opt
 }
 
 const ITEM_STATUS_LABELS: Record<OrderItemStatus, string> = {
-  queued: 'Waiting for the kitchen',
-  preparing: 'Being prepared',
-  ready: 'Ready, on its way',
-  delivered: 'Delivered',
-  cancelled: 'Cancelled',
+  queued: 'Esperando a la cocina',
+  preparing: 'En preparación',
+  ready: 'Listo, va en camino',
+  delivered: 'Entregado',
+  cancelled: 'Cancelado',
 }
 
 const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  queued: 'Sent to the kitchen',
-  in_progress: 'In the kitchen',
-  partially_delivered: 'Partly delivered',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
+  queued: 'Enviada a la cocina',
+  in_progress: 'En la cocina',
+  partially_delivered: 'Entregada en parte',
+  completed: 'Completada',
+  cancelled: 'Cancelada',
 }
 
 /** The table can ask for the bill only when something is left to pay (not every dish cancelled). */
@@ -93,7 +106,7 @@ export function orderStatusLabel(status: OrderStatus): string {
 export function rejectionNote(item: { status: OrderItemStatus; cancel_reason: string | null }): string | null {
   if (item.status !== 'cancelled') return null
   const reason = item.cancel_reason?.trim()
-  return reason ? `Rejected: ${reason}` : 'Rejected'
+  return reason ? `Rechazado: ${reason}` : 'Rechazado'
 }
 
 export type StatusTone = 'neutral' | 'warning' | 'success'
@@ -117,21 +130,19 @@ export function clockTime(iso: string): string {
 }
 
 /**
- * Sends orders with a client id kept until one succeeds: a retry after a lost answer (or after
- * reviewing a changed cart) reuses it, so the table never sends the same order twice.
+ * Sends orders with a client id tied to the cart version the sender reviewed: a retry of that version after a lost
+ * answer reuses it, so the table never sends the same order twice, and any later round gets its own id, so it never
+ * replays an order the server already took.
  */
 export function createOrderSender(
   submit: (id: string, cartVersion: number) => Promise<Order>,
   newId: () => string = () => crypto.randomUUID(),
 ) {
-  let draftId = newId()
+  const drafts = createDraftIds(newId)
   return {
-    get draftId(): string {
-      return draftId
-    },
     async send(cartVersion: number): Promise<Order> {
-      const order = await submit(draftId, cartVersion)
-      draftId = newId()
+      const order = await submit(drafts.idFor(String(cartVersion)), cartVersion)
+      drafts.reset()
       return order
     },
   }

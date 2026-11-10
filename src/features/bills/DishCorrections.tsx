@@ -1,8 +1,26 @@
 import { PlusIcon, XCircleIcon } from '@phosphor-icons/react'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useId, useState, type FormEvent } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog.tsx'
+import { Label } from '../../components/ui/label.tsx'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select.tsx'
 import { createDraftIds } from '../../shared/api/idempotency.ts'
 import { Button } from '../../shared/ui/Button.tsx'
-import { Field, Select, TextInput } from '../../shared/ui/Field.tsx'
+import { Field, TextInput } from '../../shared/ui/Field.tsx'
 import { ErrorText } from '../../shared/ui/Feedback.tsx'
 import { useRowAction } from '../../shared/ui/useRowAction.ts'
 import { formatMoney } from '../catalog/price.ts'
@@ -35,34 +53,44 @@ export function CancelDishControl({ onCancel }: { onCancel: (reason: string) => 
     }
   }
 
-  if (!open) {
-    return (
-      <Button variant="ghost" icon={<XCircleIcon size={16} aria-hidden />} onClick={() => setOpen(true)}>
-        Cancel dish
-      </Button>
-    )
-  }
-
   return (
-    <form onSubmit={submit} className="space-y-2 rounded-lg bg-red-50 p-3">
-      <TextInput
-        aria-label="Why is the dish cancelled"
-        autoFocus
-        maxLength={MAX_REASON_LENGTH}
-        placeholder="Reason, like The table changed its mind"
-        value={reason}
-        onChange={(event) => setReason(event.target.value)}
-      />
-      {(problem ?? error) && <ErrorText>{problem ?? error}</ErrorText>}
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" variant="danger" disabled={busy}>
-          {busy ? 'Cancelling…' : 'Cancel dish'}
-        </Button>
-        <Button variant="ghost" disabled={busy} onClick={() => setOpen(false)}>
-          Keep it
-        </Button>
-      </div>
-    </form>
+    <>
+      <Button
+        variant="ghost"
+        className="min-h-11 text-red-700 hover:bg-red-50 hover:text-red-800"
+        icon={<XCircleIcon size={16} aria-hidden />}
+        onClick={() => setOpen(true)}
+      >
+        Cancelar platillo
+      </Button>
+      <Dialog open={open} onOpenChange={(next) => !busy && setOpen(next)}>
+        <DialogContent>
+          <form onSubmit={submit} className="space-y-4">
+            <DialogHeader>
+              <DialogTitle>¿Cancelar este platillo?</DialogTitle>
+              <DialogDescription>La mesa ve el motivo. Solo se cancelan los platillos que la cocina aún no empieza.</DialogDescription>
+            </DialogHeader>
+            <TextInput
+              aria-label="Motivo de la cancelación"
+              autoFocus
+              maxLength={MAX_REASON_LENGTH}
+              placeholder="Motivo, por ejemplo: La mesa cambió de opinión"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+            />
+            {(problem ?? error) && <ErrorText>{problem ?? error}</ErrorText>}
+            <DialogFooter>
+              <Button variant="ghost" size="md" className="min-h-11" disabled={busy} onClick={() => setOpen(false)}>
+                Conservarlo
+              </Button>
+              <Button type="submit" variant="danger" size="md" className="min-h-11" disabled={busy}>
+                {busy ? 'Cancelando…' : 'Cancelar platillo'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
@@ -73,8 +101,8 @@ export function AddDishControl({ onAdd }: { onAdd: (dish: NewOrderDish) => Promi
   const [open, setOpen] = useState(false)
   if (!open) {
     return (
-      <Button variant="secondary" icon={<PlusIcon size={16} aria-hidden />} onClick={() => setOpen(true)}>
-        Add dish
+      <Button variant="secondary" className="min-h-11" icon={<PlusIcon size={16} aria-hidden />} onClick={() => setOpen(true)}>
+        Agregar platillo
       </Button>
     )
   }
@@ -92,6 +120,7 @@ function AddDishForm({ onAdd, onClose }: { onAdd: (dish: NewOrderDish) => Promis
   // One client id per distinct dish: a retry after a lost answer never adds it twice.
   const [drafts] = useState(() => createDraftIds())
   const { busy, error, run } = useRowAction()
+  const ids = useId()
 
   useEffect(() => {
     let active = true
@@ -101,7 +130,7 @@ function AddDishForm({ onAdd, onClose }: { onAdd: (dish: NewOrderDish) => Promis
       })
       .catch((caught: unknown) => {
         if (!active) return
-        const message = caught instanceof OrderingError ? caught.message : 'Could not load the menu. Please try again.'
+        const message = caught instanceof OrderingError ? caught.message : 'No se pudo cargar el menú. Inténtalo de nuevo.'
         setMenu({ status: 'error', message })
       })
     return () => {
@@ -138,28 +167,34 @@ function AddDishForm({ onAdd, onClose }: { onAdd: (dish: NewOrderDish) => Promis
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3 rounded-xl bg-zinc-50 p-3">
-      {menu.status === 'loading' && <p className="text-sm text-zinc-500">Loading the menu…</p>}
+    <form onSubmit={submit} className="space-y-3 rounded-xl border border-line bg-canvas p-3">
+      {menu.status === 'loading' && <p className="text-sm text-muted">Cargando el menú…</p>}
       {menu.status === 'error' && <ErrorText>{menu.message}</ErrorText>}
       {menu.status === 'loaded' && (
         <>
-          <Field label="Dish">
-            <Select value={itemId} onChange={(event) => chooseDish(event.target.value)}>
-              <option value="">Choose a dish</option>
-              {menu.categories.map((category) => (
-                <optgroup key={category.id} label={category.name}>
-                  {category.items.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name} · {formatMoney(item.price_cents)}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
+          <div className="space-y-2">
+            <Label htmlFor={`${ids}-dish`}>Platillo</Label>
+            <Select value={itemId} onValueChange={chooseDish}>
+              <SelectTrigger id={`${ids}-dish`} className="min-h-11">
+                <SelectValue placeholder="Elige un platillo" />
+              </SelectTrigger>
+              <SelectContent>
+                {menu.categories.map((category) => (
+                  <SelectGroup key={category.id}>
+                    <SelectLabel>{category.name}</SelectLabel>
+                    {category.items.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.name} · {formatMoney(item.price_cents)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ))}
+              </SelectContent>
             </Select>
-          </Field>
+          </div>
           {groups.length > 0 && <ModifierPicker groups={groups} selected={selected} onChange={setSelected} disabled={busy} />}
           <div className="flex flex-wrap gap-3">
-            <Field label="Quantity" className="w-24">
+            <Field label="Cantidad" className="w-24">
               <TextInput
                 type="number"
                 min={MIN_QUANTITY}
@@ -168,10 +203,10 @@ function AddDishForm({ onAdd, onClose }: { onAdd: (dish: NewOrderDish) => Promis
                 onChange={(event) => setQuantity(event.target.value)}
               />
             </Field>
-            <Field label="Note (optional)" className="min-w-0 flex-1">
+            <Field label="Nota (opcional)" className="min-w-0 flex-1">
               <TextInput
                 maxLength={MAX_NOTE_LENGTH}
-                placeholder="Like No onion"
+                placeholder="Por ejemplo: Sin cebolla"
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
               />
@@ -181,11 +216,11 @@ function AddDishForm({ onAdd, onClose }: { onAdd: (dish: NewOrderDish) => Promis
       )}
       {(problem ?? error) && <ErrorText>{problem ?? error}</ErrorText>}
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" variant="primary" disabled={busy || menu.status !== 'loaded'}>
-          {busy ? 'Adding…' : 'Add to order'}
+        <Button type="submit" variant="primary" className="min-h-11" disabled={busy || menu.status !== 'loaded'}>
+          {busy ? 'Agregando…' : 'Agregar a la orden'}
         </Button>
-        <Button variant="ghost" disabled={busy} onClick={onClose}>
-          Cancel
+        <Button variant="ghost" className="min-h-11" disabled={busy} onClick={onClose}>
+          Cancelar
         </Button>
       </div>
     </form>

@@ -247,12 +247,12 @@ describe('table ordering API', () => {
       }),
     )
 
-    expect((await failureOf(fetchCart())).message).toBe('Could not reach the server. Check your connection and try again.')
+    expect((await failureOf(fetchCart())).message).toBe('No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.')
   })
 
   it('does not show internal details of a server failure', async () => {
     stubFetch(problem(500, 'Internal Server Error'))
 
-    expect((await failureOf(fetchCart())).message).toBe('The server could not complete that. Please try again in a moment.')
+    expect((await failureOf(fetchCart())).message).toBe('El servidor no pudo completar la acción. Inténtalo de nuevo en un momento.')
   })
 })

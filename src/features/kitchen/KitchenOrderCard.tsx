@@ -1,21 +1,24 @@
-import { CheckIcon, FireIcon, ProhibitIcon } from '@phosphor-icons/react'
+import { CheckIcon, CheckSquareIcon, FireIcon, ProhibitIcon, SquareIcon } from '@phosphor-icons/react'
 import { useState, type FormEvent } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog.tsx'
+import { cn } from '../../lib/utils.ts'
 import { Button } from '../../shared/ui/Button.tsx'
+import { MOTION } from '../../shared/ui/classes.ts'
 import { TextInput } from '../../shared/ui/Field.tsx'
-import { Badge, ErrorText } from '../../shared/ui/Feedback.tsx'
+import { ErrorText } from '../../shared/ui/Feedback.tsx'
 import { useRowAction } from '../../shared/ui/useRowAction.ts'
 import type { ItemTarget, StaffOrder } from './api.ts'
-import {
-  isPending,
-  kitchenActions,
-  MAX_REASON_LENGTH,
-  pendingSelection,
-  rejectReasonError,
-  staffItemLabel,
-  staffItemTone,
-} from './logic.ts'
+import { isPending, kitchenActions, MAX_REASON_LENGTH, pendingSelection, rejectReasonError } from './logic.ts'
 import { modifierSummary } from '../ordering/modifiers.ts'
 import { OrderTicketHeader } from './OrderTicketHeader.tsx'
+import { StatusBadge } from './StatusBadge.tsx'
 
 interface KitchenOrderCardProps {
   order: StaffOrder
@@ -24,6 +27,9 @@ interface KitchenOrderCardProps {
   /** Resolves to an error message, or null when the dishes moved. */
   onAct: (itemIds: string[], target: ItemTarget, reason?: string) => Promise<string | null>
 }
+
+/** Big enough to hit with a busy hand on a kitchen tablet (at least 48px high). */
+const ACTION = 'min-h-12'
 
 /** One ticket for the kitchen: its dishes, how long it has waited, and what to do with the selected dishes. */
 export function KitchenOrderCard({ order, now, late, onAct }: KitchenOrderCardProps) {
@@ -71,107 +77,157 @@ export function KitchenOrderCard({ order, now, late, onAct }: KitchenOrderCardPr
   return (
     <article
       aria-busy={busy}
-      aria-label={`Order ${order.number}, ${order.table_name}`}
-      className={`flex flex-col gap-4 rounded-2xl border bg-white p-4 ${late ? 'border-red-300 ring-2 ring-red-200' : 'border-zinc-200'}`}
+      aria-label={`Orden ${order.number}, ${order.table_name}`}
+      className={cn(
+        'flex flex-col gap-4 rounded-2xl border bg-surface p-4 shadow-xs sm:p-6',
+        late ? 'border-red-300 ring-2 ring-red-200' : 'border-line',
+      )}
     >
-      <OrderTicketHeader order={order} now={now} late={late} />
+      <OrderTicketHeader order={order} now={now} late={late} size="large" />
 
-      <ul className="space-y-1">
+      <ul className="space-y-2">
         {order.items.map((item) => {
           const selectable = isPending(item)
           const checked = selectable && selected.has(item.id)
           return (
             <li key={item.id}>
               <label
-                className={`flex items-start gap-3 rounded-xl p-2 ${selectable ? 'cursor-pointer hover:bg-zinc-50' : 'opacity-60'} ${checked ? 'bg-zinc-100' : ''}`}
+                className={cn(
+                  'flex items-start gap-3 rounded-xl border p-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-action/50',
+                  MOTION,
+                  selectable ? 'cursor-pointer active:scale-[0.99]' : 'border-transparent bg-canvas opacity-60',
+                  selectable && (checked ? 'border-action bg-subtle ring-1 ring-action' : 'border-line hover:border-line-strong hover:bg-subtle'),
+                )}
               >
                 <input
                   type="checkbox"
-                  className="mt-1 h-4 w-4 accent-zinc-950"
+                  className="sr-only"
                   disabled={!selectable || busy}
                   checked={checked}
                   onChange={() => toggle(item.id)}
                 />
+                <span aria-hidden className={cn('mt-0.5 shrink-0', checked ? 'text-action' : 'text-faint')}>
+                  {checked ? <CheckSquareIcon size={28} weight="fill" /> : <SquareIcon size={28} />}
+                </span>
                 <span className="min-w-0 flex-1 space-y-1">
-                  <span className={`block ${item.status === 'cancelled' ? 'text-zinc-400 line-through' : 'text-zinc-950'}`}>
-                    <span className="font-semibold tabular-nums">{item.quantity} ×</span> {item.name}
+                  <span
+                    className={cn(
+                      'block text-lg font-semibold',
+                      item.status === 'cancelled' ? 'text-faint line-through' : 'text-ink',
+                    )}
+                  >
+                    <span className="tabular-nums">{item.quantity} ×</span> {item.name}
                   </span>
                   {item.modifiers.length > 0 && (
-                    <span className="block text-sm text-zinc-700">{modifierSummary(item.modifiers)}</span>
+                    <span className="block text-base text-ink-soft">{modifierSummary(item.modifiers)}</span>
                   )}
-                  {item.note && <span className="block text-sm text-amber-800">Note: {item.note}</span>}
+                  {item.note && <span className="block text-base font-medium text-amber-800">Nota: {item.note}</span>}
                   {item.status === 'cancelled' && item.cancel_reason && (
-                    <span className="block text-sm text-zinc-500">Rejected: {item.cancel_reason}</span>
+                    <span className="block text-sm text-muted">Rechazado: {item.cancel_reason}</span>
                   )}
                 </span>
-                <Badge tone={staffItemTone(item.status)}>{staffItemLabel(item.status)}</Badge>
+                <StatusBadge status={item.status} className="mt-1 text-sm" />
               </label>
             </li>
           )
         })}
       </ul>
 
-      {!rejecting ? (
-        <div className="mt-auto flex flex-wrap gap-2 border-t border-zinc-100 pt-4">
+      <div className="mt-auto space-y-3 border-t border-line pt-4">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm text-muted" aria-live="polite">
+            {chosen.length === 0
+              ? 'Toca los platillos para elegirlos.'
+              : chosen.length === 1
+                ? '1 platillo elegido'
+                : `${chosen.length} platillos elegidos`}
+          </p>
           <Button
             variant="ghost"
+            className="min-h-11"
             disabled={busy || pending.length === 0}
             onClick={() => setSelected(allChosen ? new Set() : new Set(pending.map((item) => item.id)))}
           >
-            {allChosen ? 'Clear' : 'Select all'}
+            {allChosen ? 'Quitar selección' : 'Seleccionar todo'}
           </Button>
+        </div>
+        {/* Only with something chosen: an idle ticket shows its dishes, not three disabled buttons. */}
+        {chosen.length > 0 && <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <Button
             variant="secondary"
-            icon={<FireIcon size={16} aria-hidden />}
+            size="md"
+            className={ACTION}
+            icon={<FireIcon size={20} aria-hidden />}
             disabled={busy || !actions.start}
             onClick={() => move('preparing')}
           >
-            Start{count}
+            Empezar{count}
           </Button>
           <Button
             variant="primary"
-            icon={<CheckIcon size={16} aria-hidden />}
+            size="md"
+            className={ACTION}
+            icon={<CheckIcon size={20} aria-hidden />}
             disabled={busy || !actions.ready}
             onClick={() => move('ready')}
           >
-            Ready{count}
+            Listo{count}
           </Button>
           <Button
             variant="danger"
-            icon={<ProhibitIcon size={16} aria-hidden />}
+            size="md"
+            className={ACTION}
+            icon={<ProhibitIcon size={20} aria-hidden />}
             disabled={busy || !actions.reject}
-            title="Only dishes not started yet can be rejected"
+            title="Solo se pueden rechazar los platillos que aún no empiezan"
             onClick={() => setRejecting(true)}
           >
-            Reject{count}
+            Rechazar{count}
           </Button>
-        </div>
-      ) : (
-        <form onSubmit={submitReject} className="mt-auto space-y-2 rounded-xl bg-red-50 p-4">
-          <p className="text-sm text-red-900">
-            Reject {chosen.length} {chosen.length === 1 ? 'dish' : 'dishes'}? The waiters and the table see the reason.
-          </p>
-          <TextInput
-            aria-label="Reason"
-            autoFocus
-            maxLength={MAX_REASON_LENGTH}
-            placeholder="Reason, like Out of avocado"
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-          />
-          {reasonError && <ErrorText>{reasonError}</ErrorText>}
-          <div className="flex flex-wrap gap-2">
-            <Button type="submit" variant="danger" disabled={busy || !actions.reject}>
-              {busy ? 'Rejecting…' : 'Reject'}
-            </Button>
-            <Button variant="ghost" disabled={busy} onClick={() => setRejecting(false)}>
-              Cancel
-            </Button>
-          </div>
-        </form>
-      )}
+        </div>}
+      </div>
 
-      {error && <ErrorText>{error}</ErrorText>}
+      {!rejecting && error && <ErrorText>{error}</ErrorText>}
+
+      <Dialog open={rejecting} onOpenChange={(open) => !busy && setRejecting(open)}>
+        <DialogContent>
+          <form onSubmit={submitReject} className="space-y-4">
+            <DialogHeader>
+              <DialogTitle>
+                ¿Rechazar {chosen.length} {chosen.length === 1 ? 'platillo' : 'platillos'}?
+              </DialogTitle>
+              <DialogDescription>
+                Orden #{order.number} · {order.table_name}. Los meseros y la mesa ven el motivo.
+              </DialogDescription>
+            </DialogHeader>
+            <ul className="space-y-1 text-sm text-ink">
+              {chosen.map((item) => (
+                <li key={item.id}>
+                  <span className="font-semibold tabular-nums">{item.quantity} ×</span> {item.name}
+                </li>
+              ))}
+            </ul>
+            <TextInput
+              aria-label="Motivo"
+              autoFocus
+              maxLength={MAX_REASON_LENGTH}
+              placeholder="Motivo, por ejemplo: Sin aguacate"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+            />
+            {reasonError && <ErrorText>{reasonError}</ErrorText>}
+            {error && <ErrorText>{error}</ErrorText>}
+            <DialogFooter>
+              <Button variant="ghost" size="md" className="min-h-11" disabled={busy} onClick={() => setRejecting(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" variant="danger" size="md" className="min-h-11" disabled={busy || !actions.reject}>
+                {busy ? 'Rechazando…' : 'Rechazar'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </article>
   )
 }

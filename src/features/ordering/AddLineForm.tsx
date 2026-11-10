@@ -42,13 +42,13 @@ export function AddLineForm({ item, onAdd, onDone, initialSelection = [] }: AddL
     <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-canvas p-3">
       {groups.length > 0 && <ModifierPicker groups={groups} selected={selected} onChange={setSelected} disabled={busy} />}
       <div className="flex items-center justify-between gap-4">
-        <span className="text-sm font-medium text-ink-soft">How many</span>
+        <span className="text-sm font-medium text-ink-soft">Cantidad</span>
         <QuantityStepper value={quantity} onChange={setQuantity} disabled={busy} label={item.name} />
       </div>
-      <Field label="Note for the kitchen (optional)">
+      <Field label="Nota para la cocina (opcional)">
         <TextInput
           maxLength={MAX_NOTE_LENGTH}
-          placeholder="No onion, extra salsa"
+          placeholder="Sin cebolla, salsa extra"
           value={note}
           onChange={(event) => setNote(event.target.value)}
           disabled={busy}
@@ -58,10 +58,10 @@ export function AddLineForm({ item, onAdd, onDone, initialSelection = [] }: AddL
       {error && <ErrorText>{error}</ErrorText>}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" variant="primary" disabled={busy || unmet !== null} className="type-button flex-1">
-          {busy ? 'Adding…' : `Add ${quantity} · ${formatMoney(unitPrice(item, selected) * quantity)}`}
+          {busy ? 'Agregando…' : `Agregar ${quantity} · ${formatMoney(unitPrice(item, selected) * quantity)}`}
         </Button>
         <Button variant="ghost" disabled={busy} onClick={onDone} className="type-button">
-          Cancel
+          Cancelar
         </Button>
       </div>
     </form>

@@ -25,11 +25,11 @@ export function dishDraftError(
   groups: ModifierGroup[] = [],
   selected: readonly string[] = [],
 ): string | null {
-  if (itemId === '') return 'Choose a dish.'
+  if (itemId === '') return 'Elige un platillo.'
   if (!Number.isInteger(quantity) || quantity < MIN_QUANTITY || quantity > MAX_QUANTITY) {
-    return `Choose a quantity from ${MIN_QUANTITY} to ${MAX_QUANTITY}.`
+    return `Elige una cantidad de ${MIN_QUANTITY} a ${MAX_QUANTITY}.`
   }
-  if (note.trim().length > MAX_NOTE_LENGTH) return `Keep the note under ${MAX_NOTE_LENGTH} characters.`
+  if (note.trim().length > MAX_NOTE_LENGTH) return `La nota debe tener menos de ${MAX_NOTE_LENGTH} caracteres.`
   const options = selectionError(groups, selected)
   return options === null ? null : `${options}.`
 }

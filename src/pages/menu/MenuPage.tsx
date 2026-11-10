@@ -2,11 +2,10 @@ import { CheckCircleIcon, ReceiptIcon, ShoppingBagIcon, XIcon } from '@phosphor-
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../features/auth/useAuth.ts'
 import { useSessionHeartbeat } from '../../features/auth/useSessionHeartbeat.ts'
-import { formatMoney } from '../../features/catalog/price.ts'
 import type { Cart, Order } from '../../features/ordering/api.ts'
 import { BillRequestControl } from '../../features/ordering/BillRequestControl.tsx'
 import { CartContents } from '../../features/ordering/CartContents.tsx'
-import { dishCount, hasSomethingToPay } from '../../features/ordering/logic.ts'
+import { cartBarTotal, dishCount, hasSomethingToPay } from '../../features/ordering/logic.ts'
 import { MenuBrowser } from '../../features/ordering/MenuBrowser.tsx'
 import { OrderCard } from '../../features/ordering/OrderCard.tsx'
 import { SendConfirmation } from '../../features/ordering/SendConfirmation.tsx'
@@ -26,7 +25,7 @@ const NOTICE_MS = 6_000
 
 function MenuSkeleton() {
   return (
-    <div role="status" aria-label="Loading the menu" className="space-y-6">
+    <div role="status" aria-label="Cargando el menú" className="space-y-6">
       <div className="flex gap-2">
         <Skeleton className="h-9 w-24" />
         <Skeleton className="h-9 w-28" />
@@ -48,7 +47,7 @@ interface CartAreaProps {
 }
 
 function CartArea({ cart, ordering, onSend }: CartAreaProps) {
-  if (cart.status === 'loading') return <ListSkeleton rows={2} label="Loading the table order" />
+  if (cart.status === 'loading') return <ListSkeleton rows={2} label="Cargando el pedido de la mesa" />
   if (cart.status === 'error') return <LoadError message={cart.message} onRetry={ordering.retryCart} />
   return (
     <CartContents
@@ -61,13 +60,13 @@ function CartArea({ cart, ordering, onSend }: CartAreaProps) {
   )
 }
 
-function OrdersArea({ orders }: { orders: Loadable<Order[]> }) {
-  if (orders.status === 'loading') return <ListSkeleton rows={2} label="Loading the orders" />
-  if (orders.status === 'error') return null
+function OrdersArea({ orders, onRetry }: { orders: Loadable<Order[]>; onRetry: () => void }) {
+  if (orders.status === 'loading') return <ListSkeleton rows={2} label="Cargando las órdenes" />
+  if (orders.status === 'error') return <LoadError message={orders.message} onRetry={onRetry} />
   if (orders.data.length === 0) {
     return (
-      <EmptyState icon={<ReceiptIcon size={24} aria-hidden />} title="No orders sent yet">
-        Orders sent from this table show up here with the status of every dish.
+      <EmptyState icon={<ReceiptIcon size={24} aria-hidden />} title="Aún no hay órdenes enviadas">
+        Las órdenes enviadas desde esta mesa aparecen aquí con el estado de cada platillo.
       </EmptyState>
     )
   }
@@ -114,7 +113,7 @@ export function MenuPage() {
 
   function handleSent(order: Order) {
     setConfirming(false)
-    setNotice(`Order #${order.number} sent`)
+    setNotice(`Orden #${order.number} enviada`)
   }
 
   async function handleLeave() {
@@ -124,12 +123,15 @@ export function MenuPage() {
 
   const loadedCart = cart.status === 'loaded' ? cart.data : null
   const count = loadedCart ? dishCount(loadedCart) : 0
+  const barTotal = cartBarTotal(cart)
   const theme = published.status === 'loaded' ? published.data : null
   const logoId = theme?.theme.brand.logo.image_id
   const logoUrl = theme && logoId ? theme.image_urls[logoId] : undefined
   const layout = theme?.theme.layout ?? DEFAULT_LAYOUT
   const cards = theme?.theme.cards ?? DEFAULT_CARDS
   const placement = cartPlacement(layout.cart)
+  // A category of the menu with its own four-column grid widens the page as the general one does.
+  const categoryIds = menu.status === 'loaded' ? menu.data.map((category) => category.id) : []
 
   if (published.status === 'loading') {
     // A moment at most (the theme is cached): avoids showing the neutral look before the business's.
@@ -147,9 +149,9 @@ export function MenuPage() {
       identity={guest ? `${table.name} · ${guest.name}` : table.name}
       onSignOut={guest ? () => void handleLeave() : undefined}
       signingOut={leaving}
-      signOutLabel="Leave"
+      signOutLabel="Salir"
       fixedBar={layout.sticky_header}
-      width={menuWidthClass(layout)}
+      width={menuWidthClass(layout, categoryIds)}
     >
       <div className={`grid gap-8 pb-24 ${placement.grid}`}>
         <div className={`min-w-0 space-y-12 ${placement.main}`}>
@@ -162,9 +164,9 @@ export function MenuPage() {
 
           <section aria-labelledby="orders-title" className="space-y-4">
             <h2 id="orders-title" className="text-xl font-semibold tracking-tight text-ink">
-              Orders from this table
+              Órdenes de esta mesa
             </h2>
-            <OrdersArea orders={orders} />
+            <OrdersArea orders={orders} onRetry={ordering.retryCart} />
             {/* Shown while there is something to pay, or to cancel a request already made. */}
             {orders.status === 'loaded' &&
               (hasSomethingToPay(orders.data) ||
@@ -174,11 +176,11 @@ export function MenuPage() {
           </section>
         </div>
 
-        <aside aria-label="Table order" className={placement.aside}>
+        <aside aria-label="Pedido de la mesa" className={placement.aside}>
           <Card
             className={`sticky max-h-[calc(100vh-8rem)] space-y-4 overflow-y-auto p-4 ${layout.sticky_header ? 'top-24' : 'top-4'}`}
           >
-            <h2 className="text-lg font-semibold tracking-tight text-ink">Table order</h2>
+            <h2 className="text-lg font-semibold tracking-tight text-ink">Pedido de la mesa</h2>
             <CartArea cart={cart} ordering={ordering} onSend={openConfirmation} />
           </Card>
         </aside>
@@ -200,10 +202,14 @@ export function MenuPage() {
         >
           <span className="flex items-center gap-2 text-base font-semibold">
             <ShoppingBagIcon size={20} aria-hidden />
-            Table order
+            Pedido de la mesa
             {count > 0 && <span className="rounded-md bg-badge px-2 text-sm text-badge-ink tabular-nums">{count}</span>}
           </span>
-          <span className="text-base font-semibold tabular-nums">{formatMoney(loadedCart?.total_cents ?? 0)}</span>
+          {barTotal === null ? (
+            <span role="status" aria-label="Cargando el total" className="h-6 w-16 animate-pulse rounded-lg bg-cart-ink/30" />
+          ) : (
+            <span className="text-base font-semibold tabular-nums">{barTotal}</span>
+          )}
         </button>
       </div>
 
@@ -211,7 +217,7 @@ export function MenuPage() {
         id="cart-sheet"
         role="dialog"
         aria-modal="true"
-        aria-label="Table order"
+        aria-label="Pedido de la mesa"
         inert={!sheetOpen}
         className={`fixed inset-0 z-30 overflow-y-auto bg-canvas/95 px-4 pt-24 pb-8 backdrop-blur-xl transition-opacity duration-500 ease-smooth ${placement.compact} ${
           sheetOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
@@ -219,12 +225,19 @@ export function MenuPage() {
       >
         <div className="mx-auto max-w-lg space-y-4">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-xl font-semibold tracking-tight text-ink">Table order</h2>
-            <IconButton label="Close the order" icon={<XIcon size={20} />} onClick={() => setSheetOpen(false)} />
+            <h2 className="text-xl font-semibold tracking-tight text-ink">Pedido de la mesa</h2>
+            <IconButton label="Cerrar el pedido" icon={<XIcon size={20} />} onClick={() => setSheetOpen(false)} />
           </div>
           <Card className="p-4">
             <CartArea cart={cart} ordering={ordering} onSend={openConfirmation} />
           </Card>
+          {/* The status of what was sent, without scrolling past the whole menu. */}
+          {orders.status === 'loaded' && orders.data.length > 0 && (
+            <section aria-label="Órdenes de esta mesa" className="space-y-4 pt-4">
+              <h3 className="text-lg font-semibold tracking-tight text-ink">Órdenes de esta mesa</h3>
+              <OrdersArea orders={orders} onRetry={ordering.retryCart} />
+            </section>
+          )}
         </div>
       </div>
 

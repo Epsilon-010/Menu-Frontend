@@ -33,7 +33,7 @@ type ListState =
   | { status: 'loaded'; categories: CategoryWithItems[] }
 
 function messageOf(error: unknown): string {
-  return error instanceof CatalogError ? error.message : 'Something went wrong. Please try again.'
+  return error instanceof CatalogError ? error.message : 'Algo salió mal. Intenta de nuevo.'
 }
 
 /** Admin section to build the menu: categories and items, their order, visibility and images. */
@@ -123,8 +123,8 @@ export function CatalogPanel() {
 
   const header = (
     <SectionHeader
-      title="Menu"
-      description="Tables show categories and items in this order. Hidden ones stay here for you, but guests do not see them."
+      title="Menú"
+      description="Las mesas muestran las categorías y los productos en este orden. Los ocultos siguen aquí para ti, pero los comensales no los ven."
     />
   )
 
@@ -133,16 +133,16 @@ export function CatalogPanel() {
       <form onSubmit={handleCreate} className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <TextInput
-            aria-label="New category name"
+            aria-label="Nombre de la nueva categoría"
             required
             maxLength={60}
-            placeholder="New category, like Tacos or Drinks"
+            placeholder="Nueva categoría, como Tacos o Bebidas"
             value={name}
             onChange={(event) => setName(event.target.value)}
             className="min-w-0 flex-1"
           />
           <Button type="submit" variant="primary" icon={<PlusIcon size={16} aria-hidden />} disabled={saving}>
-            {saving ? 'Adding…' : 'Add category'}
+            {saving ? 'Agregando…' : 'Agregar categoría'}
           </Button>
         </div>
         {createError && <ErrorText>{createError}</ErrorText>}
@@ -155,7 +155,7 @@ export function CatalogPanel() {
       <div className="space-y-8">
         {header}
         {list.status === 'loading' ? (
-          <ListSkeleton label="Loading the menu" rows={4} />
+          <ListSkeleton label="Cargando el menú" rows={4} />
         ) : (
           <LoadError
             message={list.message}
@@ -213,16 +213,16 @@ export function CatalogPanel() {
       {addCategory}
       {stale && (
         <div role="status" className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-amber-50 p-4">
-          <p className="text-sm text-amber-900">Your change was saved, but the menu could not refresh. {stale}</p>
+          <p className="text-sm text-amber-900">Tu cambio se guardó, pero el menú no se pudo actualizar. {stale}</p>
           <Button variant="secondary" onClick={() => void reload(false).then((failure) => setStale(failure))}>
-            Refresh the menu
+            Actualizar el menú
           </Button>
         </div>
       )}
       {categories.length === 0 ? (
-        <EmptyState icon={<BowlFoodIcon size={24} aria-hidden />} title="Start your menu with a category">
-          Group your dishes the way guests look for them, like Tacos, Drinks or Desserts. Then add items with a price
-          and a photo.
+        <EmptyState icon={<BowlFoodIcon size={24} aria-hidden />} title="Empieza tu menú con una categoría">
+          Agrupa tus platillos como los buscan los comensales, por ejemplo Tacos, Bebidas o Postres. Después agrega
+          productos con precio y foto.
         </EmptyState>
       ) : (
         <div className="space-y-4">

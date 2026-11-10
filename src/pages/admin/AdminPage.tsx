@@ -1,28 +1,29 @@
 import { BowlFoodIcon, CallBellIcon, ChairIcon, ChartBarIcon, CookingPotIcon, PaletteIcon, ShieldCheckIcon, SlidersHorizontalIcon, TimerIcon, UserCircleIcon, UsersThreeIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
-import { Outlet, useNavigate } from 'react-router'
+import { Outlet, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../../features/auth/useAuth.ts'
 import { AppShell, type NavItem } from '../../shared/ui/AppShell.tsx'
 
 const ADMIN_NAV: NavItem[] = [
-  { to: '/admin', label: 'Menu', icon: <BowlFoodIcon size={16} aria-hidden />, end: true },
-  { to: '/admin/modifiers', label: 'Modifiers', icon: <SlidersHorizontalIcon size={16} aria-hidden /> },
-  { to: '/admin/tables', label: 'Tables', icon: <ChairIcon size={16} aria-hidden /> },
-  { to: '/admin/staff', label: 'Staff', icon: <UsersThreeIcon size={16} aria-hidden /> },
-  { to: '/admin/admins', label: 'Admins', icon: <ShieldCheckIcon size={16} aria-hidden /> },
-  { to: '/admin/settings', label: 'Orders', icon: <TimerIcon size={16} aria-hidden /> },
-  { to: '/admin/design', label: 'Design', icon: <PaletteIcon size={16} aria-hidden /> },
-  { to: '/admin/stats', label: 'Statistics', icon: <ChartBarIcon size={16} aria-hidden /> },
-  { to: '/admin/account', label: 'Account', icon: <UserCircleIcon size={16} aria-hidden /> },
+  { to: '/admin', label: 'Menú', icon: <BowlFoodIcon size={16} aria-hidden />, end: true },
+  { to: '/admin/modifiers', label: 'Opciones y extras', icon: <SlidersHorizontalIcon size={16} aria-hidden /> },
+  { to: '/admin/tables', label: 'Mesas', icon: <ChairIcon size={16} aria-hidden /> },
+  { to: '/admin/staff', label: 'Personal', icon: <UsersThreeIcon size={16} aria-hidden /> },
+  { to: '/admin/admins', label: 'Administradores', icon: <ShieldCheckIcon size={16} aria-hidden /> },
+  { to: '/admin/settings', label: 'Órdenes', icon: <TimerIcon size={16} aria-hidden /> },
+  { to: '/admin/design', label: 'Diseño', icon: <PaletteIcon size={16} aria-hidden /> },
+  { to: '/admin/stats', label: 'Estadísticas', icon: <ChartBarIcon size={16} aria-hidden /> },
+  { to: '/admin/account', label: 'Cuenta', icon: <UserCircleIcon size={16} aria-hidden /> },
   // The waiter's tables view: open tables, follow their orders and take payments.
-  { to: '/waiter', label: 'Service', icon: <CallBellIcon size={16} aria-hidden /> },
-  { to: '/kitchen', label: 'Kitchen', icon: <CookingPotIcon size={16} aria-hidden /> },
+  { to: '/waiter', label: 'Servicio', icon: <CallBellIcon size={16} aria-hidden /> },
+  { to: '/kitchen', label: 'Cocina', icon: <CookingPotIcon size={16} aria-hidden /> },
 ]
 
 /** Admin layout: the floating navigation and the selected section. */
 export function AdminPage() {
   const { state, signOut } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const [signingOut, setSigningOut] = useState(false)
 
   if (state.status !== 'authenticated' || state.account.user === null) return null
@@ -41,6 +42,8 @@ export function AdminPage() {
       nav={ADMIN_NAV}
       onSignOut={() => void handleSignOut()}
       signingOut={signingOut}
+      // The design editor puts its sections, preview and options side by side.
+      width={pathname === '/admin/design' ? 'max-w-7xl' : undefined}
     >
       <Outlet />
     </AppShell>

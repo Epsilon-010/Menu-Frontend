@@ -35,7 +35,7 @@ export function onSessionEnded(listener: () => void): () => void {
  */
 export class SessionUnavailableError extends Error {
   constructor() {
-    super('Could not reach the server. Check the connection and try again.')
+    super('No se pudo conectar con el servidor. Revisa la conexión e inténtalo de nuevo.')
     this.name = 'SessionUnavailableError'
   }
 }
@@ -103,5 +103,5 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
 
 /** Request that must not trigger a refresh (login, logout). */
 export function publicFetch(path: string, init: RequestInit = {}): Promise<Response> {
-  return fetch(`${API_BASE}${path}`, init)
+  return fetch(`${API_BASE}${path}`, withDeadline(init))
 }

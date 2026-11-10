@@ -13,31 +13,31 @@ import { ErrorText } from '../shared/ui/Feedback.tsx'
 
 type Mode = 'admin' | 'staff' | 'table'
 
-const TOO_MANY = 'Too many attempts. Wait a few minutes and try again.'
-const OFFLINE = 'Could not reach the server. Check your connection and try again.'
+const TOO_MANY = 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.'
+const OFFLINE = 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.'
 
 const ERROR_MESSAGES: Record<Mode, Record<LoginFailure, string>> = {
   admin: {
-    'invalid-credentials': 'That email and password do not match. Check them and try again.',
+    'invalid-credentials': 'Ese correo y esa contraseña no coinciden. Revísalos e inténtalo de nuevo.',
     'too-many-attempts': TOO_MANY,
     unavailable: OFFLINE,
   },
   staff: {
-    'invalid-credentials': 'That code and PIN do not match. Ask your manager for a new PIN.',
+    'invalid-credentials': 'Ese código y ese PIN no coinciden. Pide un PIN nuevo al administrador.',
     'too-many-attempts': TOO_MANY,
     unavailable: OFFLINE,
   },
   table: {
-    'invalid-credentials': 'That table code and PIN do not match. Ask the manager for the current PIN.',
+    'invalid-credentials': 'Ese código de mesa y ese PIN no coinciden. Pide el PIN actual al administrador.',
     'too-many-attempts': TOO_MANY,
     unavailable: OFFLINE,
   },
 }
 
 const INTROS: Record<Mode, string> = {
-  admin: 'Managers sign in with the email and password of their business.',
-  staff: 'Use the code and PIN your manager gave you.',
-  table: 'Use the table code and PIN the manager created for this tablet.',
+  admin: 'Los administradores inician sesión con el correo y la contraseña de su negocio.',
+  staff: 'Usa el código y el PIN que te dio el administrador.',
+  table: 'Usa el código de mesa y el PIN que el administrador creó para esta tablet.',
 }
 
 interface ModeTabProps {
@@ -57,7 +57,8 @@ function ModeTab({ selected, onSelect, icon, children }: ModeTabProps) {
       onClick={onSelect}
       className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold ${MOTION} ${state}`}
     >
-      {icon}
+      {/* The three tabs only fit a narrow phone without their icons. */}
+      <span className="hidden sm:inline-flex">{icon}</span>
       {children}
     </button>
   )
@@ -103,37 +104,37 @@ export function LoginPage() {
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6">
         <div className="space-y-2">
           <AuthLogo />
-          <h2 className="text-2xl font-semibold tracking-tight text-zinc-950">Sign in</h2>
+          <h2 className="text-2xl font-semibold tracking-tight text-zinc-950">Iniciar sesión</h2>
           <p className="text-sm text-zinc-500">{INTROS[mode]}</p>
         </div>
 
-        <div role="tablist" aria-label="Sign in as" className="flex gap-1 rounded-xl bg-zinc-100 p-1">
+        <div role="tablist" aria-label="Iniciar sesión como" className="flex gap-1 rounded-xl bg-zinc-100 p-1">
           <ModeTab
             selected={mode === 'admin'}
             onSelect={() => switchMode('admin')}
             icon={<CrownSimpleIcon size={16} aria-hidden />}
           >
-            Admin
+            Administrador
           </ModeTab>
           <ModeTab
             selected={mode === 'staff'}
             onSelect={() => switchMode('staff')}
             icon={<UserCircleIcon size={16} aria-hidden />}
           >
-            Staff
+            Personal
           </ModeTab>
           <ModeTab
             selected={mode === 'table'}
             onSelect={() => switchMode('table')}
             icon={<DeviceTabletIcon size={16} aria-hidden />}
           >
-            Table
+            Mesa
           </ModeTab>
         </div>
 
         {mode === 'admin' && (
           <div className="space-y-4">
-            <Field label="Email">
+            <Field label="Correo electrónico">
               <TextInput
                 type="email"
                 autoComplete="username"
@@ -144,7 +145,7 @@ export function LoginPage() {
                 onChange={(event) => setAccount(event.target.value)}
               />
             </Field>
-            <Field label="Password">
+            <Field label="Contraseña">
               <TextInput
                 type="password"
                 autoComplete="current-password"
@@ -159,7 +160,7 @@ export function LoginPage() {
         {mode === 'staff' && (
           <div className="space-y-4">
             {/* No length rules: accounts made before codes keep their old username and password until a new PIN. */}
-            <Field label="Code" hint={`${STAFF_CODE_LENGTH} letters and digits.`}>
+            <Field label="Código" hint={`${STAFF_CODE_LENGTH} letras y dígitos.`}>
               <TextInput
                 type="text"
                 autoComplete="username"
@@ -172,7 +173,7 @@ export function LoginPage() {
                 className="font-mono tracking-widest"
               />
             </Field>
-            <Field label="PIN" hint={`${STAFF_PIN_LENGTH} digits (${LEGACY_PIN_LENGTH} for a PIN given before).`}>
+            <Field label="PIN" hint={`${STAFF_PIN_LENGTH} dígitos (${LEGACY_PIN_LENGTH} para un PIN anterior).`}>
               <TextInput
                 type="password"
                 inputMode="numeric"
@@ -190,8 +191,8 @@ export function LoginPage() {
         {mode === 'table' && (
           <div className="space-y-4">
             <Field
-              label="Table code"
-              hint={`${TABLE_CODE_LENGTH} letters and digits, shown in the manager's table list.`}
+              label="Código de mesa"
+              hint={`${TABLE_CODE_LENGTH} letras y dígitos; aparece en la lista de mesas del administrador.`}
             >
               <TextInput
                 type="text"
@@ -213,7 +214,7 @@ export function LoginPage() {
                 autoComplete="off"
                 required
                 pattern={`\\d{${LEGACY_PIN_LENGTH}}|\\d{${PIN_LENGTH}}`}
-                title={`${PIN_LENGTH} digits (${LEGACY_PIN_LENGTH} for a PIN given before)`}
+                title={`${PIN_LENGTH} dígitos (${LEGACY_PIN_LENGTH} para un PIN anterior)`}
                 maxLength={PIN_LENGTH}
                 value={secret}
                 onChange={(event) => setSecret(event.target.value)}
@@ -230,13 +231,13 @@ export function LoginPage() {
           disabled={submitting || state.status === 'loading'}
           className={`w-full ${buttonClass('primary', 'md')}`}
         >
-          {submitting ? 'Signing in…' : 'Sign in'}
+          {submitting ? 'Iniciando sesión…' : 'Iniciar sesión'}
         </button>
 
         <p className="text-center text-sm text-zinc-500">
-          New here?{' '}
+          ¿Eres nuevo?{' '}
           <Link to="/register" className="font-medium text-zinc-950 underline underline-offset-4 hover:text-zinc-600">
-            Create your business
+            Crea tu negocio
           </Link>
         </p>
       </form>

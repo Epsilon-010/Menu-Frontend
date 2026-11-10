@@ -73,8 +73,8 @@ export class CatalogError extends Error {
 }
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
-const OFFLINE = 'Could not reach the server. Check your connection and try again.'
-const SERVER_FAILED = 'The server could not complete that. Please try again in a moment.'
+const OFFLINE = 'No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.'
+const SERVER_FAILED = 'El servidor no pudo completar la acción. Intenta de nuevo en un momento.'
 
 async function errorFrom(response: Response): Promise<CatalogError> {
   const body = (await response.json().catch(() => null)) as { detail?: unknown } | null
@@ -82,8 +82,8 @@ async function errorFrom(response: Response): Promise<CatalogError> {
   if (typeof body?.detail === 'string') {
     return new CatalogError(body.detail.endsWith('.') ? body.detail : `${body.detail}.`, response.status)
   }
-  if (response.status === 422) return new CatalogError('Please check the fields and try again.', 422)
-  if (response.status === 401) return new CatalogError('Your session ended. Sign in again to keep editing.', 401)
+  if (response.status === 422) return new CatalogError('Revisa los campos e intenta de nuevo.', 422)
+  if (response.status === 401) return new CatalogError('Tu sesión terminó. Inicia sesión de nuevo para seguir editando.', 401)
   return new CatalogError(SERVER_FAILED, response.status)
 }
 
@@ -175,10 +175,10 @@ export async function uploadImageFile(file: File): Promise<string> {
   const signature = (await (await send('/catalog/images/signature', { method: 'POST' })).json()) as UploadSignature
   const format = FORMAT_BY_TYPE[file.type]
   if (!format || !signature.allowed_formats.includes(format)) {
-    throw new CatalogError(`Use a ${signature.allowed_formats.join(', ')} image.`)
+    throw new CatalogError(`Usa una imagen ${signature.allowed_formats.join(', ')}.`)
   }
   if (file.size > signature.max_bytes) {
-    throw new CatalogError(`The image must be at most ${Math.floor(signature.max_bytes / (1024 * 1024))} MB.`)
+    throw new CatalogError(`La imagen debe pesar como máximo ${Math.floor(signature.max_bytes / (1024 * 1024))} MB.`)
   }
 
   const form = new FormData()
@@ -194,9 +194,9 @@ export async function uploadImageFile(file: File): Promise<string> {
     // Cross-origin and without cookies: the signature is the only credential.
     upload = await fetch(signature.upload_url, { method: 'POST', body: form, credentials: 'omit' })
   } catch {
-    throw new CatalogError('Could not upload the image. Please try again.')
+    throw new CatalogError('No se pudo subir la imagen. Intenta de nuevo.')
   }
-  if (!upload.ok) throw new CatalogError('The image storage rejected the file. Please try another image.')
+  if (!upload.ok) throw new CatalogError('El almacenamiento de imágenes rechazó el archivo. Prueba con otra imagen.')
   return signature.public_id
 }
 

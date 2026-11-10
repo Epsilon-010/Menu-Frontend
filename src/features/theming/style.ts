@@ -84,7 +84,10 @@ export function themeVariables(colors: ThemeColors): Record<string, string> {
     '--color-badge-ink': colors.badge_text,
     '--color-cart': colors.cart_bg,
     '--color-cart-ink': colors.cart_text,
-    'color-scheme': colors.mode,
+    // Status text the palette has no color for: it still has to read on a dark menu.
+    '--color-danger': colors.mode === 'dark' ? '#f87171' : '#b91c1c',
+    '--color-warning': colors.mode === 'dark' ? '#fbbf24' : '#92400e',
+    colorScheme: colors.mode,
   }
 }
 

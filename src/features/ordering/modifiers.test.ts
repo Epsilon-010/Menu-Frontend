@@ -60,32 +60,32 @@ const TACO: MenuItem = {
 
 describe('the rule of a group', () => {
   it('uses the server wording for each kind of limit', () => {
-    expect(ruleMessage(SIZE)).toBe('Choose 1 option for Size')
-    expect(ruleMessage({ ...EXTRAS, max_select: 3 })).toBe('Choose up to 3 options for Extras')
-    expect(ruleMessage({ ...EXTRAS, max_select: 1 })).toBe('Choose up to 1 option for Extras')
-    expect(ruleMessage({ ...SIZE, max_select: 2 })).toBe('Choose between 1 and 2 options for Size')
-    expect(ruleMessage({ ...SAUCES, min_select: 2 })).toBe('Choose 2 options for Sauces')
+    expect(ruleMessage(SIZE)).toBe('Elige 1 opción de Size')
+    expect(ruleMessage({ ...EXTRAS, max_select: 3 })).toBe('Elige hasta 3 opciones de Extras')
+    expect(ruleMessage({ ...EXTRAS, max_select: 1 })).toBe('Elige hasta 1 opción de Extras')
+    expect(ruleMessage({ ...SIZE, max_select: 2 })).toBe('Elige entre 1 y 2 opciones de Size')
+    expect(ruleMessage({ ...SAUCES, min_select: 2 })).toBe('Elige 2 opciones de Sauces')
   })
 
   it('has a short hint for the picker', () => {
-    expect(groupHint(SIZE)).toBe('Choose 1')
-    expect(groupHint(EXTRAS)).toBe('Optional, up to 2')
-    expect(groupHint(SAUCES)).toBe('Choose 1 to 2')
+    expect(groupHint(SIZE)).toBe('Elige 1')
+    expect(groupHint(EXTRAS)).toBe('Opcional, hasta 2')
+    expect(groupHint(SAUCES)).toBe('Elige de 1 a 2')
   })
 })
 
 describe('selectionError', () => {
   it('names the first unmet rule in the item order', () => {
-    expect(selectionError(TACO.modifier_groups, [])).toBe('Choose 1 option for Size')
+    expect(selectionError(TACO.modifier_groups, [])).toBe('Elige 1 opción de Size')
     expect(selectionError(TACO.modifier_groups, ['large'])).toBeNull()
     expect(selectionError(TACO.modifier_groups, ['large', 'cheese', 'avocado', 'onion'])).toBe(
-      'Choose up to 2 options for Extras',
+      'Elige hasta 2 opciones de Extras',
     )
-    expect(selectionError([SAUCES], [])).toBe('Choose between 1 and 2 options for Sauces')
+    expect(selectionError([SAUCES], [])).toBe('Elige entre 1 y 2 opciones de Sauces')
   })
 
   it('counts a sold out option as not chosen', () => {
-    expect(selectionError(TACO.modifier_groups, ['huge'])).toBe('Choose 1 option for Size')
+    expect(selectionError(TACO.modifier_groups, ['huge'])).toBe('Elige 1 opción de Size')
   })
 
   it('accepts anything for an item without groups', () => {

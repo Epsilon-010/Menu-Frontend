@@ -3,6 +3,11 @@
 type AudioContextClass = typeof AudioContext
 
 let context: AudioContext | null = null
+const listeners = new Set<() => void>()
+
+function notifyAudioChanged(): void {
+  listeners.forEach((listener) => listener())
+}
 
 function audio(): AudioContext | null {
   try {
@@ -11,6 +16,8 @@ function audio(): AudioContext | null {
         globalThis.AudioContext ?? (globalThis as { webkitAudioContext?: AudioContextClass }).webkitAudioContext
       if (!Ctor) return null
       context = new Ctor()
+      context.addEventListener('statechange', notifyAudioChanged)
+      notifyAudioChanged()
     }
     // Browsers start audio suspended until a tap; turning the sound on is that tap.
     if (context.state === 'suspended') void context.resume().catch(() => undefined)
@@ -18,6 +25,22 @@ function audio(): AudioContext | null {
   } catch {
     return null
   }
+}
+
+/** Tries to start the audio without playing anything; after a reload the browser waits for a tap. */
+export function wakeAudio(): void {
+  audio()
+}
+
+/** True while the browser keeps the audio suspended, so an alert would make no sound. */
+export function isAudioLocked(): boolean {
+  return context?.state === 'suspended'
+}
+
+/** Calls `listener` whenever the audio starts or stops; returns how to stop listening. */
+export function subscribeToAudio(listener: () => void): () => void {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
 }
 
 /** Plays a soft two-note chime; does nothing where the browser has no audio. */

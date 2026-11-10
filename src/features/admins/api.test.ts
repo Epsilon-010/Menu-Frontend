@@ -75,6 +75,6 @@ describe('admins API', () => {
   it('reports a network failure as offline', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new TypeError('offline'))))
 
-    await expect(listAdmins()).rejects.toThrow('Could not reach the server')
+    await expect(listAdmins()).rejects.toThrow('No se pudo conectar con el servidor')
   })
 })

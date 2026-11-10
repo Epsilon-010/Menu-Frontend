@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { Order } from './api.ts'
+import { formatMoney } from '../catalog/price.ts'
 import {
+  cartBarTotal,
   cartVersionOf,
   createOrderSender,
   groupByPerson,
@@ -56,12 +58,12 @@ describe('needsCartReload', () => {
 
 describe('labels', () => {
   it('turns item and order statuses into readable labels', () => {
-    expect(itemStatusLabel('queued')).toBe('Waiting for the kitchen')
-    expect(itemStatusLabel('preparing')).toBe('Being prepared')
-    expect(itemStatusLabel('ready')).toBe('Ready, on its way')
-    expect(itemStatusLabel('delivered')).toBe('Delivered')
-    expect(itemStatusLabel('cancelled')).toBe('Cancelled')
-    expect(orderStatusLabel('partially_delivered')).toBe('Partly delivered')
+    expect(itemStatusLabel('queued')).toBe('Esperando a la cocina')
+    expect(itemStatusLabel('preparing')).toBe('En preparación')
+    expect(itemStatusLabel('ready')).toBe('Listo, va en camino')
+    expect(itemStatusLabel('delivered')).toBe('Entregado')
+    expect(itemStatusLabel('cancelled')).toBe('Cancelado')
+    expect(orderStatusLabel('partially_delivered')).toBe('Entregada en parte')
   })
 })
 
@@ -90,35 +92,84 @@ describe('reconnectDelay', () => {
 })
 
 describe('createOrderSender', () => {
-  it('keeps the draft id after a failure and uses a new one after a success', async () => {
-    const ids = ['d1', 'd2']
-    const submit = vi
-      .fn<(id: string, version: number) => Promise<Order>>()
-      .mockRejectedValueOnce(new Error('The order changed, review it'))
-      .mockResolvedValueOnce({ id: 'd1', number: 4 } as Order)
-    const sender = createOrderSender(submit, () => ids.shift() ?? 'none')
+  function sender(...outcomes: (Order | Error)[]) {
+    const ids = ['d1', 'd2', 'd3']
+    const submit = vi.fn<(id: string, version: number) => Promise<Order>>(async () => {
+      const outcome = outcomes.shift()
+      if (outcome instanceof Error) throw outcome
+      return outcome as Order
+    })
+    return { submit, orders: createOrderSender(submit, () => ids.shift() ?? 'none') }
+  }
+  const order = { id: 'o1', number: 4 } as Order
 
-    await expect(sender.send(3)).rejects.toThrow()
-    expect(sender.draftId).toBe('d1')
+  it('reuses the id when the same reviewed version is retried, so a lost answer never duplicates the order', async () => {
+    const { submit, orders } = sender(new Error('lost answer'), order)
 
-    await sender.send(5)
+    await expect(orders.send(3)).rejects.toThrow()
+    await orders.send(3)
+
     expect(submit.mock.calls).toEqual([
       ['d1', 3],
-      ['d1', 5],
+      ['d1', 3],
     ])
-    expect(sender.draftId).toBe('d2')
+  })
+
+  it('gives a later round its own id after a lost answer, so it never replays the earlier order', async () => {
+    const { submit, orders } = sender(new Error('lost answer'), order)
+
+    await expect(orders.send(3)).rejects.toThrow()
+    await orders.send(7)
+
+    expect(submit.mock.calls).toEqual([
+      ['d1', 3],
+      ['d2', 7],
+    ])
+  })
+
+  it('never reuses an id after a success', async () => {
+    const { submit, orders } = sender(order, order)
+
+    await orders.send(3)
+    await orders.send(3)
+
+    expect(submit.mock.calls.map(([id]) => id)).toEqual(['d1', 'd2'])
+  })
+
+  it('returns the order the server created', async () => {
+    const { orders } = sender(order)
+
+    await expect(orders.send(3)).resolves.toBe(order)
+  })
+})
+
+describe('cartBarTotal', () => {
+  it('shows the total of a loaded cart', () => {
+    expect(cartBarTotal({ status: 'loaded', data: { total_cents: 1250 } })).toBe(formatMoney(1250))
+  })
+
+  it('shows a loaded empty cart as zero, because that total is known', () => {
+    expect(cartBarTotal({ status: 'loaded', data: { total_cents: 0 } })).toBe(formatMoney(0))
+  })
+
+  it('has no amount while the cart loads', () => {
+    expect(cartBarTotal({ status: 'loading' })).toBeNull()
+  })
+
+  it('says the total is unavailable when the cart failed to load', () => {
+    expect(cartBarTotal({ status: 'error' })).toBe('No disponible')
   })
 })
 
 describe('rejectionNote', () => {
   it('shows why the kitchen rejected a dish', () => {
-    expect(rejectionNote({ status: 'cancelled', cancel_reason: 'Out of avocado' })).toBe('Rejected: Out of avocado')
+    expect(rejectionNote({ status: 'cancelled', cancel_reason: 'Out of avocado' })).toBe('Rechazado: Out of avocado')
   })
 
   it('says nothing for dishes that were not rejected or carry no reason', () => {
     expect(rejectionNote({ status: 'ready', cancel_reason: null })).toBeNull()
-    expect(rejectionNote({ status: 'cancelled', cancel_reason: null })).toBe('Rejected')
-    expect(rejectionNote({ status: 'cancelled', cancel_reason: '  ' })).toBe('Rejected')
+    expect(rejectionNote({ status: 'cancelled', cancel_reason: null })).toBe('Rechazado')
+    expect(rejectionNote({ status: 'cancelled', cancel_reason: '  ' })).toBe('Rechazado')
   })
 })
 

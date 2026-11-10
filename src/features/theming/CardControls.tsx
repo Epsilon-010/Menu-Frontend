@@ -1,4 +1,3 @@
-import { Field, Select } from '../../shared/ui/Field.tsx'
 import type {
   AddButtonStyle,
   BadgeShape,
@@ -6,6 +5,7 @@ import type {
   BorderWidth,
   ButtonShape,
   CardAnimation,
+  CardBlock,
   CardHover,
   CardPadding,
   CardRadius,
@@ -39,47 +39,58 @@ import {
   MIN_OVERLAY_OPACITY,
   PRICE_POSITIONS,
 } from './cards.ts'
-import { Choice } from './Choice.tsx'
-import { withCards } from './editor.ts'
+import { Choice, SliderField } from './Choice.tsx'
+import { withCardBlocks, withCards } from './editor.ts'
+import { SortableBlocks } from './SortableBlocks.tsx'
 
 // Records keyed by every option: a new option cannot ship without its label.
 const TEMPLATE_LABELS: Record<CardTemplate, string> = {
-  vertical: 'Vertical: image on top',
-  horizontal: 'Horizontal: image beside the text',
-  overlay: 'Full image with the text over it',
+  vertical: 'Vertical: imagen arriba',
+  horizontal: 'Horizontal: imagen junto al texto',
+  overlay: 'Imagen completa con el texto encima',
 }
-const ASPECT_LABELS: Record<ImageAspect, string> = { square: 'Square', landscape: '4:3', wide: '16:9' }
-const FIT_LABELS: Record<ImageFit, string> = { cover: 'Fill and crop', contain: 'Show it whole' }
-const POSITION_LABELS: Record<ImagePosition, string> = { left: 'Left', right: 'Right' }
+const BLOCK_LABELS: Record<CardBlock, string> = {
+  image: 'Imagen',
+  heading: 'Nombre y precio',
+  description: 'Descripción',
+  badges: 'Etiquetas',
+  add_button: 'Botón de agregar',
+}
+const ASPECT_LABELS: Record<ImageAspect, string> = { square: 'Cuadrada', landscape: '4:3', wide: '16:9' }
+const FIT_LABELS: Record<ImageFit, string> = { cover: 'Llenar y recortar', contain: 'Mostrarla completa' }
+const POSITION_LABELS: Record<ImagePosition, string> = { left: 'Izquierda', right: 'Derecha' }
 const RADIUS_LABELS: Record<CardRadius, string> = {
-  none: 'Square',
-  sm: 'Slightly rounded',
-  md: 'Rounded',
-  lg: 'More rounded',
-  xl: 'Very rounded',
+  none: 'Rectas',
+  sm: 'Poco redondeadas',
+  md: 'Redondeadas',
+  lg: 'Más redondeadas',
+  xl: 'Muy redondeadas',
 }
-const SHADOW_LABELS: Record<CardShadow, string> = { none: 'None', sm: 'Soft', md: 'Medium', lg: 'Strong' }
-const BORDER_WIDTH_LABELS: Record<BorderWidth, string> = { none: 'No border', thin: 'Thin', thick: 'Thick' }
+const SHADOW_LABELS: Record<CardShadow, string> = { none: 'Ninguna', sm: 'Suave', md: 'Media', lg: 'Fuerte' }
+const BORDER_WIDTH_LABELS: Record<BorderWidth, string> = { none: 'Sin borde', thin: 'Delgado', thick: 'Grueso' }
 const BORDER_COLOR_LABELS: Record<BorderColor, string> = {
-  border: 'Border color',
-  primary: 'Primary color',
-  accent: 'Accent color',
+  border: 'Color de bordes',
+  primary: 'Color primario',
+  accent: 'Color de acento',
 }
-const PADDING_LABELS: Record<CardPadding, string> = { compact: 'Compact', comfortable: 'Comfortable', spacious: 'Spacious' }
-const PRICE_LABELS: Record<PricePosition, string> = { top: 'Next to the name', bottom: 'Next to the button' }
+const PADDING_LABELS: Record<CardPadding, string> = { compact: 'Compacto', comfortable: 'Cómodo', spacious: 'Amplio' }
+const PRICE_LABELS: Record<PricePosition, string> = { top: 'Junto al nombre', bottom: 'Junto al botón' }
 const BUTTON_STYLE_LABELS: Record<AddButtonStyle, string> = {
-  text: 'The word "Add"',
-  icon: 'Plus icon only',
-  both: 'Icon and text',
+  text: 'La palabra "Agregar"',
+  icon: 'Solo el ícono de más',
+  both: 'Ícono y texto',
 }
-const BUTTON_SHAPE_LABELS: Record<ButtonShape, string> = { square: 'Square', rounded: 'Rounded', pill: 'Pill' }
-const HOVER_LABELS: Record<CardHover, string> = { none: 'None', lift: 'Lift', grow: 'Grow' }
-const ANIMATION_LABELS: Record<CardAnimation, string> = { none: 'None', fade: 'Fade in', rise: 'Rise in' }
-const BADGE_SHAPE_LABELS: Record<BadgeShape, string> = { pill: 'Pill', rounded: 'Rounded' }
+const BUTTON_SHAPE_LABELS: Record<ButtonShape, string> = { square: 'Cuadrado', rounded: 'Redondeado', pill: 'Píldora' }
+const HOVER_LABELS: Record<CardHover, string> = { none: 'Ninguno', lift: 'Elevar', grow: 'Agrandar' }
+const ANIMATION_LABELS: Record<CardAnimation, string> = { none: 'Ninguna', fade: 'Aparecer', rise: 'Subir al aparecer' }
+const BADGE_SHAPE_LABELS: Record<BadgeShape, string> = { pill: 'Píldora', rounded: 'Redondeada' }
 
 const LINES = Array.from(
   { length: MAX_DESCRIPTION_LINES - MIN_DESCRIPTION_LINES + 1 },
-  (_, index) => MIN_DESCRIPTION_LINES + index,
+  (_, index) => String(MIN_DESCRIPTION_LINES + index),
+)
+const LINE_LABELS: Record<string, string> = Object.fromEntries(
+  LINES.map((lines) => [lines, lines === '0' ? 'Ocultar la descripción' : lines]),
 )
 
 interface CardControlsProps {
@@ -87,7 +98,7 @@ interface CardControlsProps {
   onChange: (theme: Theme) => void
 }
 
-/** How each product card looks: template, image, shape, add button, motion and badges. */
+/** How each product card looks: template, order of its parts, image, shape, add button, motion and badges. */
 export function CardControls({ theme, onChange }: CardControlsProps) {
   const { cards } = theme
   const set = (changes: Partial<ThemeCards>) => onChange(withCards(theme, changes))
@@ -97,22 +108,34 @@ export function CardControls({ theme, onChange }: CardControlsProps) {
   return (
     <div className="space-y-6">
       <Choice
-        label="Card template"
+        label="Plantilla de tarjeta"
         value={cards.template}
         options={CARD_TEMPLATES}
         labels={TEMPLATE_LABELS}
         onChange={(template) => set({ template })}
         hint={
           listView
-            ? 'The list view always draws horizontal rows; the template applies to the grid and the carousel.'
-            : 'Products without an image show a plain card.'
+            ? 'La vista de lista siempre dibuja filas horizontales; la plantilla aplica a la cuadrícula y al carrusel.'
+            : 'Los productos sin imagen muestran una tarjeta simple.'
         }
       />
 
-      <fieldset className="grid gap-4 sm:grid-cols-3">
-        <legend className="mb-2 text-sm font-semibold text-ink">Image</legend>
+      <SortableBlocks
+        label="Orden de la tarjeta"
+        hint={
+          cards.template === 'vertical' && !listView
+            ? 'El precio sigue la opción Precio: junto al nombre o junto al botón.'
+            : 'La imagen solo cambia de lugar con la plantilla vertical; aquí queda fija y se ordena el texto.'
+        }
+        blocks={cards.blocks}
+        labels={BLOCK_LABELS}
+        onChange={(blocks) => onChange(withCardBlocks(theme, blocks))}
+      />
+
+      <fieldset className="grid gap-4 @sm:grid-cols-2 @md:grid-cols-3">
+        <legend className="mb-2 text-sm font-semibold text-ink">Imagen</legend>
         <Choice
-          label="Shape"
+          label="Forma"
           value={cards.image.aspect}
           options={IMAGE_ASPECTS}
           labels={ASPECT_LABELS}
@@ -120,14 +143,14 @@ export function CardControls({ theme, onChange }: CardControlsProps) {
           onChange={(aspect) => set({ image: { ...cards.image, aspect } })}
         />
         <Choice
-          label="Fit"
+          label="Ajuste"
           value={cards.image.fit}
           options={IMAGE_FITS}
           labels={FIT_LABELS}
           onChange={(fit) => set({ image: { ...cards.image, fit } })}
         />
         <Choice
-          label="Side"
+          label="Lado"
           value={cards.image.position}
           options={IMAGE_POSITIONS}
           labels={POSITION_LABELS}
@@ -137,43 +160,41 @@ export function CardControls({ theme, onChange }: CardControlsProps) {
       </fieldset>
 
       {cards.template === 'overlay' && !listView && (
-        <Field label={`Darkening under the text: ${cards.overlay_opacity}%`}>
-          <input
-            type="range"
-            min={MIN_OVERLAY_OPACITY}
-            max={MAX_OVERLAY_OPACITY}
-            value={cards.overlay_opacity}
-            onChange={(event) => set({ overlay_opacity: Number(event.target.value) })}
-            className="w-full accent-zinc-950"
-          />
-        </Field>
+        <SliderField
+          label="Oscurecer bajo el texto"
+          value={cards.overlay_opacity}
+          min={MIN_OVERLAY_OPACITY}
+          max={MAX_OVERLAY_OPACITY}
+          display={`${cards.overlay_opacity}%`}
+          onChange={(overlay_opacity) => set({ overlay_opacity })}
+        />
       )}
 
-      <fieldset className="grid gap-4 sm:grid-cols-2">
-        <legend className="mb-2 text-sm font-semibold text-ink">Card</legend>
+      <fieldset className="grid gap-4 @sm:grid-cols-2">
+        <legend className="mb-2 text-sm font-semibold text-ink">Tarjeta</legend>
         <Choice
-          label="Corners"
+          label="Esquinas"
           value={cards.radius}
           options={CARD_RADII}
           labels={RADIUS_LABELS}
           onChange={(radius) => set({ radius })}
         />
         <Choice
-          label="Shadow"
+          label="Sombra"
           value={cards.shadow}
           options={CARD_SHADOWS}
           labels={SHADOW_LABELS}
           onChange={(shadow) => set({ shadow })}
         />
         <Choice
-          label="Border"
+          label="Borde"
           value={cards.border.width}
           options={BORDER_WIDTHS}
           labels={BORDER_WIDTH_LABELS}
           onChange={(width) => set({ border: { ...cards.border, width } })}
         />
         <Choice
-          label="Border color"
+          label="Color del borde"
           value={cards.border.color}
           options={BORDER_COLORS}
           labels={BORDER_COLOR_LABELS}
@@ -181,33 +202,29 @@ export function CardControls({ theme, onChange }: CardControlsProps) {
           onChange={(color) => set({ border: { ...cards.border, color } })}
         />
         <Choice
-          label="Inner spacing"
+          label="Espacio interior"
           value={cards.padding}
           options={CARD_PADDINGS}
           labels={PADDING_LABELS}
           onChange={(padding) => set({ padding })}
         />
-        <Field label="Description lines">
-          <Select
-            value={cards.description_lines}
-            onChange={(event) => set({ description_lines: Number(event.target.value) })}
-          >
-            {LINES.map((lines) => (
-              <option key={lines} value={lines}>
-                {lines === 0 ? 'Hide the description' : lines}
-              </option>
-            ))}
-          </Select>
-        </Field>
         <Choice
-          label="Price"
+          label="Líneas de descripción"
+          kind="select"
+          value={String(cards.description_lines)}
+          options={LINES}
+          labels={LINE_LABELS}
+          onChange={(lines) => set({ description_lines: Number(lines) })}
+        />
+        <Choice
+          label="Precio"
           value={cards.price_position}
           options={PRICE_POSITIONS}
           labels={PRICE_LABELS}
           onChange={(price_position) => set({ price_position })}
         />
         <Choice
-          label="Badges"
+          label="Etiquetas"
           value={cards.badge_shape}
           options={BADGE_SHAPES}
           labels={BADGE_SHAPE_LABELS}
@@ -215,17 +232,17 @@ export function CardControls({ theme, onChange }: CardControlsProps) {
         />
       </fieldset>
 
-      <fieldset className="grid gap-4 sm:grid-cols-2">
-        <legend className="mb-2 text-sm font-semibold text-ink">Add button</legend>
+      <fieldset className="grid gap-4 @sm:grid-cols-2">
+        <legend className="mb-2 text-sm font-semibold text-ink">Botón de agregar</legend>
         <Choice
-          label="Content"
+          label="Contenido"
           value={cards.add_button.style}
           options={ADD_BUTTON_STYLES}
           labels={BUTTON_STYLE_LABELS}
           onChange={(style) => set({ add_button: { ...cards.add_button, style } })}
         />
         <Choice
-          label="Button shape"
+          label="Forma del botón"
           value={cards.add_button.shape}
           options={BUTTON_SHAPES}
           labels={BUTTON_SHAPE_LABELS}
@@ -233,22 +250,22 @@ export function CardControls({ theme, onChange }: CardControlsProps) {
         />
       </fieldset>
 
-      <fieldset className="grid gap-4 sm:grid-cols-2">
-        <legend className="mb-2 text-sm font-semibold text-ink">Motion</legend>
+      <fieldset className="grid gap-4 @sm:grid-cols-2">
+        <legend className="mb-2 text-sm font-semibold text-ink">Movimiento</legend>
         <Choice
-          label="On hover"
+          label="Al pasar el cursor"
           value={cards.hover}
           options={CARD_HOVERS}
           labels={HOVER_LABELS}
           onChange={(hover) => set({ hover })}
         />
         <Choice
-          label="When cards appear"
+          label="Al aparecer las tarjetas"
           value={cards.animation}
           options={CARD_ANIMATIONS}
           labels={ANIMATION_LABELS}
           onChange={(animation) => set({ animation })}
-          hint="Off for people who ask their device to reduce motion."
+          hint="Se desactiva para quien pide a su dispositivo reducir el movimiento."
         />
       </fieldset>
     </div>

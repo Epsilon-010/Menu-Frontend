@@ -49,7 +49,7 @@ export function SendConfirmation({ liveCart, onSend, onSent, onClose }: SendConf
     if (result.kind === 'sent') onSent(result.order)
     else if (result.kind === 'changed') {
       if (result.cart) reviewLatest(result.cart)
-      else setError('The order changed and could not be reloaded. Check your connection and try again.')
+      else setError('El pedido cambió y no se pudo volver a cargar. Revisa tu conexión e inténtalo de nuevo.')
     } else setError(result.message)
   }
 
@@ -66,26 +66,26 @@ export function SendConfirmation({ liveCart, onSend, onSent, onClose }: SendConf
       >
         <div className="space-y-1 p-6 pb-4">
           <h2 id="send-title" className="text-xl font-semibold tracking-tight text-ink">
-            Review the order before sending
+            Revisa el pedido antes de enviarlo
           </h2>
-          <p className="text-sm text-muted">It goes straight to the kitchen for the whole table.</p>
+          <p className="text-sm text-muted">Va directo a la cocina para toda la mesa.</p>
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-6">
           {changedNotice && !outdated && (
             <p role="status" className="flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
               <WarningIcon size={16} className="mt-0.5 shrink-0" aria-hidden />
-              Someone at the table changed the order. This is the latest version; review it again before sending.
+              Alguien en la mesa cambió el pedido. Esta es la versión más reciente; revísala de nuevo antes de enviarla.
             </p>
           )}
           {outdated && (
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-amber-50 p-3">
               <p className="flex items-start gap-2 text-sm text-amber-900">
                 <WarningIcon size={16} className="mt-0.5 shrink-0" aria-hidden />
-                Someone just changed the order.
+                Alguien acaba de cambiar el pedido.
               </p>
               <Button variant="secondary" onClick={() => reviewLatest(liveCart)} disabled={busy} className="type-button">
-                Show the changes
+                Ver los cambios
               </Button>
             </div>
           )}
@@ -105,7 +105,7 @@ export function SendConfirmation({ liveCart, onSend, onSent, onClose }: SendConf
                       </p>
                       {line.modifiers.length > 0 && <p className="text-muted">{modifierSummary(line.modifiers)}</p>}
                       {line.note && <p className="text-muted">{line.note}</p>}
-                      {!line.available && <p className="text-amber-800">No longer available, it will not be sent</p>}
+                      {!line.available && <p className="text-warning">Ya no está disponible, no se enviará</p>}
                     </div>
                     <span
                       className={`shrink-0 tabular-nums ${line.available ? 'text-ink' : 'text-faint line-through'}`}
@@ -117,7 +117,7 @@ export function SendConfirmation({ liveCart, onSend, onSent, onClose }: SendConf
               </ul>
             </section>
           ))}
-          {groups.length === 0 && <p className="text-sm text-muted">The order is empty now.</p>}
+          {groups.length === 0 && <p className="text-sm text-muted">Ahora el pedido está vacío.</p>}
         </div>
 
         <div className="space-y-4 p-6 pt-4">
@@ -135,10 +135,10 @@ export function SendConfirmation({ liveCart, onSend, onSent, onClose }: SendConf
               disabled={busy || !hasDishes}
               onClick={() => void handleConfirm()}
             >
-              {busy ? 'Sending…' : 'Confirm and send'}
+              {busy ? 'Enviando…' : 'Confirmar y enviar'}
             </Button>
             <Button variant="ghost" size="md" disabled={busy} onClick={onClose} className="type-button-face">
-              Keep editing
+              Seguir editando
             </Button>
           </div>
         </div>

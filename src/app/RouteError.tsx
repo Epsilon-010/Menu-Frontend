@@ -15,12 +15,12 @@ export function RouteErrorScreen({ onReload }: RouteErrorScreenProps) {
         <WarningCircleIcon size={24} weight="bold" aria-hidden />
       </span>
       <div className="max-w-md space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">Something went wrong</h1>
-        <p className="text-zinc-500">This screen could not be shown. Reload to try again.</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">Algo salió mal</h1>
+        <p className="text-zinc-500">No se pudo mostrar esta pantalla. Recarga para intentarlo de nuevo.</p>
       </div>
       <button type="button" onClick={onReload} className={buttonClass('primary', 'md')}>
         <ArrowClockwiseIcon size={16} aria-hidden />
-        Reload
+        Recargar
       </button>
     </main>
   )

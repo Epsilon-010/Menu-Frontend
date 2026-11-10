@@ -12,6 +12,8 @@ export type AuthState =
   | { status: 'authenticated'; account: Account }
   /** A guest's session ended: they see a closing screen, never the staff sign in form. */
   | { status: 'visit-ended'; reason: VisitEndReason }
+  /** The session could not be checked (server down, no network): it may still be valid, so the user can retry. */
+  | { status: 'unavailable'; retry: () => void }
 
 export interface AuthContextValue {
   state: AuthState

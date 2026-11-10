@@ -1,8 +1,11 @@
 import type {
+  CardBlock,
+  CategoryLayout,
   ColorField,
   FontId,
   ImageSlot,
   FontRole,
+  HeaderBlock,
   TextElement,
   TextStyle,
   Theme,
@@ -70,6 +73,26 @@ export function withCards(theme: Theme, changes: Partial<ThemeCards>): Theme {
   return { ...theme, cards: { ...theme.cards, ...changes } }
 }
 
+export function withCardBlocks(theme: Theme, blocks: CardBlock[]): Theme {
+  return withCards(theme, { blocks })
+}
+
+export function withHeaderBlocks(theme: Theme, header_blocks: HeaderBlock[]): Theme {
+  return withLayout(theme, { header_blocks })
+}
+
+/** What a category starts with when it gets its own design: the general view, columns and card template. */
+export function generalCategoryLayout(theme: Theme): CategoryLayout {
+  return { product_view: theme.layout.product_view, columns: theme.layout.columns, card_template: theme.cards.template }
+}
+
+/** Gives a category its own layout, changes it, or (null) sends it back to the general layout. */
+export function withCategoryLayout(theme: Theme, categoryId: string, value: CategoryLayout | null): Theme {
+  if (value !== null) return withLayout(theme, { categories: { ...theme.layout.categories, [categoryId]: value } })
+  const categories = Object.fromEntries(Object.entries(theme.layout.categories).filter(([id]) => id !== categoryId))
+  return withLayout(theme, { categories })
+}
+
 /** A preset replaces colors, typography, layout and cards; the brand (name, texts, images) stays the tenant's. */
 export function withPreset(theme: Theme, preset: ThemePreset): Theme {
   return { ...theme, colors: preset.colors, typography: preset.typography, layout: preset.layout, cards: preset.cards }
@@ -83,7 +106,7 @@ export function withDefaults(theme: Theme, presets: ThemePreset[]): Theme {
   return presets.length > 0 ? withPreset(theme, presets[0]) : theme
 }
 
-const NOT_A_DESIGN = 'That file is not a menu design. Choose a .json file exported from this editor.'
+const NOT_A_DESIGN = 'Ese archivo no es un diseño de menú. Elige un archivo .json exportado desde este editor.'
 
 /** The JSON object inside an exported file; the server checks every value when it is imported. */
 export function readThemeFile(text: string): Record<string, unknown> {
@@ -109,18 +132,18 @@ export function themeFileName(businessName: string, day: Date): string {
   return `${slug ? `${slug}-design` : 'menu-design'}-${date}.json`
 }
 
-const SLOT_NAMES: Record<ImageSlot, string> = { logo: 'logo', banner: 'banner', background: 'background image' }
+const SLOT_NAMES: Record<ImageSlot, string> = { logo: 'el logo', banner: 'el banner', background: 'la imagen de fondo' }
 
 /** The warning for images an import left out, or null when it kept them all. */
 export function removedImagesText(slots: ImageSlot[]): string | null {
   if (slots.length === 0) return null
   const names = slots.map((slot) => SLOT_NAMES[slot])
-  const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
+  const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}`
   const one = slots.length === 1
   const reason = one
-    ? 'was left out: it belongs to another business or is no longer in your designs. Upload it again.'
-    : 'were left out: they belong to another business or are no longer in your designs. Upload them again.'
-  return `The ${list} ${reason}`
+    ? 'quedó fuera: pertenece a otro negocio o ya no está en tus diseños. Sube la imagen de nuevo.'
+    : 'quedaron fuera: pertenecen a otro negocio o ya no están en tus diseños. Sube las imágenes de nuevo.'
+  return `${list[0].toUpperCase()}${list.slice(1)} ${reason}`
 }
 
 /** The preset the theme still looks exactly like, or null once the admin adjusted anything. */

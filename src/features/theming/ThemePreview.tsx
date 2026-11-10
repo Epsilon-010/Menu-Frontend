@@ -1,6 +1,6 @@
 import { DeviceMobileIcon, DeviceTabletIcon, ForkKnifeIcon, ShoppingBagIcon } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
-import { MOTION } from '../../shared/ui/classes.ts'
+import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group.tsx'
 import { formatMoney } from '../catalog/price.ts'
 import { fetchMenu, type MenuCategory } from '../ordering/api.ts'
 import { MenuBrowser } from '../ordering/MenuBrowser.tsx'
@@ -12,20 +12,38 @@ type Device = 'tablet' | 'phone'
 
 const DEVICES: Record<Device, { width: number; height: number; label: string }> = {
   tablet: { width: 820, height: 1080, label: 'Tablet' },
-  phone: { width: 390, height: 780, label: 'Phone' },
+  phone: { width: 390, height: 780, label: 'Celular' },
 }
 
-/** Scale that fits a frame of `width` pixels into its container (never above 1). */
-function useFitScale(width: number) {
+// Space above and below the frame on wide screens before scrolling: the page title, the size toggle and a
+// bottom margin. Pinned after scrolling, the frame keeps that size and just has some room left.
+const PINNED_CHROME_PX = 232
+
+/**
+ * Scale that fits a `width` x `height` frame into its container (never above 1). On wide screens the
+ * preview stays pinned beside the options, so the whole frame also fits the window height.
+ */
+function useFitScale(width: number, height: number) {
   const ref = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
   useEffect(() => {
     const element = ref.current
     if (!element) return
-    const observer = new ResizeObserver(([entry]) => setScale(Math.min(1, entry.contentRect.width / width)))
+    // Some embedded browsers and test environments have no matchMedia; they get the width fit only.
+    const wide = window.matchMedia?.('(min-width: 64rem)')
+    const update = () => {
+      const byHeight = wide?.matches ? Math.max(0.3, (window.innerHeight - PINNED_CHROME_PX) / height) : 1
+      setScale(Math.min(1, element.clientWidth / width, byHeight))
+    }
+    update()
+    const observer = new ResizeObserver(update)
     observer.observe(element)
-    return () => observer.disconnect()
-  }, [width])
+    window.addEventListener('resize', update)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', update)
+    }
+  }, [width, height])
   return { ref, scale }
 }
 
@@ -41,7 +59,7 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
   const [menu, setMenu] = useState<MenuCategory[] | null>(null)
   const [menuFailed, setMenuFailed] = useState(false)
   const frame = DEVICES[device]
-  const { ref, scale } = useFitScale(frame.width)
+  const { ref, scale } = useFitScale(frame.width, frame.height)
   const logoUrl = theme.brand.logo.image_id ? imageUrls[theme.brand.logo.image_id] : undefined
   const { layout, cards } = theme
   // The real menu shows the side panel from tablets (panel) or large screens (bar); the tablet frame is below large.
@@ -70,27 +88,23 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
   }, [])
 
   return (
-    <div className="space-y-3">
-      <div role="radiogroup" aria-label="Preview size" className="inline-flex gap-1 rounded-xl border border-line bg-surface p-1">
+    <div className="flex flex-col items-center gap-3">
+      <ToggleGroup
+        type="single"
+        aria-label="Tamaño de la vista previa"
+        value={device}
+        onValueChange={(option) => option && setDevice(option as Device)}
+      >
         {(Object.keys(DEVICES) as Device[]).map((option) => (
-          <button
-            key={option}
-            type="button"
-            role="radio"
-            aria-checked={device === option}
-            onClick={() => setDevice(option)}
-            className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold active:scale-[0.98] ${MOTION} ${
-              device === option ? 'bg-action text-action-ink' : 'text-ink-soft hover:bg-subtle'
-            }`}
-          >
+          <ToggleGroupItem key={option} value={option}>
             {option === 'phone' ? <DeviceMobileIcon size={16} aria-hidden /> : <DeviceTabletIcon size={16} aria-hidden />}
             {DEVICES[option].label}
-          </button>
+          </ToggleGroupItem>
         ))}
-      </div>
+      </ToggleGroup>
 
       <div ref={ref} className="w-full">
-        <div style={{ height: frame.height * scale }} className="mx-auto" aria-label={`Menu preview, ${frame.label}`}>
+        <div style={{ width: frame.width * scale, height: frame.height * scale }} className="mx-auto" aria-label={`Vista previa del menú, ${frame.label}`}>
           <div
             style={{ width: frame.width, height: frame.height, transform: `scale(${scale})`, transformOrigin: 'top left' }}
             className="overflow-hidden rounded-3xl border-8 border-zinc-900 shadow-lg"
@@ -103,12 +117,12 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
                   {!layout.sticky_header && header}
                   <MenuHero theme={theme} imageUrls={imageUrls} businessName={businessName} />
                   {menu && <MenuBrowser categories={menu} onAdd={() => Promise.resolve(null)} layout={layout} cards={cards} belowFixedBar={false} />}
-                  {menuFailed && <p className="text-sm text-muted">The menu could not be loaded for the preview.</p>}
+                  {menuFailed && <p className="text-sm text-muted">No se pudo cargar el menú para la vista previa.</p>}
                 </div>
                 {sidePanel && (
-                  <aside aria-label="Table order" className="w-64 shrink-0 border-l border-line bg-surface p-4">
-                    <p className="text-lg font-semibold tracking-tight text-ink">Table order</p>
-                    <p className="mt-2 text-sm text-muted">2 dishes · {formatMoney(4500)}</p>
+                  <aside aria-label="Pedido de la mesa" className="w-64 shrink-0 border-l border-line bg-surface p-4">
+                    <p className="text-lg font-semibold tracking-tight text-ink">Pedido de la mesa</p>
+                    <p className="mt-2 text-sm text-muted">2 platillos · {formatMoney(4500)}</p>
                   </aside>
                 )}
               </div>
@@ -122,7 +136,7 @@ export function ThemePreview({ theme, imageUrls, businessName }: ThemePreviewPro
                   >
                     <span className="flex items-center gap-2 text-base font-semibold">
                       <ShoppingBagIcon size={20} aria-hidden />
-                      Table order
+                      Pedido de la mesa
                       <span className="rounded-md bg-badge px-2 text-sm text-badge-ink tabular-nums">2</span>
                     </span>
                     <span className="text-base font-semibold tabular-nums">{formatMoney(4500)}</span>

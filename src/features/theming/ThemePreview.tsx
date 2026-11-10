@@ -134,6 +134,7 @@ export function ThemePreview({ theme, imageUrls, businessName, selectedSection, 
                     layout={layout}
                     cards={cards}
                     onAdd={noAdd}
+                    imageUrls={imageUrls}
                     selectedId={selectedSection}
                     onSelect={onSelectSection}
                   />

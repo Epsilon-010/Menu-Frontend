@@ -10,7 +10,15 @@ const TEXT: MenuSection = { id: 't', type: 'text', title: 'Promo del día', body
 function render(sections: MenuSection[], selectedId: string | null = null): string {
   const theme = { layout: { ...DEFAULT_LAYOUT, sections } } as unknown as Theme
   return renderToStaticMarkup(
-    <PageControls theme={theme} onChange={() => {}} selectedId={selectedId} onSelect={() => {}} onOpen={() => {}} />,
+    <PageControls
+      theme={theme}
+      imageUrls={{ 'tenants/t/sections/a': 'https://img.test/a.jpg' }}
+      onChange={() => {}}
+      selectedId={selectedId}
+      onSelect={() => {}}
+      onOpen={() => {}}
+      onUploadImage={() => Promise.resolve(null)}
+    />,
   )
 }
 
@@ -35,6 +43,18 @@ describe('the page panel', () => {
     expect(html).toContain('Mensaje')
     expect(html).toContain('Más opciones')
     expect(html).toMatch(/<details[^>]*>(?:(?!<\/details>).)*Alineación/s)
+  })
+
+  it('offers a picture section and lets the admin upload, change or remove its photo', () => {
+    expect(render(DEFAULT_SECTIONS)).toContain('Una foto de tu local, un platillo o una promoción.')
+    const empty: MenuSection = { id: 'i', type: 'image', image_id: null, caption: '' }
+    const blank = render([empty, ...DEFAULT_SECTIONS], 'i')
+    expect(blank).toContain('Subir foto')
+    expect(blank).not.toContain('Quitar foto')
+    const withPhoto = render([{ ...empty, image_id: 'tenants/t/sections/a' }, ...DEFAULT_SECTIONS], 'i')
+    expect(withPhoto).toContain('src="https://img.test/a.jpg"')
+    expect(withPhoto).toContain('Cambiar foto')
+    expect(withPhoto).toContain('Quitar foto')
   })
 
   it('shows nothing to edit until a section is picked', () => {

@@ -46,6 +46,7 @@ import {
 } from './editor.ts'
 import { PageControls } from './PageControls.tsx'
 import { PresetGallery } from './PresetGallery.tsx'
+import { withSectionChanged } from './sections.ts'
 import { ThemePreview } from './ThemePreview.tsx'
 import { CardControls } from './CardControls.tsx'
 import { LayoutControls } from './LayoutControls.tsx'
@@ -278,6 +279,23 @@ export function ThemeEditorPanel() {
     }
   }
 
+  async function uploadSectionImage(sectionId: string, file: File): Promise<string | null> {
+    try {
+      const publicId = await uploadThemeImage('section', file)
+      setLocalUrls((urls) => ({ ...urls, [publicId]: URL.createObjectURL(file) }))
+      // The admin may have kept editing while it uploaded: change only that section of the current draft.
+      setDraft((current) =>
+        current
+          ? { ...current, layout: { ...current.layout, sections: withSectionChanged(current.layout.sections, sectionId, { image_id: publicId }) } }
+          : current,
+      )
+      setNotice(null)
+      return null
+    } catch (caught) {
+      return messageOf(caught)
+    }
+  }
+
   // `theme` is the draft when the button was pressed; the controls stay usable while the request runs.
   async function save(): Promise<boolean> {
     try {
@@ -320,7 +338,15 @@ export function ThemeEditorPanel() {
       <PresetGallery presets={saved.presets} selected={matchingPreset(theme, saved.presets)} onApply={applyPreset} />
     ),
     page: (
-      <PageControls theme={theme} onChange={edit} selectedId={pageSection} onSelect={setPageSection} onOpen={setSection} />
+      <PageControls
+        theme={theme}
+        imageUrls={imageUrls}
+        onChange={edit}
+        selectedId={pageSection}
+        onSelect={setPageSection}
+        onOpen={setSection}
+        onUploadImage={uploadSectionImage}
+      />
     ),
     colors: <ColorControls theme={theme} defaults={saved.defaults} onChange={edit} />,
     brand: (

@@ -11,6 +11,8 @@ export type BannerHeight = 'sm' | 'md' | 'lg'
 export type BackgroundKind = 'none' | 'image' | 'pattern'
 export type BackgroundPattern = 'dots' | 'grid' | 'stripes' | 'waves' | 'checks' | 'zigzag'
 export type ImageSlot = 'logo' | 'banner' | 'background'
+/** Where an uploaded image goes: a brand slot, or a picture section of the page. */
+export type UploadSlot = ImageSlot | 'section'
 
 export const BACKGROUND_PATTERNS: BackgroundPattern[] = ['dots', 'grid', 'stripes', 'waves', 'checks', 'zigzag']
 export const MAX_NAME_LENGTH = 60
@@ -129,7 +131,7 @@ export interface ThemeLayout {
   sections: MenuSection[]
 }
 
-export type SectionType = 'hero' | 'menu' | 'featured' | 'text' | 'divider'
+export type SectionType = 'hero' | 'menu' | 'featured' | 'text' | 'divider' | 'image'
 export type FeaturedView = 'carousel' | 'grid'
 export type TextSectionAlign = 'left' | 'center'
 export type TextSectionStyle = 'plain' | 'highlight'
@@ -170,7 +172,15 @@ export interface DividerSection {
   type: 'divider'
 }
 
-export type MenuSection = HeroSection | MenuCategoriesSection | FeaturedSection | TextSection | DividerSection
+/** A picture of the business (uploaded to its `sections` folder) with an optional caption. */
+export interface ImageSection {
+  id: string
+  type: 'image'
+  image_id: string | null
+  caption: string
+}
+
+export type MenuSection = HeroSection | MenuCategoriesSection | FeaturedSection | TextSection | DividerSection | ImageSection
 
 export type CardTemplate = 'vertical' | 'horizontal' | 'overlay'
 export type ImageAspect = 'square' | 'landscape' | 'wide'
@@ -275,7 +285,7 @@ export interface ThemeVersions {
 export interface ImportedTheme {
   theme: Theme
   /** Image slots emptied: those images belong to another business, or no design of this one uses them anymore. */
-  removed_images: ImageSlot[]
+  removed_images: UploadSlot[]
   image_urls: ImageUrls
 }
 
@@ -385,7 +395,7 @@ const FORMAT_BY_TYPE: Record<string, string> = {
  * for a public id the server chose; returns that public id. Saving the draft with it attaches it; if it is
  * never saved, the server's cleanup deletes it.
  */
-export async function uploadThemeImage(slot: ImageSlot, file: File): Promise<string> {
+export async function uploadThemeImage(slot: UploadSlot, file: File): Promise<string> {
   const init = { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ kind: slot }) }
   const signature = (await (await send('/theme/images/signature', init)).json()) as UploadSignature
   const format = FORMAT_BY_TYPE[file.type]

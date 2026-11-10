@@ -17,24 +17,38 @@ import {
   DotsSixVerticalIcon,
   FlagBannerIcon,
   ForkKnifeIcon,
+  ImageIcon,
   MinusIcon,
   PlusIcon,
   StarIcon,
   TextTIcon,
   TrashIcon,
 } from '@phosphor-icons/react'
-import { useEffect, useId, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { FOCUS_RING } from '../../components/ui/styles.ts'
 import { Button, IconButton } from '../../shared/ui/Button.tsx'
 import { MOTION } from '../../shared/ui/classes.ts'
 import { Field, TextArea, TextInput } from '../../shared/ui/Field.tsx'
 import { fetchMenu, type MenuCategory } from '../ordering/api.ts'
-import type { FeaturedSection, FeaturedView, MenuSection, SectionType, TextSection, TextSectionAlign, TextSectionStyle, Theme } from './api.ts'
+import { ErrorText } from '../../shared/ui/Feedback.tsx'
+import type {
+  FeaturedSection,
+  FeaturedView,
+  ImageSection,
+  ImageUrls,
+  MenuSection,
+  SectionType,
+  TextSection,
+  TextSectionAlign,
+  TextSectionStyle,
+  Theme,
+} from './api.ts'
 import { Choice } from './Choice.tsx'
 import {
   canAddSection,
   MAX_FEATURED_ITEMS,
   MAX_FEATURED_TITLE_LENGTH,
+  MAX_IMAGE_CAPTION_LENGTH,
   MAX_SECTIONS,
   MAX_TEXT_BODY_LENGTH,
   MAX_TEXT_TITLE_LENGTH,
@@ -58,12 +72,13 @@ const ICONS: Record<SectionType, ReactNode> = {
   featured: <StarIcon size={18} aria-hidden />,
   text: <TextTIcon size={18} aria-hidden />,
   divider: <MinusIcon size={18} aria-hidden />,
+  image: <ImageIcon size={18} aria-hidden />,
 }
 const SECTION_INFO = Object.fromEntries(
   (Object.keys(ICONS) as SectionType[]).map((type) => [type, { ...SECTION_TEXT[type], icon: ICONS[type] }]),
 ) as Record<SectionType, { name: string; hint: string; icon: ReactNode }>
 
-const ADDABLE: AddableSectionType[] = ['featured', 'text', 'divider', 'hero']
+const ADDABLE: AddableSectionType[] = ['featured', 'text', 'image', 'divider', 'hero']
 const VIEW_LABELS: Record<FeaturedView, string> = { carousel: 'Carrusel (se desliza)', grid: 'Cuadrícula' }
 const STYLE_LABELS: Record<TextSectionStyle, string> = { highlight: 'Destacado, con fondo de color', plain: 'Simple, sin fondo' }
 const ALIGN_LABELS: Record<TextSectionAlign, string> = { center: 'Centrado', left: 'A la izquierda' }
@@ -307,12 +322,69 @@ function TextSettings({ section, onChange }: { section: TextSection; onChange: (
   )
 }
 
-function SectionSettings({ section, onChange, onOpen }: {
+/** Uploads a picture for that section; resolves to an error message, or null once it is in the draft. */
+export type UploadSectionImage = (sectionId: string, file: File) => Promise<string | null>
+
+function ImageSettings({ section, imageUrls, onChange, onUpload }: {
+  section: ImageSection
+  imageUrls: ImageUrls
+  onChange: (changes: Partial<ImageSection>) => void
+  onUpload: UploadSectionImage
+}) {
+  const input = useRef<HTMLInputElement>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const url = section.image_id === null ? undefined : imageUrls[section.image_id]
+
+  async function handleFile(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = '' // choosing the same file again uploads it again
+    if (!file) return
+    setBusy(true)
+    setError(await onUpload(section.id, file))
+    setBusy(false)
+  }
+
+  return (
+    <div className="space-y-4">
+      {url && <img src={url} alt="" className="aspect-video w-full rounded-xl object-cover" />}
+      <div className="flex flex-wrap gap-2">
+        <Button disabled={busy} onClick={() => input.current?.click()}>
+          {busy ? 'Subiendo…' : url ? 'Cambiar foto' : 'Subir foto'}
+        </Button>
+        {section.image_id !== null && (
+          <Button disabled={busy} onClick={() => onChange({ image_id: null })}>
+            Quitar foto
+          </Button>
+        )}
+        <input
+          ref={input}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          className="hidden"
+          aria-label="Foto de la sección"
+          onChange={(event) => void handleFile(event)}
+        />
+      </div>
+      <p className="text-xs text-muted">PNG, JPG o WebP, hasta 5 MB. Se muestra ancha, como el banner.</p>
+      {error && <ErrorText>{error}</ErrorText>}
+      <Field label="Descripción" hint="Opcional. Se lee debajo de la foto y ayuda a quien usa lector de pantalla.">
+        <TextInput value={section.caption} maxLength={MAX_IMAGE_CAPTION_LENGTH} onChange={(event) => onChange({ caption: event.target.value })} />
+      </Field>
+    </div>
+  )
+}
+
+function SectionSettings({ section, imageUrls, onChange, onOpen, onUpload }: {
   section: MenuSection
+  imageUrls: ImageUrls
   onChange: (changes: Partial<MenuSection>) => void
   onOpen: (panel: OtherPanel) => void
+  onUpload: UploadSectionImage
 }) {
   switch (section.type) {
+    case 'image':
+      return <ImageSettings section={section} imageUrls={imageUrls} onChange={onChange} onUpload={onUpload} />
     case 'featured':
       return <FeaturedSettings section={section} onChange={onChange} />
     case 'text':
@@ -341,14 +413,16 @@ function SectionSettings({ section, onChange, onOpen }: {
 
 interface PageControlsProps {
   theme: Theme
+  imageUrls: ImageUrls
   onChange: (theme: Theme) => void
   selectedId: string | null
   onSelect: (id: string | null) => void
   onOpen: (panel: OtherPanel) => void
+  onUploadImage: UploadSectionImage
 }
 
 /** The menu page as a list of sections: drag to reorder, add prefabricated ones, and edit the selected one. */
-export function PageControls({ theme, onChange, selectedId, onSelect, onOpen }: PageControlsProps) {
+export function PageControls({ theme, imageUrls, onChange, selectedId, onSelect, onOpen, onUploadImage }: PageControlsProps) {
   const { sections } = theme.layout
   const selected = sections.find((section) => section.id === selectedId) ?? null
   const setSections = (next: MenuSection[]) => onChange({ ...theme, layout: { ...theme.layout, sections: next } })
@@ -379,7 +453,13 @@ export function PageControls({ theme, onChange, selectedId, onSelect, onOpen }: 
             {SECTION_INFO[selected.type].icon}
             {SECTION_INFO[selected.type].name}
           </h3>
-          <SectionSettings section={selected} onChange={(changes) => setSections(withSectionChanged(sections, selected.id, changes))} onOpen={onOpen} />
+          <SectionSettings
+            section={selected}
+            imageUrls={imageUrls}
+            onChange={(changes) => setSections(withSectionChanged(sections, selected.id, changes))}
+            onOpen={onOpen}
+            onUpload={onUploadImage}
+          />
         </section>
       )}
       <AddGallery sections={sections} onAdd={add} />

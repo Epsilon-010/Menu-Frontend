@@ -69,6 +69,25 @@ describe('the menu page by its sections', () => {
     expect(preview).toContain('Elige los productos')
   })
 
+  it('draws a picture with its caption, and nothing on the menu while it has no photo', () => {
+    const picture: MenuSection = { id: 'p', type: 'image', image_id: 'tenants/t/sections/a', caption: 'Nuestra terraza' }
+    const html = renderToStaticMarkup(
+      <MenuSections
+        sections={[picture, { id: 'q', type: 'image', image_id: null, caption: 'Vacía' }, DEFAULT_SECTIONS[1]]}
+        hero={null}
+        menu={<p>MENU</p>}
+        categories={CATEGORIES}
+        layout={DEFAULT_LAYOUT}
+        cards={DEFAULT_CARDS}
+        onAdd={() => Promise.resolve(null)}
+        imageUrls={{ 'tenants/t/sections/a': 'https://img.test/a.jpg' }}
+      />,
+    )
+    expect(order(html)).toEqual(['image', 'menu'])
+    expect(html).toContain('<img src="https://img.test/a.jpg" alt="Nuestra terraza"')
+    expect(html).toContain('<figcaption')
+  })
+
   it('outlines the section picked in the editor preview', () => {
     const html = render(DEFAULT_SECTIONS, { selectedId: DEFAULT_SECTIONS[1].id, onSelect: () => {} })
     expect(html).toMatch(/data-section="menu"[^>]*data-selected="true"/)

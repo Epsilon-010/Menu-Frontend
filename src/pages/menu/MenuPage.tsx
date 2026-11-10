@@ -172,6 +172,7 @@ export function MenuPage() {
             layout={layout}
             cards={cards}
             onAdd={ordering.addLine}
+            imageUrls={theme?.image_urls}
           />
 
           <section aria-labelledby="orders-title" className="space-y-4">

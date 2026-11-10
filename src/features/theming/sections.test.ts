@@ -96,6 +96,8 @@ describe('the page builder', () => {
     expect(first).toMatchObject({ type: 'text', align: 'center', style: 'highlight' })
     expect(newSection('featured')).toMatchObject({ type: 'featured', item_ids: [], view: 'carousel' })
     expect(newSection('divider')).toMatchObject({ type: 'divider' })
+    expect(newSection('image')).toMatchObject({ type: 'image', image_id: null, caption: '' })
+    expect(normalizeSections([{ id: 'p', type: 'image', image_id: 7, caption: '' }, MENU])).toEqual([MENU])
   })
 })
 

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { FeaturedSection, MenuSection, TextSection, ThemeCards, ThemeLayout } from '../theming/api.ts'
+import type { FeaturedSection, ImageUrls, MenuSection, TextSection, ThemeCards, ThemeLayout } from '../theming/api.ts'
 import { cardTemplate } from '../theming/cards.ts'
 import { featuredItems } from '../theming/sections.ts'
 import type { MenuCategory } from './api.ts'
@@ -18,6 +18,8 @@ interface MenuSectionsProps {
   layout: ThemeLayout
   cards: ThemeCards
   onAdd: OnAdd
+  /** Delivery URLs of the theme's images, by public id (for picture sections). */
+  imageUrls?: ImageUrls
   /** Editor preview only: the section being edited, and picking one by clicking it. */
   selectedId?: string | null
   onSelect?: (id: string) => void
@@ -72,7 +74,18 @@ function Text({ section }: { section: TextSection }) {
  * The menu page as the theme's sections say, top to bottom. On the real menu empty sections draw nothing; in the
  * editor preview (`onSelect`) they show a hint, and clicking any section picks it for editing.
  */
-export function MenuSections({ sections, hero, menu, categories, layout, cards, onAdd, selectedId, onSelect }: MenuSectionsProps) {
+export function MenuSections({
+  sections,
+  hero,
+  menu,
+  categories,
+  layout,
+  cards,
+  onAdd,
+  imageUrls = {},
+  selectedId,
+  onSelect,
+}: MenuSectionsProps) {
   const editing = onSelect !== undefined
   const draw = (section: MenuSection): ReactNode => {
     switch (section.type) {
@@ -92,6 +105,16 @@ export function MenuSections({ sections, hero, menu, categories, layout, cards, 
         return <Text section={section} />
       case 'divider':
         return <hr className="border-t-2 border-line" />
+      case 'image': {
+        const url = section.image_id === null ? undefined : imageUrls[section.image_id]
+        if (url === undefined) return editing ? <Placeholder>Sube una foto para esta sección.</Placeholder> : null
+        return (
+          <figure className="space-y-2">
+            <img src={url} alt={section.caption} className="aspect-video w-full rounded-2xl object-cover" />
+            {section.caption && <figcaption className="type-description text-center text-ink-soft">{section.caption}</figcaption>}
+          </figure>
+        )
+      }
     }
   }
 

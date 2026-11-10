@@ -7,6 +7,7 @@ export const MAX_FEATURED_ITEMS = 12
 export const MAX_FEATURED_TITLE_LENGTH = 60
 export const MAX_TEXT_TITLE_LENGTH = 80
 export const MAX_TEXT_BODY_LENGTH = 500
+export const MAX_IMAGE_CAPTION_LENGTH = 120
 
 const FEATURED_VIEWS: FeaturedView[] = ['carousel', 'grid']
 const TEXT_ALIGNS: TextSectionAlign[] = ['left', 'center']
@@ -28,11 +29,13 @@ export const SECTION_TEXT: Record<SectionType, { name: string; hint: string }> =
   featured: { name: 'Destacados', hint: 'Los productos que quieres recomendar, en carrusel o cuadrícula.' },
   text: { name: 'Texto', hint: 'Una bienvenida, una promoción o un aviso.' },
   divider: { name: 'Separador', hint: 'Una línea para separar secciones.' },
+  image: { name: 'Imagen', hint: 'Una foto de tu local, un platillo o una promoción.' },
 }
 
 /** What a row of the section list says about its section, besides its name. */
 export function sectionSummary(section: MenuSection): string {
   if (section.type === 'text') return section.title || section.body || 'Sin texto'
+  if (section.type === 'image') return section.image_id === null ? 'Sin foto todavía' : section.caption || 'Foto sin descripción'
   if (section.type === 'featured') {
     const count = section.item_ids.length
     const products = count === 1 ? '1 producto' : `${count} productos`
@@ -58,6 +61,11 @@ function readSection(raw: unknown): MenuSection | null {
       if (!isText(title, MAX_FEATURED_TITLE_LENGTH) || !FEATURED_VIEWS.includes(view as FeaturedView)) return null
       if (!Array.isArray(item_ids) || !item_ids.every((entry) => typeof entry === 'string')) return null
       return { id, type: 'featured', title, item_ids: item_ids.slice(0, MAX_FEATURED_ITEMS), view: view as FeaturedView }
+    }
+    case 'image': {
+      const { image_id, caption } = value
+      if (!(image_id === null || typeof image_id === 'string') || !isText(caption, MAX_IMAGE_CAPTION_LENGTH)) return null
+      return { id, type: 'image', image_id, caption }
     }
     case 'text': {
       const { title, body, align, style } = value
@@ -99,6 +107,8 @@ export function newSection(type: AddableSectionType, id: string = crypto.randomU
   switch (type) {
     case 'featured':
       return { id, type, title: 'Recomendados', item_ids: [], view: 'carousel' }
+    case 'image':
+      return { id, type, image_id: null, caption: '' }
     case 'text':
       return { id, type, title: 'Bienvenidos', body: 'Escribe aquí un mensaje, una promoción o un aviso.', align: 'center', style: 'highlight' }
     default:

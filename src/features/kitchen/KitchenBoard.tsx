@@ -5,7 +5,7 @@ import { SoundToggle } from '../../shared/ui/SoundToggle.tsx'
 import { useNow } from '../../shared/ui/useNow.ts'
 import { useSoundAlert } from '../../shared/sound/useSoundAlert.ts'
 import { useLateOrderMinutes } from '../settings/useLateOrderMinutes.ts'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchFinishedOrders, fetchKitchenOrders, type StaffOrder } from './api.ts'
 import { FinishedOrders } from './FinishedOrders.tsx'
 import { KitchenOrderCard } from './KitchenOrderCard.tsx'
@@ -31,8 +31,17 @@ export function KitchenBoard() {
 
   // What already went out is a courtesy below the queue: if it cannot load, the last list stays.
   const [finished, setFinished] = useState<StaffOrder[]>([])
+  const finishedRequests = useRef(0)
   const reloadFinished = useCallback(() => {
-    fetchFinishedOrders().then(setFinished, () => undefined)
+    // Only the newest request is shown: an older answer arriving late never puts back a stale list.
+    finishedRequests.current += 1
+    const id = finishedRequests.current
+    fetchFinishedOrders().then(
+      (orders) => {
+        if (id === finishedRequests.current) setFinished(orders)
+      },
+      () => undefined,
+    )
   }, [])
   useEffect(() => {
     const first = window.setTimeout(reloadFinished, 0)

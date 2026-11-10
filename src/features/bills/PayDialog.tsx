@@ -18,8 +18,7 @@ import { PAYMENT_METHODS, type Bill, type PaymentMethod } from './api.ts'
 import {
   changeDueCents,
   chargeLines,
-  chargeScopeFor,
-  chargeTotalCents,
+  paymentRequestFor,
   deliveredTotalCents,
   undeliveredDishes,
   type ChargeScope,
@@ -57,8 +56,7 @@ export function PayDialog({ open, tableName, bill, method, onMethod, busy, error
   const pending = undeliveredDishes(bill)
   const delivered = deliveredTotalCents(bill)
   // Stays right if the bill changes while the dialog is open (a dish arrives, or the last pending one is cancelled).
-  const scope = chargeScopeFor(bill, wanted)
-  const total = chargeTotalCents(bill, scope)
+  const { scope, totalCents: total, onlyDelivered } = paymentRequestFor(bill, wanted)
   const lines = chargeLines(bill)
   const change = method === 'cash' ? changeDueCents(received, total) : null
 
@@ -180,7 +178,7 @@ export function PayDialog({ open, tableName, bill, method, onMethod, busy, error
             size="md"
             className="min-h-11"
             disabled={busy}
-            onClick={() => onPay(method, total, scope === 'delivered')}
+            onClick={() => onPay(method, total, onlyDelivered)}
           >
             {busy ? 'Registrando…' : `Registrar pago de ${formatMoney(total)}`}
           </Button>

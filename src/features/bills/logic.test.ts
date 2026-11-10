@@ -15,6 +15,7 @@ import {
   chargeLines,
   chargeScopeFor,
   chargeTotalCents,
+  paymentRequestFor,
   deliveredTotalCents,
   withoutTable,
 } from './logic.ts'
@@ -210,6 +211,29 @@ describe('what a payment covers', () => {
     expect(chargeScopeFor(nothingArrived, 'delivered')).toBe('all')
     const allArrived = { ...served, orders: [{ ...ORDER, items: [dish('delivered'), dish('cancelled')] }] }
     expect(chargeScopeFor(allArrived, 'delivered')).toBe('all')
+  })
+})
+
+describe('paymentRequestFor', () => {
+  const partly = {
+    ...bill(null),
+    total_cents: 300,
+    orders: [{ ...ORDER, items: [dish('delivered'), { ...dish('queued'), quantity: 2, subtotal_cents: 200 }] }],
+  }
+
+  it('asks for what was delivered by default when something is still pending', () => {
+    expect(paymentRequestFor(partly, 'delivered')).toEqual({ scope: 'delivered', totalCents: 100, onlyDelivered: true })
+  })
+
+  it('asks for the whole bill when the waiter picks it', () => {
+    expect(paymentRequestFor(partly, 'all')).toEqual({ scope: 'all', totalCents: 300, onlyDelivered: false })
+  })
+
+  it('falls back to the whole bill when nothing was delivered, or nothing is pending any more', () => {
+    const nothingArrived = { ...partly, orders: [{ ...ORDER, items: [dish('queued')] }], total_cents: 100 }
+    expect(paymentRequestFor(nothingArrived, 'delivered')).toEqual({ scope: 'all', totalCents: 100, onlyDelivered: false })
+    const allArrived = { ...partly, orders: [{ ...ORDER, items: [dish('delivered')] }], total_cents: 100 }
+    expect(paymentRequestFor(allArrived, 'delivered')).toEqual({ scope: 'all', totalCents: 100, onlyDelivered: false })
   })
 })
 

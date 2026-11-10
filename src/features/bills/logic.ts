@@ -75,6 +75,18 @@ export function chargeTotalCents(bill: Pick<Bill, 'orders' | 'total_cents'>, sco
   return scope === 'delivered' ? deliveredTotalCents(bill) : bill.total_cents
 }
 
+/** What the payment dialog shows and sends: the amount on screen always is the amount the server is asked to charge. */
+export interface PaymentRequest {
+  scope: ChargeScope
+  totalCents: number
+  onlyDelivered: boolean
+}
+
+export function paymentRequestFor(bill: Pick<Bill, 'orders' | 'total_cents'>, wanted: ChargeScope): PaymentRequest {
+  const scope = chargeScopeFor(bill, wanted)
+  return { scope, totalCents: chargeTotalCents(bill, scope), onlyDelivered: scope === 'delivered' }
+}
+
 /**
  * The change for a cash payment: cents to give back (0 or more), a negative amount when the cash does not
  * cover the total, or null while nothing valid is typed.

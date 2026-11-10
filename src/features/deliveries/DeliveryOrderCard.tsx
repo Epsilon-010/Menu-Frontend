@@ -7,7 +7,7 @@ import { useRowAction } from '../../shared/ui/useRowAction.ts'
 import type { StaffOrder, StaffOrderItem } from '../kitchen/api.ts'
 import { OrderTicketHeader } from '../kitchen/OrderTicketHeader.tsx'
 import { StatusBadge } from '../kitchen/StatusBadge.tsx'
-import { rejectionNote } from '../ordering/logic.ts'
+import { cancellationNote } from '../ordering/logic.ts'
 import { modifierSummary } from '../ordering/modifiers.ts'
 import { deliveryCounter, deliveryProgress, splitDelivery, visibleSections, type DeliverySection, type DeliveryView } from './logic.ts'
 
@@ -24,11 +24,11 @@ const SECTION_TITLES: Record<DeliverySection, string> = {
   ready: 'Listos para llevar',
   inKitchen: 'En cocina',
   delivered: 'Entregados',
-  rejected: 'Rechazados',
+  rejected: 'Cancelados',
 }
 
 function DishLine({ item, children }: { item: StaffOrderItem; children?: ReactNode }) {
-  const note = rejectionNote(item)
+  const note = cancellationNote(item)
   return (
     <li className="flex items-center justify-between gap-3 py-2 text-sm">
       <div className="min-w-0 space-y-1">
@@ -68,12 +68,12 @@ export function DeliveryOrderCard({ order, now, late, view, onDeliver }: Deliver
         now={now}
         late={late}
         title={
-          // Each half stays on one line; the counter only drops below the table when both cannot fit.
+          // The table and its order never break apart; the counter takes its own line under them.
           <>
-            <span className="break-words">
-              {order.table_name} · Orden #{order.number}
-            </span>{' '}
-            <span className="whitespace-nowrap font-normal text-muted">· {deliveryProgress(order)}</span>
+            <span className="block">
+              {order.table_name} <span className="whitespace-nowrap">· Orden #{order.number}</span>
+            </span>
+            <span className="block text-base font-normal text-muted">{deliveryProgress(order)}</span>
           </>
         }
       />

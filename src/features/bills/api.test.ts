@@ -73,6 +73,14 @@ describe('bills API', () => {
     ])
   })
 
+  it('asks to charge only what was delivered when the waiter chose so', async () => {
+    const calls = stubFetch(ok({ id: 'b1' }))
+
+    await registerPayment('b1', 'cash', 2500, true)
+
+    expect(calls[0].init?.body).toBe(JSON.stringify({ method: 'cash', expected_total_cents: 2500, only_delivered: true }))
+  })
+
   it('reports a bill that changed after the waiter saw it, asking to review the total', async () => {
     stubFetch(problem(409, 'The bill changed, review it'))
 

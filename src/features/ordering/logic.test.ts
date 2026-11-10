@@ -12,7 +12,7 @@ import {
   needsCartReload,
   orderStatusLabel,
   reconnectDelay,
-  rejectionNote,
+  cancellationNote,
   unavailableNames,
 } from './logic.ts'
 
@@ -161,15 +161,28 @@ describe('cartBarTotal', () => {
   })
 })
 
-describe('rejectionNote', () => {
-  it('shows why the kitchen rejected a dish', () => {
-    expect(rejectionNote({ status: 'cancelled', cancel_reason: 'Out of avocado' })).toBe('Rechazado: Out of avocado')
+describe('cancellationNote', () => {
+  it('says the kitchen rejected a dish only when the kitchen did', () => {
+    expect(cancellationNote({ status: 'cancelled', cancel_reason: 'Out of avocado', cancelled_by: 'kitchen' })).toBe(
+      'Rechazado por la cocina: Out of avocado',
+    )
+    expect(cancellationNote({ status: 'cancelled', cancel_reason: null, cancelled_by: 'kitchen' })).toBe('Rechazado por la cocina')
   })
 
-  it('says nothing for dishes that were not rejected or carry no reason', () => {
-    expect(rejectionNote({ status: 'ready', cancel_reason: null })).toBeNull()
-    expect(rejectionNote({ status: 'cancelled', cancel_reason: null })).toBe('Rechazado')
-    expect(rejectionNote({ status: 'cancelled', cancel_reason: '  ' })).toBe('Rechazado')
+  it('calls a dish a waiter or an admin cancelled just cancelled', () => {
+    expect(cancellationNote({ status: 'cancelled', cancel_reason: 'Changed their mind', cancelled_by: 'waiter' })).toBe(
+      'Cancelado: Changed their mind',
+    )
+    expect(cancellationNote({ status: 'cancelled', cancel_reason: 'Mistake', cancelled_by: 'admin' })).toBe('Cancelado: Mistake')
+  })
+
+  it('never blames the kitchen for a dish whose role was not recorded', () => {
+    expect(cancellationNote({ status: 'cancelled', cancel_reason: 'Old', cancelled_by: null })).toBe('Cancelado: Old')
+    expect(cancellationNote({ status: 'cancelled', cancel_reason: '  ' })).toBe('Cancelado')
+  })
+
+  it('says nothing for dishes that were not cancelled', () => {
+    expect(cancellationNote({ status: 'ready', cancel_reason: null })).toBeNull()
   })
 })
 

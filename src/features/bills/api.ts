@@ -99,10 +99,18 @@ export async function openTable(tableId: string): Promise<Bill> {
 /**
  * Registers the payment, which closes the bill and ends every guest session at the table. `expectedTotalCents` is the
  * total the waiter saw: if the bill no longer matches it, nothing is charged and this throws BillChangedError.
+ * With `onlyDelivered` the dishes that never reached the table leave the bill and only the rest is charged.
  */
-export async function registerPayment(billId: string, method: PaymentMethod, expectedTotalCents: number): Promise<Bill> {
+export async function registerPayment(
+  billId: string,
+  method: PaymentMethod,
+  expectedTotalCents: number,
+  onlyDelivered = false,
+): Promise<Bill> {
   try {
-    const body = { method, expected_total_cents: expectedTotalCents }
+    const body = onlyDelivered
+      ? { method, expected_total_cents: expectedTotalCents, only_delivered: true }
+      : { method, expected_total_cents: expectedTotalCents }
     return billFrom((await (await send(`/bills/${billId}/payment`, json(body))).json()) as Bill)
   } catch (error) {
     if (error instanceof BillError && error.status === 409 && error.message === BILL_CHANGED_DETAIL) {

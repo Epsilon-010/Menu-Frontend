@@ -3,13 +3,11 @@ import {
   ChairIcon,
   CheckIcon,
   CircleIcon,
-  CreditCardIcon,
   DoorOpenIcon,
   MoneyIcon,
-  WalletIcon,
   XCircleIcon,
 } from '@phosphor-icons/react'
-import { useReducer, type ReactNode } from 'react'
+import { useReducer } from 'react'
 import { Badge } from '../../components/ui/badge.tsx'
 import {
   Dialog,
@@ -19,7 +17,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog.tsx'
-import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group.tsx'
 import { cn } from '../../lib/utils.ts'
 import { Button } from '../../shared/ui/Button.tsx'
 import { ErrorText } from '../../shared/ui/Feedback.tsx'
@@ -27,23 +24,18 @@ import { useRowAction } from '../../shared/ui/useRowAction.ts'
 import { formatMoney } from '../catalog/price.ts'
 import { OrderCard } from '../ordering/OrderCard.tsx'
 import { clockTime } from '../ordering/logic.ts'
-import { PAYMENT_METHODS, type NewOrderDish, type PaymentMethod, type TableOverview } from './api.ts'
+import type { NewOrderDish, PaymentMethod, TableOverview } from './api.ts'
 import { billDialogFor, billDialogReducer, NO_BILL_DIALOG } from './billDialog.ts'
 import { AddDishControl, CancelDishControl } from './DishCorrections.tsx'
-import { acceptsNewDishes, canCancelDish, hasSomethingToCharge, tableCardId } from './logic.ts'
-
-const METHOD_ICONS: Record<PaymentMethod, ReactNode> = {
-  cash: <MoneyIcon size={18} aria-hidden />,
-  card: <CreditCardIcon size={18} aria-hidden />,
-  other: <WalletIcon size={18} aria-hidden />,
-}
+import { PayDialog } from './PayDialog.tsx'
+import { acceptsNewDishes, canCancelDish, hasSomethingToCharge, tableCardId, undeliveredDishes } from './logic.ts'
 
 interface TableBillCardProps {
   table: TableOverview
   /** Each action resolves to an error message, or null when it was done. */
   onOpen: () => Promise<string | null>
-  /** `expectedTotalCents` is the total on screen when the waiter confirmed. */
-  onPay: (method: PaymentMethod, expectedTotalCents: number) => Promise<string | null>
+  /** `expectedTotalCents` is the total on screen when the waiter confirmed; `onlyDelivered` drops what never arrived. */
+  onPay: (method: PaymentMethod, expectedTotalCents: number, onlyDelivered: boolean) => Promise<string | null>
   onClose: () => Promise<string | null>
   /** The waiter attended the table that asked for the bill. */
   onDismissRequest: () => Promise<string | null>
@@ -68,6 +60,7 @@ export function TableBillCard({
   const billId = bill?.id ?? null
   const requestedAt = bill?.bill_requested_at ?? null
   const { mode, error } = billDialogFor(dialog, billId)
+  const pending = bill ? undeliveredDishes(bill) : 0
 
   async function run(action: () => Promise<string | null>) {
     const failure = await runAction(action)
@@ -85,18 +78,19 @@ export function TableBillCard({
       tabIndex={-1}
       aria-busy={busy}
       className={cn(
-        'scroll-mt-24 space-y-4 rounded-2xl border bg-surface p-4 shadow-xs focus:outline-none sm:p-6',
+        'scroll-mt-24 space-y-4 rounded-2xl border bg-surface p-4 shadow-xs focus:outline-none',
+        bill && 'sm:p-6',
         requestedAt ? 'border-amber-300 ring-2 ring-amber-200' : 'border-line',
       )}
     >
-      <header className="flex flex-wrap items-center gap-4">
+      <header className="flex flex-wrap items-center gap-3">
         <span
           className={cn(
-            'flex size-12 shrink-0 items-center justify-center rounded-xl',
+            'flex size-10 shrink-0 items-center justify-center rounded-lg',
             bill ? 'bg-action text-action-ink' : 'bg-subtle text-muted',
           )}
         >
-          <ChairIcon size={24} aria-hidden />
+          <ChairIcon size={20} aria-hidden />
         </span>
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -119,10 +113,28 @@ export function TableBillCard({
           <p className="text-sm text-muted">
             {bill
               ? `Abierta a las ${clockTime(bill.opened_at)} · ${bill.orders.length} ${bill.orders.length === 1 ? 'orden' : 'órdenes'}`
-              : 'Se abre sola cuando alguien escanea su QR.'}
+              : 'Sin visita'}
           </p>
         </div>
-        {bill && <p className="text-2xl font-semibold tracking-tight text-ink tabular-nums">{formatMoney(bill.total_cents)}</p>}
+        {!bill && (
+          <Button
+            variant="secondary"
+            className="min-h-11"
+            icon={<DoorOpenIcon size={18} aria-hidden />}
+            disabled={busy}
+            onClick={() => void run(onOpen)}
+          >
+            {busy ? 'Abriendo…' : 'Abrir'}
+          </Button>
+        )}
+        {bill && (
+          <div className="text-right">
+            <p className="text-2xl font-semibold tracking-tight text-ink tabular-nums">{formatMoney(bill.total_cents)}</p>
+            {pending > 0 && (
+              <p className="text-sm text-muted">{pending === 1 ? '1 platillo sin entregar' : `${pending} platillos sin entregar`}</p>
+            )}
+          </div>
+        )}
       </header>
 
       {requestedAt && (
@@ -139,21 +151,6 @@ export function TableBillCard({
             onClick={() => void run(onDismissRequest)}
           >
             Atendida
-          </Button>
-        </div>
-      )}
-
-      {!bill && (
-        <div className="flex flex-wrap items-center gap-4">
-          <Button
-            variant="secondary"
-            size="md"
-            className="min-h-11"
-            icon={<DoorOpenIcon size={20} aria-hidden />}
-            disabled={busy}
-            onClick={() => void run(onOpen)}
-          >
-            {busy ? 'Abriendo…' : 'Abrir mesa'}
           </Button>
         </div>
       )}
@@ -204,55 +201,19 @@ export function TableBillCard({
       )}
 
       {bill && (
-        <Dialog open={mode.kind === 'pay'} onOpenChange={(open) => !open && closeDialog()}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Cobrar {table.table_name}</DialogTitle>
-              <DialogDescription>
-                Al registrar el pago se cierra la cuenta y se cierra la sesión de todos los comensales de la mesa.
-              </DialogDescription>
-            </DialogHeader>
-            <p className="text-4xl font-semibold tracking-tight text-ink tabular-nums">{formatMoney(bill.total_cents)}</p>
-            <div className="space-y-2">
-              <span id={`method-${bill.id}`} className="block text-sm font-medium text-ink-soft">
-                Método de pago
-              </span>
-              <ToggleGroup
-                type="single"
-                width="full"
-                value={mode.kind === 'pay' ? mode.method : undefined}
-                disabled={busy}
-                aria-labelledby={`method-${bill.id}`}
-                // Pressing the chosen method again would clear it; a payment always has a method.
-                onValueChange={(next) => next && dispatch({ type: 'method', method: next as PaymentMethod })}
-              >
-                {PAYMENT_METHODS.map((option) => (
-                  <ToggleGroupItem key={option.value} value={option.value} className="min-h-11 text-base">
-                    {METHOD_ICONS[option.value]}
-                    {option.label}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </div>
-            {error && <ErrorText>{error}</ErrorText>}
-            <DialogFooter>
-              <Button variant="ghost" size="md" className="min-h-11" disabled={busy} onClick={closeDialog}>
-                Cancelar
-              </Button>
-              <Button
-                variant="primary"
-                size="md"
-                className="min-h-11"
-                disabled={busy}
-                onClick={() => {
-                  if (mode.kind === 'pay') void run(() => onPay(mode.method, bill.total_cents))
-                }}
-              >
-                {busy ? 'Registrando…' : `Registrar pago de ${formatMoney(bill.total_cents)}`}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <PayDialog
+          // A fresh dialog each time it opens: the choice and the cash typed for one payment never carry over.
+          key={mode.kind === 'pay' ? 'open' : 'closed'}
+          open={mode.kind === 'pay'}
+          tableName={table.table_name}
+          bill={bill}
+          method={mode.kind === 'pay' ? mode.method : 'cash'}
+          onMethod={(method) => dispatch({ type: 'method', method })}
+          busy={busy}
+          error={error}
+          onClose={closeDialog}
+          onPay={(method, totalCents, onlyDelivered) => void run(() => onPay(method, totalCents, onlyDelivered))}
+        />
       )}
 
       {bill && (

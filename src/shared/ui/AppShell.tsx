@@ -22,7 +22,7 @@ interface AppShellProps {
   signingOut?: boolean
   /** Text of the sign out button ("Leave" for a guest at a table). */
   signOutLabel?: string
-  /** False: the bar scrolls away with the page instead of staying on top (a table menu's layout choice). */
+  /** False: the bar scrolls away with the page instead of sticking to the top (a table menu's layout choice). */
   fixedBar?: boolean
   /** Max width class of the content (a table menu with a four-column grid widens it). */
   width?: string
@@ -36,10 +36,20 @@ function navLinkClass({ isActive }: { isActive: boolean }): string {
 
 // Full class names per breakpoint, so Tailwind finds them in the source.
 const BAR_BREAKPOINTS = {
-  narrow: { list: 'sm:flex', signOut: 'sm:block', compact: 'sm:hidden' },
-  wide: { list: 'lg:flex', signOut: 'lg:block', compact: 'lg:hidden' },
-  // The side rail takes over on wide screens: the floating bar never holds the links.
-  rail: { list: '', signOut: '', compact: 'xl:hidden' },
+  // Nothing to navigate to (a table menu): the only action stays in the bar at every width.
+  inline: { list: 'hidden', signOut: 'block', compact: 'hidden' },
+  narrow: {
+    list: 'hidden sm:flex',
+    signOut: 'hidden sm:block',
+    compact: 'sm:hidden',
+  },
+  wide: {
+    list: 'hidden lg:flex',
+    signOut: 'hidden lg:block',
+    compact: 'lg:hidden',
+  },
+  // The side rail takes over on wide screens: the top bar never holds the links.
+  rail: { list: 'hidden', signOut: 'hidden', compact: 'xl:hidden' },
 }
 
 /** The two lines of the menu toggle rotate into an X instead of swapping icons. */
@@ -53,7 +63,7 @@ function MenuToggleIcon({ open }: { open: boolean }) {
   )
 }
 
-/** Layout of every signed-in screen: a floating bar with the business, navigation and sign out. */
+/** Layout of every signed-in screen: a top bar with the business, navigation and sign out, then the content. */
 export function AppShell({
   business,
   logoUrl,
@@ -67,10 +77,18 @@ export function AppShell({
   children,
 }: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false)
-  const hasMenu = nav.length > 0 || onSignOut !== undefined
+  // The full height menu holds the links; with none, sign out stays in the bar and there is nothing to open.
+  const hasMenu = nav.length > 0
   // A long navigation (the admin's eleven sections) gets a side rail on wide screens instead of hiding behind the toggle.
   const hasRail = nav.length > 8
-  const bar = hasRail ? BAR_BREAKPOINTS.rail : nav.length > 4 ? BAR_BREAKPOINTS.wide : BAR_BREAKPOINTS.narrow
+  const bar =
+    nav.length === 0
+      ? BAR_BREAKPOINTS.inline
+      : hasRail
+        ? BAR_BREAKPOINTS.rail
+        : nav.length > 4
+          ? BAR_BREAKPOINTS.wide
+          : BAR_BREAKPOINTS.narrow
   const brandMark = logoUrl ? (
     <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-lg object-contain" />
   ) : (
@@ -113,11 +131,7 @@ export function AppShell({
             <ul className="space-y-1">
               {nav.map((item) => (
                 <li key={item.to}>
-                  <NavLink
-                    to={item.to}
-                    end={item.end}
-                    className={(link) => `${navLinkClass(link)} w-full`}
-                  >
+                  <NavLink to={item.to} end={item.end} className={(link) => `${navLinkClass(link)} w-full`}>
                     {item.icon}
                     {item.label}
                   </NavLink>
@@ -126,7 +140,12 @@ export function AppShell({
             </ul>
           </nav>
           {onSignOut && (
-            <button type="button" onClick={onSignOut} disabled={signingOut} className={`${buttonClass('ghost')} w-full justify-start`}>
+            <button
+              type="button"
+              onClick={onSignOut}
+              disabled={signingOut}
+              className={`${buttonClass('ghost')} w-full justify-start`}
+            >
               <SignOutIcon size={16} aria-hidden />
               {signingOut ? 'Cerrando sesión…' : signOutLabel}
             </button>
@@ -134,18 +153,17 @@ export function AppShell({
         </aside>
       )}
 
-      <header className={`${fixedBar ? 'fixed' : 'absolute'} inset-x-0 top-4 z-40 flex justify-center px-4 ${hasRail ? 'xl:hidden' : ''}`}>
-        <nav
-          aria-label="Principal"
-          className="flex max-w-full items-center gap-2 rounded-2xl border border-line bg-surface/80 p-2 shadow-sm backdrop-blur-md"
-        >
-          <div className="flex min-w-0 items-center gap-3 pr-2">
+      {/* In the page flow: the bar takes its own row, so it never sits on top of the content below it. */}
+      <header
+        className={`${fixedBar ? 'sticky top-0' : 'relative'} z-40 border-b border-line bg-surface/90 backdrop-blur-md ${hasRail ? 'xl:hidden' : ''}`}
+      >
+        <nav aria-label="Principal" className={`mx-auto flex h-16 ${width} items-center gap-4 px-4 sm:px-6`}>
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             {brandMark}
             {brandText}
           </div>
-
           {nav.length > 0 && (
-            <ul className={`hidden items-center gap-1 ${bar.list}`}>
+            <ul className={`shrink-0 items-center gap-1 ${bar.list}`}>
               {nav.map((item) => (
                 <li key={item.to}>
                   <NavLink to={item.to} end={item.end} className={navLinkClass}>
@@ -156,28 +174,28 @@ export function AppShell({
               ))}
             </ul>
           )}
-
           {onSignOut && (
             // The wrapper owns the visibility: the button's own classes already set its display.
-            <div className={`hidden ${bar.signOut}`}>
-              <button type="button" onClick={onSignOut} disabled={signingOut} className={buttonClass('ghost')}>
+            <div className={`shrink-0 ${bar.signOut}`}>
+              <button type="button" onClick={onSignOut} disabled={signingOut} className={buttonClass('secondary')}>
                 <SignOutIcon size={16} aria-hidden />
                 {signingOut ? 'Cerrando sesión…' : signOutLabel}
               </button>
             </div>
           )}
-
           {hasMenu && (
-            <button
-              type="button"
-              aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
-              aria-expanded={menuOpen}
-              aria-controls="mobile-menu"
-              onClick={() => setMenuOpen((open) => !open)}
-              className={`rounded-lg p-2 text-ink-soft hover:bg-subtle active:scale-[0.98] ${bar.compact} ${MOTION}`}
-            >
-              <MenuToggleIcon open={menuOpen} />
-            </button>
+            <div className={`shrink-0 ${bar.compact}`}>
+              <button
+                type="button"
+                aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
+                aria-expanded={menuOpen}
+                aria-controls="mobile-menu"
+                onClick={() => setMenuOpen((open) => !open)}
+                className={`flex size-11 items-center justify-center rounded-lg text-ink-soft hover:bg-subtle active:scale-[0.98] ${MOTION}`}
+              >
+                <MenuToggleIcon open={menuOpen} />
+              </button>
+            </div>
           )}
         </nav>
       </header>
@@ -186,7 +204,7 @@ export function AppShell({
         <div
           id="mobile-menu"
           inert={!menuOpen}
-          className={`fixed inset-0 z-30 overflow-y-auto bg-canvas/95 px-6 pt-24 pb-8 backdrop-blur-xl transition-opacity duration-500 ease-smooth ${bar.compact} ${
+          className={`fixed inset-0 z-30 overflow-y-auto bg-canvas/95 px-6 pt-20 pb-8 backdrop-blur-xl transition-opacity duration-500 ease-smooth ${bar.compact} ${
             menuOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
           }`}
         >
@@ -194,7 +212,9 @@ export function AppShell({
             {nav.map((item, index) => (
               <li
                 key={item.to}
-                style={{ transitionDelay: menuOpen ? `${Math.min(index * 60, 400)}ms` : '0ms' }}
+                style={{
+                  transitionDelay: menuOpen ? `${Math.min(index * 60, 400)}ms` : '0ms',
+                }}
                 className={`transition duration-500 ease-smooth ${menuOpen ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
               >
                 <NavLink
@@ -214,7 +234,9 @@ export function AppShell({
             ))}
             {onSignOut && (
               <li
-                style={{ transitionDelay: menuOpen ? `${Math.min(nav.length * 60, 400)}ms` : '0ms' }}
+                style={{
+                  transitionDelay: menuOpen ? `${Math.min(nav.length * 60, 400)}ms` : '0ms',
+                }}
                 className={`transition duration-500 ease-smooth ${menuOpen ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
               >
                 <button
@@ -233,7 +255,7 @@ export function AppShell({
       )}
 
       <div className={hasRail ? 'xl:pl-64' : undefined}>
-        <main id="main" className={`mx-auto ${width} px-4 pt-24 pb-16 sm:px-6 ${hasRail ? 'xl:pt-8' : ''}`}>
+        <main id="main" className={`mx-auto ${width} px-4 pt-8 pb-16 sm:px-6`}>
           {children}
         </main>
       </div>

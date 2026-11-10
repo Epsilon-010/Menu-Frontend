@@ -1,7 +1,7 @@
 /** Pure rules of the table screen, kept apart from React so they can be tested on their own. */
 import { createDraftIds } from '../../shared/api/idempotency.ts'
 import { formatMoney } from '../catalog/price.ts'
-import type { Cart, CartLine, Order, OrderItemStatus, OrderStatus } from './api.ts'
+import type { CancelledBy, Cart, CartLine, Order, OrderItemStatus, OrderStatus } from './api.ts'
 
 export interface PersonLines<Line> {
   person: string
@@ -102,11 +102,19 @@ export function orderStatusLabel(status: OrderStatus): string {
   return ORDER_STATUS_LABELS[status]
 }
 
-/** What the table and the waiters read under a rejected dish: "Rejected: <reason>". */
-export function rejectionNote(item: { status: OrderItemStatus; cancel_reason: string | null }): string | null {
+/**
+ * What everyone reads under a cancelled dish. Only the kitchen "rejects": a dish a waiter or an admin
+ * cancelled (or one cancelled before the role was recorded) is just cancelled.
+ */
+export function cancellationNote(item: {
+  status: OrderItemStatus
+  cancel_reason: string | null
+  cancelled_by?: CancelledBy | null
+}): string | null {
   if (item.status !== 'cancelled') return null
+  const label = item.cancelled_by === 'kitchen' ? 'Rechazado por la cocina' : 'Cancelado'
   const reason = item.cancel_reason?.trim()
-  return reason ? `Rechazado: ${reason}` : 'Rechazado'
+  return reason ? `${label}: ${reason}` : label
 }
 
 export type StatusTone = 'neutral' | 'warning' | 'success'

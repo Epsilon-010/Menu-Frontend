@@ -3,10 +3,9 @@ import type { StaffOrder, StaffOrderItem } from './api.ts'
 import {
   chunk,
   isLate,
-  kitchenActions,
+  finishedAt,
   kitchenQueue,
   newIds,
-  pendingSelection,
   rejectReasonError,
   replaceOrder,
   staffItemLabel,
@@ -72,32 +71,13 @@ describe('replaceOrder', () => {
   })
 })
 
-describe('kitchenActions', () => {
-  it('offers nothing without a selection', () => {
-    expect(kitchenActions([])).toEqual({ start: false, ready: false, reject: false })
-  })
-
-  it('lets queued dishes start, be ready or be rejected', () => {
-    expect(kitchenActions([item('a', 'queued'), item('b', 'queued')])).toEqual({ start: true, ready: true, reject: true })
-  })
-
-  it('only offers Ready once any selected dish is being prepared', () => {
-    expect(kitchenActions([item('a', 'queued'), item('b', 'preparing')])).toEqual({
-      start: false,
-      ready: true,
-      reject: false,
-    })
-  })
-
-  it('offers nothing for dishes that left the kitchen', () => {
-    expect(kitchenActions([item('a', 'ready')])).toEqual({ start: false, ready: false, reject: false })
-  })
-})
-
-describe('pendingSelection', () => {
-  it('keeps only selected dishes that are still in the kitchen', () => {
-    const current = order('o1', 1, [item('a', 'queued'), item('b', 'ready'), item('c', 'preparing')])
-    expect(pendingSelection(new Set(['a', 'b', 'gone']), current).map((i) => i.id)).toEqual(['a'])
+describe('finishedAt', () => {
+  it('is the latest change of any dish of the order', () => {
+    const done = order('o1', 1, [
+      { ...item('a', 'ready'), updated_at: '2026-10-28T12:09:00.5+00:00' },
+      { ...item('b', 'cancelled'), updated_at: '2026-10-28T12:10:00Z' },
+    ])
+    expect(finishedAt(done)).toBe('2026-10-28T12:10:00Z')
   })
 })
 
@@ -143,7 +123,7 @@ describe('chunk', () => {
 
 describe('staff item labels', () => {
   it('names each dish status and colors the ones that need attention', () => {
-    expect(staffItemLabel('cancelled')).toBe('Rechazado')
+    expect(staffItemLabel('cancelled')).toBe('Cancelado')
     expect(staffItemTone('preparing')).toBe('warning')
     expect(staffItemTone('ready')).toBe('success')
     expect(staffItemTone('queued')).toBe('neutral')

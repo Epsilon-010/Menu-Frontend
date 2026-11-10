@@ -44,7 +44,7 @@ describe('the menu by its layout', () => {
     expect(html).toContain('href="#category-drinks"')
     expect(sections(html)).toEqual(['tacos', 'drinks'])
     expect(html).toContain('grid gap-4 @[39rem]:grid-cols-2')
-    expect(html).toContain('sticky top-0 pt-20')
+    expect(html).toContain('sticky top-16 pt-2')
     expect(html).not.toContain('Coming soon')
   })
 

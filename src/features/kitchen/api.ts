@@ -1,5 +1,5 @@
 import { apiFetch } from '../../shared/api/http.ts'
-import { withItemModifiers, type OrderItemStatus, type OrderStatus } from '../ordering/api.ts'
+import { withItemModifiers, type CancelledBy, type OrderItemStatus, type OrderStatus } from '../ordering/api.ts'
 
 /** An option chosen for a dish, by name only: the staff queues never show prices. */
 export interface StaffModifier {
@@ -16,8 +16,10 @@ export interface StaffOrderItem {
   /** Guest name, "Guest N" or "Tablet". */
   added_by: string
   status: OrderItemStatus
-  /** Why it was rejected; null unless it is cancelled. */
+  /** Why it was cancelled; null unless it is cancelled. */
   cancel_reason: string | null
+  /** Who cancelled it; null or missing when it is not cancelled, or was before the role was recorded. */
+  cancelled_by?: CancelledBy | null
   ready_at: string | null
   updated_at: string
   /** Chosen options, in the item's group order. */
@@ -95,6 +97,11 @@ export function jsonBody(method: string, body: unknown): RequestInit {
 /** Orders with dishes still queued or being prepared, oldest number first. */
 export async function fetchKitchenOrders(): Promise<StaffOrder[]> {
   return (await ordersRequest<StaffOrder[]>('/kitchen/orders')).map(withItemModifiers)
+}
+
+/** Orders of open tables with nothing left to cook, the one finished last first. */
+export async function fetchFinishedOrders(): Promise<StaffOrder[]> {
+  return (await ordersRequest<StaffOrder[]>('/kitchen/orders/finished')).map(withItemModifiers)
 }
 
 /**

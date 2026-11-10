@@ -10,6 +10,7 @@ import {
   newBillRequests,
   tableIdOf,
   tablesForWaiter,
+  undeliveredDishes,
   withoutTable,
 } from './logic.ts'
 import { billDialogFor, billDialogReducer, NO_BILL_DIALOG } from './billDialog.ts'
@@ -153,6 +154,23 @@ describe('bill requests', () => {
     expect(tableIdOf('{"table_id":"t1"}')).toBe('t1')
     expect(tableIdOf('{"order_id":"o1"}')).toBeNull()
     expect(tableIdOf('not json')).toBeNull()
+  })
+})
+
+describe('undeliveredDishes', () => {
+  it('counts by quantity what has not reached the table, leaving cancelled dishes out', () => {
+    const open = bill(null)
+    const orders = [
+      { ...ORDER, items: [dish('queued'), { ...dish('preparing'), quantity: 2 }, dish('ready')] },
+      { ...ORDER, id: 'o2', items: [dish('delivered'), dish('cancelled')] },
+    ]
+
+    expect(undeliveredDishes({ ...open, orders })).toBe(4)
+  })
+
+  it('is zero once everything was delivered or cancelled', () => {
+    expect(undeliveredDishes({ ...bill(null), orders: [{ ...ORDER, items: [dish('delivered'), dish('cancelled')] }] })).toBe(0)
+    expect(undeliveredDishes(bill(null))).toBe(0)
   })
 })
 

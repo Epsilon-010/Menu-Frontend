@@ -13,6 +13,20 @@ export function hasSomethingToCharge(bill: Pick<Bill, 'total_cents'>): boolean {
   return bill.total_cents > 0
 }
 
+/**
+ * How many dishes of the bill have not reached the table (by quantity; cancelled ones are not owed).
+ * Paying freezes the bill, so the kitchen and the waiters stop seeing whatever is still pending.
+ */
+export function undeliveredDishes(bill: Pick<Bill, 'orders'>): number {
+  let pending = 0
+  for (const order of bill.orders) {
+    for (const item of order.items) {
+      if (item.status !== 'delivered' && item.status !== 'cancelled') pending += item.quantity
+    }
+  }
+  return pending
+}
+
 /** Only dishes the kitchen has not started can be cancelled, and only while the bill is open. */
 export function canCancelDish(bill: Pick<Bill, 'closed_at'>, item: Pick<OrderItem, 'status'>): boolean {
   return acceptsNewDishes(bill) && item.status === 'queued'

@@ -33,6 +33,8 @@ export function StaffShell({ title, nav, children }: StaffShellProps) {
       nav={nav}
       onSignOut={() => void handleSignOut()}
       signingOut={signingOut}
+      // Tickets and tables sit side by side on a wide screen.
+      width="max-w-7xl"
     >
       {children}
     </AppShell>

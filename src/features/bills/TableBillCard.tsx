@@ -7,6 +7,7 @@ import {
   DoorOpenIcon,
   MoneyIcon,
   WalletIcon,
+  WarningIcon,
   XCircleIcon,
 } from '@phosphor-icons/react'
 import { useReducer, type ReactNode } from 'react'
@@ -30,7 +31,7 @@ import { clockTime } from '../ordering/logic.ts'
 import { PAYMENT_METHODS, type NewOrderDish, type PaymentMethod, type TableOverview } from './api.ts'
 import { billDialogFor, billDialogReducer, NO_BILL_DIALOG } from './billDialog.ts'
 import { AddDishControl, CancelDishControl } from './DishCorrections.tsx'
-import { acceptsNewDishes, canCancelDish, hasSomethingToCharge, tableCardId } from './logic.ts'
+import { acceptsNewDishes, canCancelDish, hasSomethingToCharge, tableCardId, undeliveredDishes } from './logic.ts'
 
 const METHOD_ICONS: Record<PaymentMethod, ReactNode> = {
   cash: <MoneyIcon size={18} aria-hidden />,
@@ -68,6 +69,7 @@ export function TableBillCard({
   const billId = bill?.id ?? null
   const requestedAt = bill?.bill_requested_at ?? null
   const { mode, error } = billDialogFor(dialog, billId)
+  const pending = bill ? undeliveredDishes(bill) : 0
 
   async function run(action: () => Promise<string | null>) {
     const failure = await runAction(action)
@@ -85,18 +87,19 @@ export function TableBillCard({
       tabIndex={-1}
       aria-busy={busy}
       className={cn(
-        'scroll-mt-24 space-y-4 rounded-2xl border bg-surface p-4 shadow-xs focus:outline-none sm:p-6',
+        'scroll-mt-24 space-y-4 rounded-2xl border bg-surface p-4 shadow-xs focus:outline-none',
+        bill && 'sm:p-6',
         requestedAt ? 'border-amber-300 ring-2 ring-amber-200' : 'border-line',
       )}
     >
-      <header className="flex flex-wrap items-center gap-4">
+      <header className="flex flex-wrap items-center gap-3">
         <span
           className={cn(
-            'flex size-12 shrink-0 items-center justify-center rounded-xl',
+            'flex size-10 shrink-0 items-center justify-center rounded-lg',
             bill ? 'bg-action text-action-ink' : 'bg-subtle text-muted',
           )}
         >
-          <ChairIcon size={24} aria-hidden />
+          <ChairIcon size={20} aria-hidden />
         </span>
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -119,10 +122,28 @@ export function TableBillCard({
           <p className="text-sm text-muted">
             {bill
               ? `Abierta a las ${clockTime(bill.opened_at)} · ${bill.orders.length} ${bill.orders.length === 1 ? 'orden' : 'órdenes'}`
-              : 'Se abre sola cuando alguien escanea su QR.'}
+              : 'Sin visita'}
           </p>
         </div>
-        {bill && <p className="text-2xl font-semibold tracking-tight text-ink tabular-nums">{formatMoney(bill.total_cents)}</p>}
+        {!bill && (
+          <Button
+            variant="secondary"
+            className="min-h-11"
+            icon={<DoorOpenIcon size={18} aria-hidden />}
+            disabled={busy}
+            onClick={() => void run(onOpen)}
+          >
+            {busy ? 'Abriendo…' : 'Abrir'}
+          </Button>
+        )}
+        {bill && (
+          <div className="text-right">
+            <p className="text-2xl font-semibold tracking-tight text-ink tabular-nums">{formatMoney(bill.total_cents)}</p>
+            {pending > 0 && (
+              <p className="text-sm text-muted">{pending === 1 ? '1 platillo sin entregar' : `${pending} platillos sin entregar`}</p>
+            )}
+          </div>
+        )}
       </header>
 
       {requestedAt && (
@@ -139,21 +160,6 @@ export function TableBillCard({
             onClick={() => void run(onDismissRequest)}
           >
             Atendida
-          </Button>
-        </div>
-      )}
-
-      {!bill && (
-        <div className="flex flex-wrap items-center gap-4">
-          <Button
-            variant="secondary"
-            size="md"
-            className="min-h-11"
-            icon={<DoorOpenIcon size={20} aria-hidden />}
-            disabled={busy}
-            onClick={() => void run(onOpen)}
-          >
-            {busy ? 'Abriendo…' : 'Abrir mesa'}
           </Button>
         </div>
       )}
@@ -213,6 +219,17 @@ export function TableBillCard({
               </DialogDescription>
             </DialogHeader>
             <p className="text-4xl font-semibold tracking-tight text-ink tabular-nums">{formatMoney(bill.total_cents)}</p>
+            {pending > 0 && (
+              <p role="alert" className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                <WarningIcon size={18} weight="fill" className="mt-0.5 shrink-0" aria-hidden />
+                <span>
+                  <span className="font-semibold">
+                    {pending === 1 ? 'Falta 1 platillo por entregar.' : `Faltan ${pending} platillos por entregar.`}
+                  </span>{' '}
+                  El total ya los incluye. Si cobras ahora, la cocina deja de verlos y ya no se podrán entregar ni cancelar.
+                </span>
+              </p>
+            )}
             <div className="space-y-2">
               <span id={`method-${bill.id}`} className="block text-sm font-medium text-ink-soft">
                 Método de pago
@@ -248,7 +265,11 @@ export function TableBillCard({
                   if (mode.kind === 'pay') void run(() => onPay(mode.method, bill.total_cents))
                 }}
               >
-                {busy ? 'Registrando…' : `Registrar pago de ${formatMoney(bill.total_cents)}`}
+                {busy
+                  ? 'Registrando…'
+                  : pending > 0
+                    ? `Cobrar ${formatMoney(bill.total_cents)} de todos modos`
+                    : `Registrar pago de ${formatMoney(bill.total_cents)}`}
               </Button>
             </DialogFooter>
           </DialogContent>

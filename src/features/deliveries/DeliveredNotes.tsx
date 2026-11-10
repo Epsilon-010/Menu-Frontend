@@ -28,14 +28,14 @@ export function DeliveredNotes({ notes }: DeliveredNotesProps) {
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {notes.map((note) => (
-            <li key={note.order_id} className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+            <li key={note.order_id} className="space-y-3 rounded-2xl border border-line bg-surface p-4">
               <div className="flex items-start justify-between gap-2">
-                <p className="font-semibold text-amber-950">
+                <p className="font-semibold text-ink">
                   {note.table_name} · Orden #{note.order_number}
                 </p>
-                <span className="shrink-0 text-sm text-amber-900 tabular-nums">{clockTime(note.sent_at)}</span>
+                <span className="shrink-0 text-sm text-muted tabular-nums">{clockTime(note.sent_at)}</span>
               </div>
-              <ul className="space-y-1 text-sm text-amber-950">
+              <ul className="space-y-1 text-sm text-ink-soft">
                 {note.delivered.map((line, index) => (
                   <li key={index} className="flex items-start gap-2">
                     <CheckCircleIcon size={16} weight="fill" aria-hidden className="mt-0.5 shrink-0 text-emerald-600" />
@@ -43,7 +43,7 @@ export function DeliveredNotes({ notes }: DeliveredNotesProps) {
                   </li>
                 ))}
               </ul>
-              <p className="text-sm font-semibold text-amber-900">
+              <p className={`text-sm font-semibold ${note.pending === 0 ? 'text-emerald-700' : 'text-amber-800'}`}>
                 {note.pending === 0
                   ? 'Orden completa'
                   : note.pending === 1

@@ -266,9 +266,8 @@ export function MenuBrowser({
   }
 
   const spacing = densitySpacing(layout.density)
-  // Below the floating page bar the category bar starts at the very top, so no card scrolls into view around that bar.
-  // The padding only matters once stuck: at rest the negative margin slides it behind the hero, so it leaves no blank band.
-  const stickyTop = belowFixedBar ? 'top-0 pt-20 -mt-20' : 'top-0 pt-2'
+  // On the real menu the category bar sticks right under the page's top bar (4rem tall).
+  const stickyTop = belowFixedBar ? 'top-16 pt-2' : 'top-0 pt-2'
   const scrollMargin = belowFixedBar ? 'scroll-mt-32' : 'scroll-mt-16'
   const section = (category: MenuCategory): ReactNode => (
     <section key={category.id} id={sectionId(category.id)} className={`${scrollMargin} space-y-4`}>

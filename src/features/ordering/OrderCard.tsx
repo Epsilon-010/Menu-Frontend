@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Badge } from '../../shared/ui/Feedback.tsx'
 import { formatMoney } from '../catalog/price.ts'
 import type { Order, OrderItem } from './api.ts'
-import { clockTime, itemStatusLabel, itemStatusTone, orderStatusLabel, rejectionNote } from './logic.ts'
+import { clockTime, itemStatusLabel, itemStatusTone, orderStatusLabel, cancellationNote } from './logic.ts'
 import { modifierSummary } from './modifiers.ts'
 
 interface OrderCardProps {
@@ -40,14 +40,20 @@ export function OrderCard({ order, showPrices = true, itemActions, footer }: Ord
               {item.modifiers.length > 0 && <p className="text-muted">{modifierSummary(item.modifiers, showPrices)}</p>}
               {item.note && <p className="text-muted">{item.note}</p>}
               {item.status === 'cancelled' ? (
-                <p className="text-sm font-medium text-danger">{rejectionNote(item)}</p>
+                <p className="text-sm font-medium text-danger">{cancellationNote(item)}</p>
               ) : (
-                <Badge tone={itemStatusTone(item.status)}>{itemStatusLabel(item.status)}</Badge>
+                // The status and the staff's action share a row and wrap together on a narrow card.
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <Badge tone={itemStatusTone(item.status)}>{itemStatusLabel(item.status)}</Badge>
+                  {itemActions?.(item)}
+                </div>
               )}
-              {itemActions?.(item)}
             </div>
             {showPrices && (
-              <span className="shrink-0 text-ink-soft tabular-nums">{formatMoney(item.subtotal_cents)}</span>
+              // A cancelled dish is not charged: its price stays readable but crossed out.
+              <span className={`shrink-0 tabular-nums ${item.status === 'cancelled' ? 'text-faint line-through' : 'text-ink-soft'}`}>
+                {formatMoney(item.subtotal_cents)}
+              </span>
             )}
           </li>
         ))}

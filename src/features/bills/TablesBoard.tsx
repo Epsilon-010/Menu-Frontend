@@ -1,5 +1,5 @@
 import { ChairIcon } from '@phosphor-icons/react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { EmptyState, ListSkeleton, LoadError } from '../../shared/ui/Feedback.tsx'
 import { SectionHeader } from '../../shared/ui/Section.tsx'
 import { OrdersError, updateItemStatus } from '../kitchen/api.ts'
@@ -22,12 +22,32 @@ import { TableBillCard } from './TableBillCard.tsx'
 const REFRESH_MS = 10_000
 const STALE = 'Se guardó, pero la lista no se pudo actualizar. Se actualiza de nuevo en unos segundos.'
 
-type ListState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded'; tables: TableOverview[] }
+type ListState =
+  { status: 'loading' } | { status: 'error'; message: string } | { status: 'loaded'; tables: TableOverview[] }
 
 function messageOf(error: unknown): string {
   return error instanceof BillError || error instanceof OrdersError
     ? error.message
     : 'Algo salió mal. Inténtalo de nuevo.'
+}
+
+/** Tables with a visit first, each with its orders; the free ones below as small tiles that only open. */
+function TableGroups({ tables, card }: { tables: TableOverview[]; card: (table: TableOverview) => ReactNode }) {
+  const open = tables.filter((table) => table.bill !== null)
+  const free = tables.filter((table) => table.bill === null)
+  return (
+    <div className="space-y-8">
+      {open.length > 0 && <div className="space-y-4">{open.map(card)}</div>}
+      {free.length > 0 && (
+        <section aria-labelledby="free-tables-title" className="space-y-3">
+          <h2 id="free-tables-title" className="text-sm font-semibold text-ink-soft">
+            Mesas libres ({free.length})
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{free.map(card)}</div>
+        </section>
+      )}
+    </div>
+  )
 }
 
 interface TablesBoardProps {
@@ -109,7 +129,9 @@ export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = 
     return {
       onOpen: () => act(() => openTable(table.table_id)),
       onPay: (method: PaymentMethod, expectedTotalCents: number) =>
-        bill ? act(() => registerPayment(bill.id, method, expectedTotalCents)) : Promise.resolve('Esta mesa no está abierta.'),
+        bill
+          ? act(() => registerPayment(bill.id, method, expectedTotalCents))
+          : Promise.resolve('Esta mesa no está abierta.'),
       onClose: () => (bill ? act(() => closeTable(bill.id)) : Promise.resolve(null)),
       onDismissRequest: () => (bill ? act(() => dismissBillRequest(bill.id)) : Promise.resolve(null)),
       onCancelDish: (orderId: string, itemId: string, reason: string) =>
@@ -122,7 +144,7 @@ export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = 
     <div className="space-y-8">
       <SectionHeader
         title="Mesas"
-        description="Cada mesa se abre sola cuando alguien escanea su QR, y los comensales piden desde su celular. Al registrar el pago se cierra la cuenta y la sesión de todos los comensales."
+        description="Una mesa se abre sola cuando alguien escanea su QR. Al registrar el pago se cierra la cuenta y la sesión de sus comensales."
       />
 
       {stale && (
@@ -139,11 +161,10 @@ export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = 
             El administrador agrega las mesas en el panel de administración. Aparecen aquí en cuanto las agrega.
           </EmptyState>
         ) : (
-          <div className="space-y-4">
-            {tablesForWaiter(list.tables).map((table) => (
-              <TableBillCard key={table.table_id} table={table} {...handlers(table)} />
-            ))}
-          </div>
+          <TableGroups
+            tables={tablesForWaiter(list.tables)}
+            card={(table) => <TableBillCard key={table.table_id} table={table} {...handlers(table)} />}
+          />
         ))}
     </div>
   )

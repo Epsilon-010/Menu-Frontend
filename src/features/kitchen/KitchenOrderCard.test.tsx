@@ -57,9 +57,44 @@ describe('the kitchen ticket', () => {
 
     expect(html).toContain('Dish a')
     expect(html).not.toContain('Size:')
-    expect(html).toContain('Seleccionar todo')
-    // The actions only appear once a dish is chosen.
-    expect(html).not.toContain('Empezar')
+    // A queued dish carries its own next steps; nothing has to be selected first.
+    expect(html).toContain('Empezar')
+    expect(html).toContain('Listo')
+    expect(html).toContain('aria-label="Rechazar Dish a"')
+    expect(html).not.toContain('type="checkbox"')
+  })
+
+  it('offers a started dish only its next step, and the whole ticket at once when several are pending', () => {
+    const html = renderToStaticMarkup(
+      <KitchenOrderCard
+        order={order([dish('a', 'queued'), dish('b', 'queued'), dish('c', 'preparing')])}
+        now={NOW}
+        late={false}
+        onAct={() => Promise.resolve(null)}
+      />,
+    )
+
+    // Only dishes nobody started can be rejected.
+    expect(html.match(/aria-label="Rechazar /g)).toHaveLength(2)
+    expect(html).toContain('Empezar todo (2)')
+    expect(html).toContain('Todo listo (3)')
+  })
+
+  it('keeps the dishes that already went out apart, without actions', () => {
+    const cancelled = { ...dish('b', 'cancelled'), cancel_reason: 'Out of avocado', cancelled_by: 'waiter' as const }
+    const html = renderToStaticMarkup(
+      <KitchenOrderCard
+        order={order([dish('a', 'queued'), dish('r', 'ready'), cancelled])}
+        now={NOW}
+        late={false}
+        onAct={() => Promise.resolve(null)}
+      />,
+    )
+
+    expect(html).toContain('Ya salieron (2)')
+    expect(html).toContain('Cancelado: Out of avocado')
+    expect(html).not.toContain('Rechazado')
+    expect(html).not.toContain('Todo listo')
   })
 
   it('names the state of each dish in words and says when the ticket is late', () => {
@@ -75,7 +110,6 @@ describe('the kitchen ticket', () => {
     expect(html).toContain('En cola')
     expect(html).toContain('En preparación')
     expect(html).toContain('Retrasada')
-    expect(html).toContain('type="checkbox"')
   })
 })
 

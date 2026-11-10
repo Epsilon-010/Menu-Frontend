@@ -31,24 +31,13 @@ export function replaceOrder(orders: StaffOrder[], updated: StaffOrder, keep: (o
   return orders.map((order) => (order.id === updated.id ? updated : order))
 }
 
-export interface KitchenActions {
-  /** Every selected dish is queued: it can start. */
-  start: boolean
-  /** Every selected dish is queued or being prepared: it can be marked ready. */
-  ready: boolean
-  /** Every selected dish is queued: it can be rejected (with a reason). */
-  reject: boolean
-}
-
-export function kitchenActions(selected: Pick<StaffOrderItem, 'status'>[]): KitchenActions {
-  if (selected.length === 0) return { start: false, ready: false, reject: false }
-  const allQueued = selected.every((item) => item.status === 'queued')
-  return { start: allQueued, ready: selected.every(isPending), reject: allQueued }
-}
-
-/** The selected dishes of `order` that are still in the kitchen (others changed meanwhile). */
-export function pendingSelection(selected: ReadonlySet<string>, order: StaffOrder): StaffOrderItem[] {
-  return order.items.filter((item) => selected.has(item.id) && isPending(item))
+/** When the kitchen last touched an order: the latest change of any of its dishes. */
+export function finishedAt(order: StaffOrder): string {
+  let latest = order.created_at
+  for (const item of order.items) {
+    if (Date.parse(item.updated_at) > Date.parse(latest)) latest = item.updated_at
+  }
+  return latest
 }
 
 function minutesSince(iso: string, now: number): number | null {
@@ -97,7 +86,7 @@ const KITCHEN_LABELS: Record<OrderItemStatus, string> = {
   preparing: 'En preparación',
   ready: 'Listo',
   delivered: 'Entregado',
-  cancelled: 'Rechazado',
+  cancelled: 'Cancelado',
 }
 
 export function staffItemLabel(status: OrderItemStatus): string {

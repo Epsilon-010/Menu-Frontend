@@ -114,6 +114,8 @@ describe('table filter', () => {
 
 function tableItem(id: string, status: OrderItem['status'], cancel_reason: string | null = null): OrderItem {
   return {
+    // These fixtures cancel as the kitchen does; a waiter's cancellation is set where a test needs it.
+    cancelled_by: status === 'cancelled' ? 'kitchen' : null,
     id,
     item_id: `m-${id}`,
     name: `Dish ${id}`,
@@ -166,11 +168,28 @@ describe('newRejections', () => {
 
     const second = newRejections(first.seen, tables([tableItem('a', 'cancelled', 'Old'), tableItem('b', 'cancelled', 'Out of avocado')]))
     expect(second.rejections).toEqual([
-      { id: 'b', table_name: 'Table 1', order_number: 7, name: 'Dish b', note: 'Rechazado: Out of avocado' },
+      { id: 'b', table_name: 'Table 1', order_number: 7, name: 'Dish b', note: 'Out of avocado' },
     ])
 
     const third = newRejections(second.seen, tables([tableItem('a', 'cancelled', 'Old'), tableItem('b', 'cancelled', 'Out of avocado')]))
     expect(third.rejections).toEqual([])
+  })
+})
+
+describe('newRejections by who cancelled', () => {
+  it('never reports a dish a waiter or an admin cancelled as a kitchen rejection', () => {
+    const first = newRejections(null, tables([tableItem('a', 'queued'), tableItem('b', 'queued'), tableItem('c', 'queued')]))
+
+    const second = newRejections(
+      first.seen,
+      tables([
+        { ...tableItem('a', 'cancelled', 'Changed their mind'), cancelled_by: 'waiter' },
+        { ...tableItem('b', 'cancelled', 'Mistake'), cancelled_by: 'admin' },
+        { ...tableItem('c', 'cancelled', 'Old'), cancelled_by: null },
+      ]),
+    )
+
+    expect(second.rejections).toEqual([])
   })
 })
 
@@ -179,7 +198,7 @@ describe('newRejections with options', () => {
     const large = { ...tableItem('c', 'queued'), modifiers: [{ group: 'Size', name: 'Large', price_cents: 1500 }] }
     const first = newRejections(null, tables([large]))
 
-    const second = newRejections(first.seen, tables([{ ...large, status: 'cancelled', cancel_reason: 'Out of stock' }]))
+    const second = newRejections(first.seen, tables([{ ...large, status: 'cancelled', cancel_reason: 'Out of stock', cancelled_by: 'kitchen' }]))
 
     expect(second.rejections.map((each) => each.name)).toEqual(['Dish c (Size: Large)'])
   })

@@ -2,7 +2,6 @@
 import type { TableOverview } from '../bills/api.ts'
 import type { StaffOrder, StaffOrderItem } from '../kitchen/api.ts'
 import { isPending } from '../kitchen/logic.ts'
-import { rejectionNote } from '../ordering/logic.ts'
 import { dishLabel } from '../ordering/modifiers.ts'
 
 export interface DeliveryGroups {
@@ -77,7 +76,7 @@ export interface Rejection {
 }
 
 /**
- * Dishes rejected since the previous look at the tables, so waiters hear about each once.
+ * Dishes the kitchen rejected since the previous look at the tables, so waiters hear about each once.
  * The first look (`previous` null) only records what was already rejected.
  */
 export function newRejections(
@@ -89,7 +88,8 @@ export function newRejections(
   for (const table of tables) {
     for (const order of table.bill?.orders ?? []) {
       for (const item of order.items) {
-        if (item.status !== 'cancelled') continue
+        // A dish a waiter or an admin cancelled is no news to the waiters: only the kitchen rejects.
+        if (item.status !== 'cancelled' || item.cancelled_by !== 'kitchen') continue
         seen.add(item.id)
         if (previous !== null && !previous.has(item.id)) {
           rejections.push({
@@ -97,7 +97,7 @@ export function newRejections(
             table_name: table.table_name,
             order_number: order.number,
             name: dishLabel(item.name, item.modifiers),
-            note: rejectionNote(item) ?? 'Rechazado',
+            note: item.cancel_reason?.trim() || 'Sin motivo',
           })
         }
       }

@@ -81,6 +81,9 @@ export interface Cart {
 export type OrderItemStatus = 'queued' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
 export type OrderStatus = 'queued' | 'in_progress' | 'partially_delivered' | 'completed' | 'cancelled'
 
+/** The staff role that cancelled a dish: the kitchen rejects, a waiter or an admin cancels. */
+export type CancelledBy = 'kitchen' | 'waiter' | 'admin'
+
 export interface OrderItem {
   id: string
   item_id: string
@@ -89,8 +92,10 @@ export interface OrderItem {
   note: string
   added_by: string
   status: OrderItemStatus
-  /** Why the kitchen or a waiter rejected the dish; null unless it is cancelled. */
+  /** Why the kitchen or a waiter cancelled the dish; null unless it is cancelled. */
   cancel_reason: string | null
+  /** Who cancelled it; null or missing when it is not cancelled, or was before the role was recorded. */
+  cancelled_by?: CancelledBy | null
   unit_price_cents: number
   subtotal_cents: number
   /** Chosen options, included in the prices. */

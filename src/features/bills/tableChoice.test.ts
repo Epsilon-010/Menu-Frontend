@@ -42,6 +42,10 @@ describe('latestTableChoice', () => {
     expect(latestTableChoice({ tableId: 'a', at: 1 }, { tableId: 'b', at: 2 })).toBe('b')
   })
 
+  it('takes the banner on a tie', () => {
+    expect(latestTableChoice({ tableId: 'a', at: 2 }, { tableId: 'b', at: 2 })).toBe('a')
+  })
+
   it('takes the banner when it came after the click on the list', () => {
     expect(latestTableChoice({ tableId: 'a', at: 3 }, { tableId: 'b', at: 2 })).toBe('a')
   })

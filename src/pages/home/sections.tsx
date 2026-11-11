@@ -13,21 +13,19 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { MOTION } from '../../shared/ui/classes.ts'
 
+/** Part of the page, not a bar over it: no surface of its own, and it scrolls away with the hero. */
 export function LandingNav() {
-  const link = `rounded-full px-3 py-2 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white ${MOTION}`
+  const link = `rounded-full px-3 py-2 text-sm font-semibold text-ink-soft hover:text-brand ${MOTION}`
   return (
-    <header className="fixed inset-x-0 top-4 z-40 flex justify-center px-4">
-      {/* Solid and dark on purpose: it must read as a bar over the light sections and, with its ring, over the dark ones. */}
-      <nav
-        aria-label="Principal"
-        className="flex items-center gap-2 rounded-full bg-ink p-2 whitespace-nowrap text-white shadow-xl ring-1 ring-white/15"
-      >
-        <Link to="/" aria-current="page" className="flex items-center gap-2 pr-2 pl-3 text-base font-semibold">
-          <ForkKnifeIcon size={20} weight="fill" aria-hidden className="text-sun" />
+    <header className="absolute inset-x-0 top-0 z-40 px-4 py-6 sm:px-6">
+      <nav aria-label="Principal" className="mx-auto flex max-w-6xl items-center justify-between gap-4 whitespace-nowrap">
+        <Link to="/" aria-current="page" className="flex items-center gap-2 text-lg font-semibold text-ink">
+          <ForkKnifeIcon size={24} weight="fill" aria-hidden className="text-brand" />
           Menú
         </Link>
         <ul className="hidden items-center md:flex">
           {[
+            ['#app', 'La app'],
             ['#flow', 'El servicio'],
             ['#benefits', 'Beneficios'],
             ['#design', 'Diseño'],
@@ -40,127 +38,19 @@ export function LandingNav() {
             </li>
           ))}
         </ul>
-        <Link to="/login" className={`hidden min-[26rem]:block ${link}`}>
-          Iniciar sesión
-        </Link>
-        <Link
-          to="/register"
-          className={`rounded-full bg-brand px-4 py-2 text-sm font-semibold text-brand-ink hover:bg-action-hover active:scale-[0.98] ${MOTION}`}
-        >
-          Crear mi negocio
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link to="/login" className={`hidden min-[26rem]:block ${link}`}>
+            Iniciar sesión
+          </Link>
+          <Link
+            to="/register"
+            className={`rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-brand active:scale-[0.98] ${MOTION}`}
+          >
+            Crear mi negocio
+          </Link>
+        </div>
       </nav>
     </header>
-  )
-}
-
-const DISH_STATE = {
-  queued: 'bg-subtle text-ink-soft',
-  preparing: 'bg-sun/30 text-warning',
-  ready: 'bg-leaf/15 text-leaf',
-}
-
-function StoryCard({ icon, title, rows }: { icon: ReactNode; title: string; rows: [string, string, keyof typeof DISH_STATE][] }) {
-  return (
-    <div className="w-72 shrink-0 rounded-3xl bg-surface p-4 text-left text-ink shadow-2xl">
-      <p className="flex items-center gap-2 text-sm font-semibold">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-ink text-white">{icon}</span>
-        {title}
-      </p>
-      <ul className="mt-3 space-y-2">
-        {rows.map(([dish, state, tone]) => (
-          <li key={dish} className="flex items-center justify-between gap-2 rounded-xl border border-line p-2 text-sm font-medium">
-            <span className="truncate">{dish}</span>
-            <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${DISH_STATE[tone]}`}>{state}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-
-const SCENES: { who: string; does: string; body: string; card: ReactNode }[] = [
-  {
-    who: 'La mesa',
-    does: 'pide',
-    body: 'Todos escanean el mismo código QR y agregan lo suyo. La mesa ve el total en vivo y envía una sola orden.',
-    card: (
-      <StoryCard
-        icon={<QrCodeIcon size={16} weight="fill" aria-hidden />}
-        title="Mesa 5 · Tu orden"
-        rows={[
-          ['Hamburguesa', 'Invitado 1', 'queued'],
-          ['Pizza margarita', 'Invitado 2', 'queued'],
-          ['Bowl de pollo', 'Invitado 3', 'queued'],
-        ]}
-      />
-    ),
-  },
-  {
-    who: 'La cocina',
-    does: 'prepara',
-    body: 'La orden llega como una comanda en cuanto la mesa la envía. Cocina marca cada platillo sin esperar al resto.',
-    card: (
-      <StoryCard
-        icon={<CookingPotIcon size={16} weight="fill" aria-hidden />}
-        title="Orden 24 · Mesa 5"
-        rows={[
-          ['Hamburguesa', 'Preparando', 'preparing'],
-          ['Pizza margarita', 'Lista', 'ready'],
-          ['Bowl de pollo', 'En cola', 'queued'],
-        ]}
-      />
-    ),
-  },
-  {
-    who: 'El mesero',
-    does: 'entrega',
-    body: 'Ve qué platillo ya salió, de qué mesa es y qué falta. Al final cobra la cuenta de la mesa.',
-    card: (
-      <StoryCard
-        icon={<CallBellIcon size={16} weight="fill" aria-hidden />}
-        title="Listo para llevar · Mesa 5"
-        rows={[
-          ['Pizza margarita', 'Lista', 'ready'],
-          ['Hamburguesa', 'Lista', 'ready'],
-          ['Bowl de pollo', 'Preparando', 'preparing'],
-        ]}
-      />
-    ),
-  },
-]
-
-/**
- * The service in three scenes. With motion the section is three screens tall and its content stays put while the
- * scenes take turns (see `data-story` in the page motion); with reduced motion the scenes are simply stacked.
- */
-export function ServiceStory() {
-  return (
-    <section id="flow" data-story aria-label="El servicio, de la mesa a la entrega" className="bg-ink text-white motion-safe:h-[300svh]">
-      <div className="motion-safe:sticky motion-safe:top-0 motion-safe:h-svh motion-safe:overflow-hidden motion-reduce:space-y-24 motion-reduce:py-24">
-        {SCENES.map((scene, index) => (
-          <div
-            key={scene.who}
-            data-story-panel
-            className="flex flex-col items-center justify-center gap-6 px-4 pt-16 motion-safe:absolute motion-safe:inset-0 sm:px-6"
-          >
-            <p className="text-sm font-semibold text-sun">
-              0{index + 1} / 0{SCENES.length}
-            </p>
-            <div className="flex w-full max-w-7xl flex-col items-center gap-6 lg:flex-row lg:gap-12">
-              <p data-from="left" className="text-5xl font-semibold tracking-tight sm:text-6xl lg:flex-1 lg:text-right lg:text-7xl">
-                {scene.who}
-              </p>
-              <div data-from="up">{scene.card}</div>
-              <p data-from="right" className="text-5xl font-semibold tracking-tight text-sun sm:text-6xl lg:flex-1 lg:text-left lg:text-7xl">
-                {scene.does}
-              </p>
-            </div>
-            <p className="max-w-md text-center text-base text-pretty text-white/70 sm:text-lg">{scene.body}</p>
-          </div>
-        ))}
-      </div>
-    </section>
   )
 }
 
@@ -190,7 +80,7 @@ const BENEFITS: { title: string; body: string; icon: ReactNode }[] = [
 export function Benefits() {
   return (
     <section id="benefits" className="px-4 py-24 sm:px-6">
-      <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-5">
+      <div data-leave className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <div data-reveal className="space-y-4 lg:sticky lg:top-32">
             <p className="text-sm font-semibold text-brand">Beneficios</p>
@@ -239,7 +129,7 @@ const STEPS: { title: string; body: string; icon: ReactNode }[] = [
 export function HowItWorks() {
   return (
     <section id="how" className="bg-subtle px-4 py-24 sm:px-6">
-      <div className="mx-auto max-w-6xl space-y-12">
+      <div data-leave className="mx-auto max-w-6xl space-y-12">
         <div data-reveal className="space-y-4 text-center">
           <p className="text-sm font-semibold text-brand">Cómo funciona</p>
           <h2 className="mx-auto max-w-[680px] text-4xl font-semibold tracking-tight text-ink">Listo para tu primer servicio en tres pasos</h2>
@@ -290,7 +180,7 @@ const QUESTIONS: [string, string][] = [
 export function Faq() {
   return (
     <section id="faq" className="px-4 py-24 sm:px-6">
-      <div className="mx-auto max-w-3xl space-y-12">
+      <div data-leave className="mx-auto max-w-3xl space-y-12">
         <div data-reveal className="space-y-4 text-center">
           <p className="text-sm font-semibold text-brand">Preguntas frecuentes</p>
           <h2 className="text-4xl font-semibold tracking-tight text-ink">Lo que nos preguntan antes de empezar</h2>

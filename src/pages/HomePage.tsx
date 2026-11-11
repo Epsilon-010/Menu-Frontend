@@ -1,7 +1,8 @@
 import { useRef } from 'react'
 import { usePageMotion, useSmoothScroll } from '../shared/motion/motion.ts'
 import { Hero } from './home/Hero.tsx'
-import { Benefits, Faq, FinalCta, HowItWorks, LandingFooter, LandingNav, ServiceStory, Tagline } from './home/sections.tsx'
+import { Benefits, Faq, FinalCta, HowItWorks, LandingFooter, LandingNav, Tagline } from './home/sections.tsx'
+import { AppShowcase, ServiceSteps } from './home/Service.tsx'
 import { ThemeShowcase } from './home/ThemeShowcase.tsx'
 
 /** The public landing page: what the product does for a restaurant, and one action (create the business). */
@@ -21,7 +22,8 @@ export function HomePage() {
       <LandingNav />
       <main id="main">
         <Hero />
-        <ServiceStory />
+        <AppShowcase />
+        <ServiceSteps />
         <Benefits />
         <HowItWorks />
         <Tagline />

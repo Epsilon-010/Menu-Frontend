@@ -37,7 +37,7 @@ export function ThemeShowcase() {
 
   return (
     <section id="design" className="px-4 py-24 sm:px-6">
-      <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
+      <div data-leave className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
         <div data-reveal className="space-y-6">
           <p className="text-sm font-semibold text-brand">Diseño a tu gusto</p>
           <h2 className="max-w-[680px] text-4xl font-semibold tracking-tight text-ink">Un menú que se ve como tu negocio</h2>

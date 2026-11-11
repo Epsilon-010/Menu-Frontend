@@ -59,8 +59,8 @@ export function DeliveryOrderCard({ order, now, late, view, onDeliver }: Deliver
       aria-busy={busy}
       aria-label={deliveryCounter(order)}
       className={cn(
-        'flex flex-col gap-4 rounded-2xl border bg-surface p-4 shadow-xs',
-        late ? 'border-red-300 ring-2 ring-red-200' : 'border-line',
+        'flex flex-col gap-4 rounded-3xl border bg-surface p-4 shadow-sm shadow-brand/5 hover:shadow-lg hover:shadow-brand/10 transition-shadow duration-300 ease-smooth',
+        late ? 'border-red-300 ring-2 ring-red-200' : 'border-transparent',
       )}
     >
       <OrderTicketHeader

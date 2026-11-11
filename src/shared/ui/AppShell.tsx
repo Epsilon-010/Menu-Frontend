@@ -18,6 +18,13 @@ interface AppShellProps {
   /** Who or what is signed in on this device. */
   identity: string
   nav?: NavItem[]
+  /**
+   * A slim rail of icons on wide screens instead of the top bar (the waiter and kitchen screens): each item is an
+   * icon over its label. The top bar and its menu still serve narrow screens.
+   */
+  iconRail?: NavItem[]
+  /** The person signed in, for the icon rail (which has no room for the whole `identity`). */
+  person?: string
   onSignOut?: () => void
   signingOut?: boolean
   /** Text of the sign out button ("Leave" for a guest at a table). */
@@ -38,6 +45,12 @@ function navLinkClass({ isActive }: { isActive: boolean }): string {
 function railLinkClass({ isActive }: { isActive: boolean }): string {
   const state = isActive ? 'bg-white text-brand shadow-md' : 'text-white/85 hover:translate-x-1 hover:bg-white/15 hover:text-white'
   return `flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold active:scale-[0.98] ${MOTION} ${state}`
+}
+
+/** Items of the slim icon rail: the current screen on a tinted tile, like a pressed key. */
+function iconRailLinkClass({ isActive }: { isActive: boolean }): string {
+  const state = isActive ? 'bg-brand/10 text-brand' : 'text-muted hover:bg-subtle hover:text-ink'
+  return `flex w-full flex-col items-center gap-1 rounded-2xl px-1 py-3 text-xs font-semibold active:scale-[0.98] ${MOTION} ${state}`
 }
 
 // Full class names per breakpoint, so Tailwind finds them in the source.
@@ -75,6 +88,8 @@ export function AppShell({
   logoUrl,
   identity,
   nav = [],
+  iconRail,
+  person,
   onSignOut,
   signingOut = false,
   signOutLabel = 'Cerrar sesión',
@@ -174,9 +189,50 @@ export function AppShell({
         </aside>
       )}
 
+      {iconRail && (
+        <aside className="fixed inset-y-4 left-4 z-40 hidden w-24 flex-col items-center gap-4 rounded-3xl border border-line bg-surface p-3 shadow-lg shadow-brand/5 lg:flex">
+          {logoUrl ? (
+            <img src={logoUrl} alt="" className="size-12 shrink-0 rounded-2xl object-contain" />
+          ) : (
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-brand to-accent text-white">
+              <ForkKnifeIcon size={24} weight="bold" aria-hidden />
+            </span>
+          )}
+          <nav aria-label="Pantallas" className="min-h-0 w-full flex-1 overflow-y-auto">
+            <ul className="space-y-2">
+              {iconRail.map((item) => (
+                <li key={item.to}>
+                  <NavLink to={item.to} end={item.end} className={iconRailLinkClass}>
+                    {item.icon}
+                    {item.label}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <div className="flex w-full flex-col items-center gap-2">
+            <span aria-hidden className="flex size-10 items-center justify-center rounded-full bg-linear-to-br from-accent to-sun text-sm font-semibold text-ink">
+              {(person ?? identity).trim().charAt(0).toUpperCase()}
+            </span>
+            <p className="w-full truncate text-center text-xs text-muted">{person ?? identity}</p>
+            {onSignOut && (
+              <button
+                type="button"
+                onClick={onSignOut}
+                disabled={signingOut}
+                className={`flex w-full flex-col items-center gap-1 rounded-2xl px-1 py-2 text-xs font-semibold text-muted hover:bg-subtle hover:text-ink active:scale-[0.98] disabled:opacity-50 ${MOTION}`}
+              >
+                <SignOutIcon size={20} aria-hidden />
+                {signingOut ? 'Saliendo…' : 'Salir'}
+              </button>
+            )}
+          </div>
+        </aside>
+      )}
+
       {/* In the page flow: the bar takes its own row, so it never sits on top of the content below it. */}
       <header
-        className={`${fixedBar ? 'sticky top-0' : 'relative'} z-40 border-b border-line bg-surface/90 backdrop-blur-md ${hasRail ? 'xl:hidden' : ''}`}
+        className={`${fixedBar ? 'sticky top-0' : 'relative'} z-40 border-b border-line bg-surface/90 backdrop-blur-md ${hasRail ? 'xl:hidden' : ''} ${iconRail ? 'lg:hidden' : ''}`}
       >
         <nav aria-label="Principal" className={`mx-auto flex h-16 ${width} items-center gap-4 px-4 sm:px-6`}>
           <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -275,7 +331,7 @@ export function AppShell({
         </div>
       )}
 
-      <div className={hasRail ? 'xl:pl-64' : undefined}>
+      <div className={hasRail ? 'xl:pl-64' : iconRail ? 'lg:pl-28' : undefined}>
         <main id="main" className={`mx-auto ${width} px-4 pt-8 pb-16 sm:px-6`}>
           {children}
         </main>

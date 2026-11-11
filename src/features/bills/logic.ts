@@ -188,3 +188,11 @@ export function tableIdOf(data: string): string | null {
 export function tableCardId(tableId: string): string {
   return `table-${tableId}`
 }
+
+let tableChoices = 0
+
+/** A growing number for each choice of a table (a click on the list, a tap on a banner), so the newest one wins. */
+export function nextTableChoice(): number {
+  tableChoices += 1
+  return tableChoices
+}

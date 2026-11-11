@@ -1,6 +1,12 @@
-import { ChairIcon } from '@phosphor-icons/react'
+import { BellRingingIcon, ChairIcon, CircleIcon } from '@phosphor-icons/react'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { Badge } from '../../components/ui/badge.tsx'
+import { cn } from '../../lib/utils.ts'
+import { MOTION } from '../../shared/ui/classes.ts'
 import { EmptyState, ListSkeleton, LoadError } from '../../shared/ui/Feedback.tsx'
+import { useMediaQuery } from '../../shared/ui/useMediaQuery.ts'
+import { formatMoney } from '../catalog/price.ts'
+import { clockTime } from '../ordering/logic.ts'
 import { SectionHeader } from '../../shared/ui/Section.tsx'
 import { OrdersError, updateItemStatus } from '../kitchen/api.ts'
 import {
@@ -16,7 +22,7 @@ import {
   type PaymentMethod,
   type TableOverview,
 } from './api.ts'
-import { tablesForWaiter } from './logic.ts'
+import { nextTableChoice, tablesForWaiter } from './logic.ts'
 import { TableBillCard } from './TableBillCard.tsx'
 
 const REFRESH_MS = 10_000
@@ -31,21 +37,105 @@ function messageOf(error: unknown): string {
     : 'Algo salió mal. Inténtalo de nuevo.'
 }
 
+/** A table chosen from outside the board (the "asks for the bill" banner) and its turn (`nextTableChoice`). */
+export interface TableFocus {
+  tableId: string
+  at: number
+}
+
+/** One open table in the list of the wide layout: who it is, how much it owes and whether it asked for the bill. */
+function OpenTableRow({ table, selected, onSelect }: { table: TableOverview; selected: boolean; onSelect: () => void }) {
+  const bill = table.bill
+  if (!bill) return null
+  const openedAt = clockTime(bill.opened_at)
+  const orders = bill.orders.length
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onSelect}
+      className={cn(
+        'flex w-full items-center gap-4 rounded-2xl border bg-surface p-4 text-left active:scale-[0.99]',
+        MOTION,
+        selected
+          ? 'border-brand shadow-lg shadow-brand/10 ring-1 ring-brand'
+          : 'border-transparent shadow-sm shadow-brand/5 hover:-translate-y-0.5 hover:shadow-md',
+      )}
+    >
+      <span className={cn('flex size-12 shrink-0 items-center justify-center rounded-xl', selected ? 'bg-brand text-brand-ink' : 'bg-brand/10 text-brand')}>
+        <ChairIcon size={24} weight="fill" aria-hidden />
+      </span>
+      <span className="min-w-0 flex-1 space-y-1">
+        <span className="block truncate text-lg font-semibold text-ink">{table.table_name}</span>
+        <span className="block text-sm text-muted">
+          {orders === 1 ? '1 orden' : `${orders} órdenes`}
+          {openedAt && ` · Abierta a las ${openedAt}`}
+        </span>
+      </span>
+      <span className="flex shrink-0 flex-col items-end gap-1">
+        <span className="text-xl font-semibold text-ink tabular-nums">{formatMoney(bill.total_cents)}</span>
+        {bill.bill_requested_at ? (
+          <Badge variant="warning">
+            <BellRingingIcon size={14} aria-hidden />
+            Pide la cuenta
+          </Badge>
+        ) : (
+          <Badge variant="success">
+            <CircleIcon size={8} weight="fill" aria-hidden />
+            Abierta
+          </Badge>
+        )}
+      </span>
+    </button>
+  )
+}
+
+interface TableGroupsProps {
+  tables: TableOverview[]
+  card: (table: TableOverview) => ReactNode
+  /** Wide screens: the open tables as a list and only the chosen one's bill beside it. */
+  split: boolean
+  selectedId: string | null
+  onSelect: (tableId: string) => void
+}
+
 /** Tables with a visit first, each with its orders; the free ones below as small tiles that only open. */
-function TableGroups({ tables, card }: { tables: TableOverview[]; card: (table: TableOverview) => ReactNode }) {
+function TableGroups({ tables, card, split, selectedId, onSelect }: TableGroupsProps) {
   const open = tables.filter((table) => table.bill !== null)
   const free = tables.filter((table) => table.bill === null)
+  const freeTables = free.length > 0 && (
+    <section aria-labelledby="free-tables-title" className="space-y-3">
+      <h2 id="free-tables-title" className="text-sm font-semibold text-ink-soft">
+        Mesas libres ({free.length})
+      </h2>
+      <div className={cn('grid gap-3 sm:grid-cols-2', !split && 'lg:grid-cols-3')}>{free.map(card)}</div>
+    </section>
+  )
+
+  if (!split || open.length === 0) {
+    return (
+      <div className="space-y-8">
+        {open.length > 0 && <div className="space-y-4">{open.map(card)}</div>}
+        {freeTables}
+      </div>
+    )
+  }
+
+  // A table that closed (or none chosen yet) falls back to the first one: the one waiting longest for its bill.
+  const selected = open.find((table) => table.table_id === selectedId) ?? open[0]
   return (
-    <div className="space-y-8">
-      {open.length > 0 && <div className="space-y-4">{open.map(card)}</div>}
-      {free.length > 0 && (
-        <section aria-labelledby="free-tables-title" className="space-y-3">
-          <h2 id="free-tables-title" className="text-sm font-semibold text-ink-soft">
-            Mesas libres ({free.length})
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{free.map(card)}</div>
-        </section>
-      )}
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+      <div className="space-y-8">
+        <ul aria-label="Mesas abiertas" className="space-y-3">
+          {open.map((table) => (
+            <li key={table.table_id}>
+              <OpenTableRow table={table} selected={table === selected} onSelect={() => onSelect(table.table_id)} />
+            </li>
+          ))}
+        </ul>
+        {freeTables}
+      </div>
+      <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl">{card(selected)}</div>
     </div>
   )
 }
@@ -55,10 +145,16 @@ interface TablesBoardProps {
   refreshSignal?: number
   /** Receives every list that loads (for example to spot newly rejected dishes). */
   onLoaded?: (tables: TableOverview[]) => void
+  /** The table to show on the wide layout, chosen outside the board; a later click on the list replaces it. */
+  focus?: TableFocus | null
 }
 
 /** Waiter view of every table: open it for its guests, follow its orders and take the payment. */
-export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = {}) {
+export function TablesBoard({ refreshSignal = 0, onLoaded, focus = null }: TablesBoardProps = {}) {
+  const split = useMediaQuery('(min-width: 80rem)')
+  const [picked, setPicked] = useState<TableFocus | null>(null)
+  // Whichever came last, the click on the list or the choice from outside.
+  const selectedId = (focus && (!picked || focus.at >= picked.at) ? focus : picked)?.tableId ?? null
   const [list, setList] = useState<ListState>({ status: 'loading' })
   const [stale, setStale] = useState(false)
   const requests = useRef(0)
@@ -163,6 +259,9 @@ export function TablesBoard({ refreshSignal = 0, onLoaded }: TablesBoardProps = 
         ) : (
           <TableGroups
             tables={tablesForWaiter(list.tables)}
+            split={split}
+            selectedId={selectedId}
+            onSelect={(tableId) => setPicked({ tableId, at: nextTableChoice() })}
             card={(table) => <TableBillCard key={table.table_id} table={table} {...handlers(table)} />}
           />
         ))}

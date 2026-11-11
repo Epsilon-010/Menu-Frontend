@@ -104,7 +104,7 @@ export function LoginPage() {
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6">
         <div className="space-y-2">
           <AuthLogo />
-          <h2 className="text-3xl font-semibold tracking-tight text-ink">Hola de nuevo</h2>
+          <h2 className="text-4xl font-semibold tracking-tight text-ink">Iniciar sesión</h2>
           <p className="text-sm text-muted">{INTROS[mode]}</p>
         </div>
 
@@ -229,7 +229,7 @@ export function LoginPage() {
         <button
           type="submit"
           disabled={submitting || state.status === 'loading'}
-          className={`w-full ${buttonClass('primary', 'md')}`}
+          className={`w-full rounded-xl py-3 shadow-lg shadow-brand/30 ${buttonClass('primary', 'md')}`}
         >
           {submitting ? 'Iniciando sesión…' : 'Iniciar sesión'}
         </button>

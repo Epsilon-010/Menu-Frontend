@@ -21,7 +21,7 @@ export function FinishedOrders({ orders }: { orders: StaffOrder[] }) {
         {orders.map((order) => {
           const time = clockTime(finishedAt(order))
           return (
-            <li key={order.id} className="space-y-3 rounded-2xl border border-line bg-surface p-4">
+            <li key={order.id} className="space-y-3 rounded-3xl bg-surface p-4 shadow-sm shadow-brand/5">
               <div className="flex items-baseline justify-between gap-3">
                 <p className="min-w-0 font-semibold text-ink">
                   {order.table_name} <span className="font-normal text-muted">· Orden #{order.number}</span>

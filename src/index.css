@@ -236,13 +236,13 @@
 }
 
 /* Product cards of the table menu enter as they scroll into view instead of all at once when the menu loads, where
-   the browser can tie an animation to the scroll position; elsewhere they keep the entrance on load. Only cards whose
-   theme asks for an entrance carry these classes. Unlayered on purpose: the timeline must come after the utility's
+   the browser can tie an animation to the scroll position; elsewhere they keep the entrance on load. Only cards (an
+   `article`) whose theme asks for an entrance are tied to the scroll; the header keeps its entrance on load. Unlayered on purpose: the timeline must come after the utility's
    `animation` shorthand, which resets it. */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .menu-motion .motion-safe\:animate-card-fade,
-    .menu-motion .motion-safe\:animate-card-rise {
+    .menu-motion article.motion-safe\:animate-card-fade,
+    .menu-motion article.motion-safe\:animate-card-rise {
       animation-timeline: view();
       animation-range: entry 0% entry 70%;
     }

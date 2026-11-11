@@ -17,12 +17,12 @@ import { QueueNotice } from './QueueNotice.tsx'
 import { useStaffEvents } from './useStaffEvents.ts'
 import { useStaffQueue } from './useStaffQueue.ts'
 
+type KitchenTab = 'queue' | 'finished'
+
 /**
  * The kitchen screen in two views: one ticket per order with dishes still to cook, oldest first (any one can go
  * first), and the orders that already went out.
  */
-type KitchenTab = 'queue' | 'finished'
-
 export function KitchenBoard() {
   const [tab, setTab] = useState<KitchenTab>('queue')
   const sound = useSoundAlert('kitchen')

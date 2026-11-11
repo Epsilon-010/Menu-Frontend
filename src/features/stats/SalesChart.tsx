@@ -3,8 +3,8 @@ import { formatMoney } from '../catalog/price.ts'
 import { chartModel, labelledDays, shortDay, type DayValue } from './logic.ts'
 
 /** Categorical slots 1 and 2 of the reference palette, validated on a white surface (CVD ΔE 24.7). */
-export const COLLECTED_COLOR = '#2f9e5b'
-export const PENDING_COLOR = '#ff8a1f'
+export const COLLECTED_COLOR = '#2a78d6'
+export const PENDING_COLOR = '#eb6834'
 
 /** Width before the container is measured (and on the server). */
 const DEFAULT_WIDTH = 640

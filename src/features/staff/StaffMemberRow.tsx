@@ -9,7 +9,7 @@ import { useRowAction } from '../../shared/ui/useRowAction.ts'
 import { ConfirmDialog, MoreActionsMenu, TooltipIconButton } from '../../shared/ui/RowActions.tsx'
 import type { StaffMember, StaffMemberChanges, StaffRole } from './api.ts'
 import { normalizeStaffCode } from './credentials.ts'
-import { ROLE_LABELS } from './labels.ts'
+import { ROLE_LABELS, ROLE_TILES } from './labels.ts'
 import { RoleToggle } from './RoleToggle.tsx'
 
 type Mode = { kind: 'view' } | { kind: 'edit'; full_name: string; role: StaffRole } | { kind: 'confirm-pin' }
@@ -61,7 +61,7 @@ export function StaffMemberRow({ member, onUpdate, onRegeneratePin }: StaffMembe
         </form>
       ) : (
         <div className="flex flex-wrap items-center gap-4">
-          <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${member.is_active ? (member.role === 'kitchen' ? 'bg-accent/15 text-accent' : 'bg-brand/10 text-brand') : 'bg-canvas text-line-strong'}`}>
+          <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${member.is_active ? ROLE_TILES[member.role] : 'bg-canvas text-line-strong'}`}>
             <RoleIcon size={20} aria-hidden />
           </span>
           <div className="min-w-0 flex-1 space-y-1">

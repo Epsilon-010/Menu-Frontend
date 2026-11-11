@@ -50,12 +50,12 @@ function TemporaryPassword({ admin, onDismiss }: { admin: AdminWithTemporaryPass
       </div>
       <dl className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl bg-white p-4">
-          <dt className="text-xs font-medium text-zinc-500">Email</dt>
-          <dd className="truncate text-lg text-zinc-950">{admin.email}</dd>
+          <dt className="text-xs font-medium text-muted">Email</dt>
+          <dd className="truncate text-lg text-ink">{admin.email}</dd>
         </div>
         <div className="rounded-xl bg-white p-4">
-          <dt className="text-xs font-medium text-zinc-500">Contraseña temporal</dt>
-          <dd className="font-mono text-2xl tracking-widest text-zinc-950">{admin.temporary_password}</dd>
+          <dt className="text-xs font-medium text-muted">Contraseña temporal</dt>
+          <dd className="font-mono text-2xl tracking-widest text-ink">{admin.temporary_password}</dd>
         </div>
       </dl>
       <Button variant="secondary" onClick={onDismiss}>

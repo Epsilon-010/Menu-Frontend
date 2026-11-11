@@ -43,11 +43,11 @@ export function JoinTablePage() {
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6">
         <div className="space-y-2">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-950 text-white">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-brand-ink">
             <QrCodeIcon size={20} weight="bold" aria-hidden />
           </span>
-          <h1 className="text-2xl font-semibold tracking-tight text-balance text-zinc-950">Únete a tu mesa</h1>
-          <p className="text-sm text-pretty text-zinc-500">
+          <h1 className="text-2xl font-semibold tracking-tight text-balance text-ink">Únete a tu mesa</h1>
+          <p className="text-sm text-pretty text-muted">
             Pide desde tu celular. Todos en la mesa comparten el mismo pedido y ven lo que agregan los demás.
           </p>
         </div>

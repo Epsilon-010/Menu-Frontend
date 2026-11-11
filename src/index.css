@@ -12,6 +12,22 @@
   --animate-popover-in: popover-in 200ms var(--ease-smooth) both;
   --animate-overlay-in: overlay-in 200ms var(--ease-smooth) both;
 
+  /* Decorative loops of the landing and sign-in pages (floating cards, the cuisine ticker); only under motion-safe. */
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-float-slow: float 11s ease-in-out infinite;
+  --animate-ticker: ticker 32s linear infinite;
+
+  @keyframes float {
+    50% {
+      transform: translateY(-12px);
+    }
+  }
+  @keyframes ticker {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
   @keyframes popover-in {
     from {
       opacity: 0;
@@ -36,31 +52,34 @@
     }
   }
 
-  /* Semantic colors of the shared UI and the table menu. These defaults are the app's neutral look; the
+  /* Semantic colors of the shared UI and the table menu. These defaults are the app's warm look (cream, vermilion, orange); the
      menu sets them from the business's theme on its root (see features/theming/style.ts). */
-  --color-canvas: var(--color-zinc-50);
-  --color-surface: var(--color-white);
-  --color-ink: var(--color-zinc-950);
-  --color-ink-soft: var(--color-zinc-700);
-  --color-muted: var(--color-zinc-500);
-  --color-faint: var(--color-zinc-400);
-  --color-line: var(--color-zinc-200);
-  --color-line-strong: var(--color-zinc-300);
-  --color-subtle: var(--color-zinc-100);
-  --color-price: var(--color-zinc-950);
-  --color-brand: var(--color-zinc-950);
-  --color-brand-ink: var(--color-white);
-  --color-secondary: var(--color-zinc-950);
-  --color-accent: var(--color-amber-500);
-  --color-action: var(--color-zinc-950);
-  --color-action-ink: var(--color-white);
-  --color-action-hover: var(--color-zinc-800);
-  --color-badge: var(--color-zinc-100);
-  --color-badge-ink: var(--color-zinc-700);
-  --color-cart: var(--color-zinc-950);
-  --color-cart-ink: var(--color-white);
+  --color-canvas: #fff7ef;
+  --color-surface: #ffffff;
+  --color-ink: #23140d;
+  --color-ink-soft: #4d3a30;
+  --color-muted: #7a665b;
+  --color-faint: #ab988c;
+  --color-line: #f1dfcf;
+  --color-line-strong: #e3c8b1;
+  --color-subtle: #fbeadb;
+  --color-price: #23140d;
+  --color-brand: #d9381e;
+  --color-brand-ink: #ffffff;
+  --color-secondary: #23140d;
+  --color-accent: #ff8a1f;
+  --color-action: #d9381e;
+  --color-action-ink: #ffffff;
+  --color-action-hover: #bd2d16;
+  --color-badge: #ffe6d0;
+  --color-badge-ink: #9a3412;
+  --color-cart: #23140d;
+  --color-cart-ink: #ffffff;
   --color-danger: var(--color-red-700);
   --color-warning: var(--color-amber-800);
+  /* App chrome only (never set by a business theme): the sunny highlight and the fresh green of the brand. */
+  --color-sun: #ffc247;
+  --color-leaf: #2f9e5b;
 }
 
 @layer base {
@@ -69,7 +88,7 @@
   }
 
   body {
-    @apply bg-zinc-50 font-sans text-zinc-950 antialiased;
+    @apply bg-canvas font-sans text-ink antialiased;
   }
 
   h1,

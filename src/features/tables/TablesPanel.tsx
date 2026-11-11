@@ -130,7 +130,7 @@ export function TablesPanel() {
         title="Mesas"
         description="Cada tablet inicia sesión con el código de su mesa y un PIN. El PIN se muestra una sola vez; un nuevo PIN o desactivar la mesa cierra la sesión de su tablet de inmediato. Los comensales sin tablet entran desde su celular con el link del QR de la mesa mientras un mesero la tenga abierta."
       />
-      <p className="text-sm text-zinc-500">
+      <p className="text-sm text-muted">
         Por ahora, para imprimir un código QR, pega el link de la mesa en cualquier generador de códigos QR.
       </p>
 
@@ -167,12 +167,12 @@ export function TablesPanel() {
           </div>
           <dl className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl bg-white p-4">
-              <dt className="text-xs font-medium text-zinc-500">Código de la mesa</dt>
-              <dd className="font-mono text-2xl tracking-widest text-zinc-950">{credentials.code}</dd>
+              <dt className="text-xs font-medium text-muted">Código de la mesa</dt>
+              <dd className="font-mono text-2xl tracking-widest text-ink">{credentials.code}</dd>
             </div>
             <div className="rounded-xl bg-white p-4">
-              <dt className="text-xs font-medium text-zinc-500">PIN</dt>
-              <dd className="font-mono text-2xl tracking-widest text-zinc-950">{credentials.pin}</dd>
+              <dt className="text-xs font-medium text-muted">PIN</dt>
+              <dd className="font-mono text-2xl tracking-widest text-ink">{credentials.pin}</dd>
             </div>
           </dl>
           <Button variant="secondary" onClick={() => setCredentials(null)}>

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../../features/auth/useAuth.ts'
 import { AppShell, type NavItem } from '../../shared/ui/AppShell.tsx'
+import { AdminWelcome } from './AdminWelcome.tsx'
 
 const ADMIN_NAV: NavItem[] = [
   { to: '/admin', label: 'Menú', icon: <BowlFoodIcon size={16} aria-hidden />, end: true },
@@ -45,6 +46,7 @@ export function AdminPage() {
       // The design editor puts its sections, preview and options side by side.
       width={pathname === '/admin/design' ? 'max-w-7xl' : undefined}
     >
+      {pathname === '/admin' && <AdminWelcome name={user.full_name} business={tenant.name} />}
       <Outlet />
     </AppShell>
   )

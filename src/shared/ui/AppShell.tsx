@@ -34,6 +34,12 @@ function navLinkClass({ isActive }: { isActive: boolean }): string {
   return `inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold active:scale-[0.98] ${MOTION} ${state}`
 }
 
+/** Links of the colored side rail: white on the brand color, the current section raised on a white pill. */
+function railLinkClass({ isActive }: { isActive: boolean }): string {
+  const state = isActive ? 'bg-white text-brand shadow-md' : 'text-white/85 hover:translate-x-1 hover:bg-white/15 hover:text-white'
+  return `flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold active:scale-[0.98] ${MOTION} ${state}`
+}
+
 // Full class names per breakpoint, so Tailwind finds them in the source.
 const BAR_BREAKPOINTS = {
   // Nothing to navigate to (a table menu): the only action stays in the bar at every width.
@@ -122,16 +128,23 @@ export function AppShell({
       </a>
 
       {hasRail && (
-        <aside className="fixed inset-y-4 left-4 z-40 hidden w-60 flex-col gap-2 rounded-2xl border border-line bg-surface p-2 shadow-sm xl:flex">
-          <div className="flex min-w-0 items-center gap-3 p-2">
-            {brandMark}
-            {brandText}
+        <aside className="fixed inset-y-4 left-4 z-40 hidden w-60 flex-col gap-2 overflow-hidden rounded-3xl bg-linear-to-b from-brand to-action-hover p-3 text-white shadow-xl shadow-brand/25 xl:flex">
+          <div aria-hidden className="pointer-events-none absolute -top-16 -right-16 size-48 rounded-full border-[24px] border-white/10" />
+          <div className="relative flex min-w-0 items-center gap-3 p-2">
+            {logoUrl ? (
+              <img src={logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-xl bg-white object-contain" />
+            ) : (
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-brand">
+                <ForkKnifeIcon size={20} weight="bold" aria-hidden />
+              </span>
+            )}
+            <p className="truncate text-base font-semibold">{business}</p>
           </div>
-          <nav aria-label="Secciones" className="min-h-0 flex-1 overflow-y-auto">
+          <nav aria-label="Secciones" className="relative min-h-0 flex-1 overflow-y-auto">
             <ul className="space-y-1">
               {nav.map((item) => (
                 <li key={item.to}>
-                  <NavLink to={item.to} end={item.end} className={(link) => `${navLinkClass(link)} w-full`}>
+                  <NavLink to={item.to} end={item.end} className={railLinkClass}>
                     {item.icon}
                     {item.label}
                   </NavLink>
@@ -139,17 +152,25 @@ export function AppShell({
               ))}
             </ul>
           </nav>
-          {onSignOut && (
-            <button
-              type="button"
-              onClick={onSignOut}
-              disabled={signingOut}
-              className={`${buttonClass('ghost')} w-full justify-start`}
-            >
-              <SignOutIcon size={16} aria-hidden />
-              {signingOut ? 'Cerrando sesión…' : signOutLabel}
-            </button>
-          )}
+          <div className="relative space-y-3 rounded-2xl bg-linear-to-br from-accent to-sun p-3 text-ink shadow-lg">
+            <div className="flex min-w-0 items-center gap-3">
+              <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-sm font-semibold text-brand">
+                {identity.trim().charAt(0).toUpperCase()}
+              </span>
+              <p className="truncate text-sm font-semibold">{identity}</p>
+            </div>
+            {onSignOut && (
+              <button
+                type="button"
+                onClick={onSignOut}
+                disabled={signingOut}
+                className={`flex w-full items-center justify-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-ink hover:bg-white/80 active:scale-[0.98] disabled:opacity-50 ${MOTION}`}
+              >
+                <SignOutIcon size={16} aria-hidden />
+                {signingOut ? 'Cerrando sesión…' : signOutLabel}
+              </button>
+            )}
+          </div>
         </aside>
       )}
 

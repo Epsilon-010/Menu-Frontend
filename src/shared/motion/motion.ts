@@ -73,6 +73,8 @@ export function useSmoothScroll(): void {
     gsap.ticker.lagSmoothing(0)
     return () => {
       gsap.ticker.remove(tick)
+      // Back to GSAP's default, so pages without smooth scrolling keep their protection against long frames.
+      gsap.ticker.lagSmoothing(500, 33)
       lenis.destroy()
     }
   }, [])

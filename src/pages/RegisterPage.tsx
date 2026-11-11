@@ -109,9 +109,9 @@ export function RegisterPage() {
         <div className="space-y-2">
           <AuthLogo />
           <p className="text-xs font-medium text-muted">Paso {step === 'credentials' ? 1 : 2} de 2</p>
-          <h2 className="text-2xl font-semibold tracking-tight text-ink">
+          <h1 className="text-4xl font-semibold tracking-tight text-ink">
             {step === 'credentials' ? 'Crea tu negocio' : 'Ponle nombre a tu negocio'}
-          </h2>
+          </h1>
           <p className="text-sm text-muted">
             {step === 'credentials'
               ? 'Con este correo y esta contraseña inicias sesión como administrador.'

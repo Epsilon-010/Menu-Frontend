@@ -70,7 +70,7 @@ export function Hero() {
       </div>
 
       <div className="relative mx-auto grid max-w-6xl items-center gap-16 lg:grid-cols-2">
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <p data-enter className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-sm font-semibold text-brand shadow-xs">
             <span aria-hidden className="size-2 rounded-full bg-brand motion-safe:animate-pulse" />
             Menú digital para restaurantes
@@ -106,16 +106,16 @@ export function Hero() {
           </ul>
         </div>
 
-        <div ref={stage} data-enter className="relative flex justify-center py-8">
+        <div ref={stage} data-enter className="relative flex min-w-0 justify-center py-8">
           <div ref={mock} className="relative w-full max-w-sm">
             <MenuMock />
-            <p className="absolute -top-6 -left-4 flex items-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-semibold text-ink shadow-xl motion-safe:animate-float sm:-left-12">
+            <p className="absolute -top-6 left-0 flex items-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-semibold text-ink shadow-xl motion-safe:animate-float sm:-left-12">
               <span className="flex size-8 items-center justify-center rounded-lg bg-sun/30 text-warning">
                 <CookingPotIcon size={16} weight="fill" aria-hidden />
               </span>
               Cocina recibió la orden 24
             </p>
-            <p className="absolute -right-4 -bottom-6 flex items-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-semibold text-ink shadow-xl motion-safe:animate-float-slow sm:-right-10">
+            <p className="absolute right-0 -bottom-6 flex items-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-semibold text-ink shadow-xl motion-safe:animate-float-slow sm:-right-10">
               <span className="flex size-8 items-center justify-center rounded-lg bg-leaf/15 text-leaf">
                 <CheckCircleIcon size={16} weight="fill" aria-hidden />
               </span>

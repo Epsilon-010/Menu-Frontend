@@ -16,8 +16,9 @@ import {
   tableIdOf,
   withoutTable,
   type BillRequest,
+  type TableChoice,
 } from '../bills/logic.ts'
-import { TablesBoard, type TableFocus } from '../bills/TablesBoard.tsx'
+import { TablesBoard } from '../bills/TablesBoard.tsx'
 import { useStaffEvents } from '../kitchen/useStaffEvents.ts'
 import { useStaffQueue } from '../kitchen/useStaffQueue.ts'
 import { clockTime } from '../ordering/logic.ts'
@@ -46,7 +47,7 @@ export function ServiceBoard() {
   const [delivered, setDelivered] = useState<DeliveredNote[]>([])
   const [tab, setTab] = useState<ServiceTab>('deliveries')
   const [openTables, setOpenTables] = useState(0)
-  const [focus, setFocus] = useState<TableFocus | null>(null)
+  const [focus, setFocus] = useState<TableChoice | null>(null)
 
   const queue = useStaffQueue({
     load: fetchDeliveries,

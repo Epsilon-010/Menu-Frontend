@@ -104,7 +104,7 @@ export function LoginPage() {
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6">
         <div className="space-y-2">
           <AuthLogo />
-          <h2 className="text-4xl font-semibold tracking-tight text-ink">Iniciar sesión</h2>
+          <h1 className="text-4xl font-semibold tracking-tight text-ink">Iniciar sesión</h1>
           <p className="text-sm text-muted">{INTROS[mode]}</p>
         </div>
 

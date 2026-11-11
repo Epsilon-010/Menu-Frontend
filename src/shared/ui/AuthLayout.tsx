@@ -40,7 +40,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           </Link>
 
           <div className="relative space-y-8">
-            <p className="text-4xl font-semibold tracking-[0.3em] uppercase">Bienvenido</p>
+            <p aria-hidden className="text-4xl font-semibold tracking-[0.3em] uppercase">Bienvenido</p>
             <ul className="flex flex-col gap-4">
               {MOMENTS.map((moment) => (
                 <li key={moment.label} className={moment.place}>

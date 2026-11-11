@@ -22,7 +22,7 @@ export function ForcedPasswordScreen() {
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-2">
           <AuthLogo />
-          <h2 className="text-2xl font-semibold tracking-tight text-ink">Elige tu contraseña</h2>
+          <h1 className="text-4xl font-semibold tracking-tight text-ink">Elige tu contraseña</h1>
           <p className="text-sm text-muted">
             Iniciaste sesión con una contraseña temporal. Elige la tuya para empezar a usar el panel.
           </p>

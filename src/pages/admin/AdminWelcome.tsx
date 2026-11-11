@@ -38,7 +38,7 @@ export function AdminWelcome({ name, business }: { name: string; business: strin
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold text-ink">{shortcut.title}</span>
-                <span className="block truncate text-xs text-muted">{shortcut.body}</span>
+                <span className="block text-xs text-muted">{shortcut.body}</span>
               </span>
               <ArrowRightIcon size={16} aria-hidden className={`hidden text-faint group-hover:translate-x-1 group-hover:text-brand sm:block ${MOTION}`} />
             </Link>

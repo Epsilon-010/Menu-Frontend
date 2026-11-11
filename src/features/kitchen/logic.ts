@@ -104,3 +104,9 @@ const KITCHEN_TONES: Record<OrderItemStatus, StatusTone> = {
 export function staffItemTone(status: OrderItemStatus): StatusTone {
   return KITCHEN_TONES[status]
 }
+
+/** The frame of a kitchen or delivery ticket; a late one is outlined in red. */
+export function ticketClass(late: boolean): string {
+  const frame = 'flex flex-col gap-4 rounded-3xl border bg-surface p-4 shadow-sm shadow-brand/5 transition-shadow duration-300 ease-smooth hover:shadow-lg hover:shadow-brand/10'
+  return `${frame} ${late ? 'border-red-300 ring-2 ring-red-200' : 'border-transparent'}`
+}

@@ -18,7 +18,7 @@ export function LandingNav() {
     <header className="fixed inset-x-0 top-4 z-40 flex justify-center px-4">
       <nav
         aria-label="Principal"
-        className="flex items-center gap-2 rounded-2xl border border-line bg-surface/80 p-2 shadow-lg shadow-brand/10 backdrop-blur-md"
+        className="flex items-center gap-2 rounded-2xl border border-line bg-surface/80 p-2 whitespace-nowrap shadow-lg shadow-brand/10 backdrop-blur-md"
       >
         <Link to="/" aria-current="page" className="flex items-center gap-2 px-2 text-base font-semibold text-ink">
           <span className="flex size-8 items-center justify-center rounded-lg bg-linear-to-br from-brand to-accent text-white">
@@ -40,7 +40,7 @@ export function LandingNav() {
             </li>
           ))}
         </ul>
-        <Link to="/login" className={`rounded-lg px-3 py-2 text-sm font-semibold text-ink-soft hover:bg-subtle hover:text-ink ${MOTION}`}>
+        <Link to="/login" className={`hidden rounded-lg px-3 py-2 text-sm font-semibold text-ink-soft hover:bg-subtle hover:text-ink min-[26rem]:block ${MOTION}`}>
           Iniciar sesión
         </Link>
         <Link

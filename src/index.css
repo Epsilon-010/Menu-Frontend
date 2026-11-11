@@ -219,9 +219,9 @@
   text-transform: var(--type-button-transform, none);
 }
 
-/* Fields of the sign in and sign-up card: a single line under the text instead of a box. Unlayered on purpose,
+/* Text fields of the sign in and sign-up card: a single line under the text instead of a box. Unlayered on purpose,
    so it beats the shared control recipe without every form passing its own classes. */
-.auth-form input {
+.auth-form input:not([type='checkbox'], [type='radio']) {
   border-width: 0 0 2px;
   border-radius: 0;
   background-color: transparent;
@@ -229,7 +229,7 @@
   padding-inline: 0;
 }
 
-.auth-form input:focus {
+.auth-form input:not([type='checkbox'], [type='radio']):focus {
   border-color: var(--color-brand);
   outline: none;
   --tw-ring-shadow: 0 0 #0000;

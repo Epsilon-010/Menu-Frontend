@@ -22,7 +22,7 @@ import {
   type PaymentMethod,
   type TableOverview,
 } from './api.ts'
-import { nextTableChoice, tablesForWaiter } from './logic.ts'
+import { latestTableChoice, nextTableChoice, shownOpenTable, tablesForWaiter, type TableChoice } from './logic.ts'
 import { TableBillCard } from './TableBillCard.tsx'
 
 const REFRESH_MS = 10_000
@@ -35,12 +35,6 @@ function messageOf(error: unknown): string {
   return error instanceof BillError || error instanceof OrdersError
     ? error.message
     : 'Algo salió mal. Inténtalo de nuevo.'
-}
-
-/** A table chosen from outside the board (the "asks for the bill" banner) and its turn (`nextTableChoice`). */
-export interface TableFocus {
-  tableId: string
-  at: number
 }
 
 /** One open table in the list of the wide layout: who it is, how much it owes and whether it asked for the bill. */
@@ -112,7 +106,8 @@ function TableGroups({ tables, card, split, selectedId, onSelect }: TableGroupsP
     </section>
   )
 
-  if (!split || open.length === 0) {
+  const selected = shownOpenTable(open, selectedId)
+  if (!split || selected === null) {
     return (
       <div className="space-y-8">
         {open.length > 0 && <div className="space-y-4">{open.map(card)}</div>}
@@ -121,8 +116,6 @@ function TableGroups({ tables, card, split, selectedId, onSelect }: TableGroupsP
     )
   }
 
-  // A table that closed (or none chosen yet) falls back to the first one: the one waiting longest for its bill.
-  const selected = open.find((table) => table.table_id === selectedId) ?? open[0]
   return (
     <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       <div className="space-y-8">
@@ -146,15 +139,14 @@ interface TablesBoardProps {
   /** Receives every list that loads (for example to spot newly rejected dishes). */
   onLoaded?: (tables: TableOverview[]) => void
   /** The table to show on the wide layout, chosen outside the board; a later click on the list replaces it. */
-  focus?: TableFocus | null
+  focus?: TableChoice | null
 }
 
 /** Waiter view of every table: open it for its guests, follow its orders and take the payment. */
 export function TablesBoard({ refreshSignal = 0, onLoaded, focus = null }: TablesBoardProps = {}) {
   const split = useMediaQuery('(min-width: 80rem)')
-  const [picked, setPicked] = useState<TableFocus | null>(null)
-  // Whichever came last, the click on the list or the choice from outside.
-  const selectedId = (focus && (!picked || focus.at >= picked.at) ? focus : picked)?.tableId ?? null
+  const [picked, setPicked] = useState<TableChoice | null>(null)
+  const selectedId = latestTableChoice(focus, picked)
   const [list, setList] = useState<ListState>({ status: 'loading' })
   const [stale, setStale] = useState(false)
   const requests = useRef(0)

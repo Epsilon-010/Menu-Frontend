@@ -1,4 +1,4 @@
-import { KeyIcon } from '@phosphor-icons/react'
+import { KeyIcon, ShieldCheckIcon } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/useAuth.ts'
 import { Button } from '../../shared/ui/Button.tsx'
@@ -127,6 +127,7 @@ export function AdminsPanel() {
   return (
     <div className="space-y-8">
       <SectionHeader
+        icon={<ShieldCheckIcon size={24} weight="fill" aria-hidden />}
         title="Administradores"
         description="Los administradores gestionan todo el negocio. Agrega uno con nombre y email: recibes una contraseña temporal para entregársela. Desactivar a un administrador cierra su sesión en todos sus dispositivos de inmediato; no puedes desactivarte a ti mismo."
       />

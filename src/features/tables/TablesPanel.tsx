@@ -127,6 +127,7 @@ export function TablesPanel() {
   return (
     <div className="space-y-8">
       <SectionHeader
+        icon={<ChairIcon size={24} weight="fill" aria-hidden />}
         title="Mesas"
         description="Cada tablet inicia sesión con el código de su mesa y un PIN. El PIN se muestra una sola vez; un nuevo PIN o desactivar la mesa cierra la sesión de su tablet de inmediato. Los comensales sin tablet entran desde su celular con el link del QR de la mesa mientras un mesero la tenga abierta."
       />

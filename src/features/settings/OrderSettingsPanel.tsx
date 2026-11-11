@@ -1,3 +1,4 @@
+import { TimerIcon } from '@phosphor-icons/react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Button } from '../../shared/ui/Button.tsx'
 import { Field, TextInput } from '../../shared/ui/Field.tsx'
@@ -62,6 +63,7 @@ export function OrderSettingsPanel() {
   return (
     <div className="space-y-8">
       <SectionHeader
+        icon={<TimerIcon size={24} weight="fill" aria-hidden />}
         title="Órdenes"
         description="La cocina y los meseros ven cuánto ha esperado cada orden. Las órdenes que esperan más que esto se resaltan en sus pantallas."
       />

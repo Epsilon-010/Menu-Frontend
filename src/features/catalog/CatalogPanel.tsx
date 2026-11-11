@@ -123,6 +123,7 @@ export function CatalogPanel() {
 
   const header = (
     <SectionHeader
+      icon={<BowlFoodIcon size={24} weight="fill" aria-hidden />}
       title="Menú"
       description="Las mesas muestran las categorías y los productos en este orden. Los ocultos siguen aquí para ti, pero los comensales no los ven."
     />

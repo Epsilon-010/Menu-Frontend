@@ -56,7 +56,7 @@ export function AdminRow({ admin, isYou, onUpdate }: AdminRowProps) {
       ) : (
         <div className="flex flex-wrap items-center gap-4">
           <span
-            className={`flex h-10 w-10 items-center justify-center rounded-lg ${admin.is_active ? 'bg-subtle text-ink-soft' : 'bg-canvas text-line-strong'}`}
+            className={`flex h-10 w-10 items-center justify-center rounded-lg ${admin.is_active ? 'bg-leaf/15 text-leaf' : 'bg-canvas text-line-strong'}`}
           >
             <ShieldCheckIcon size={20} aria-hidden />
           </span>

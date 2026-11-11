@@ -61,7 +61,7 @@ export function StaffMemberRow({ member, onUpdate, onRegeneratePin }: StaffMembe
         </form>
       ) : (
         <div className="flex flex-wrap items-center gap-4">
-          <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${member.is_active ? 'bg-subtle text-ink-soft' : 'bg-canvas text-line-strong'}`}>
+          <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${member.is_active ? (member.role === 'kitchen' ? 'bg-accent/15 text-accent' : 'bg-brand/10 text-brand') : 'bg-canvas text-line-strong'}`}>
             <RoleIcon size={20} aria-hidden />
           </span>
           <div className="min-w-0 flex-1 space-y-1">

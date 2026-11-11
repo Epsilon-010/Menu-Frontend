@@ -92,7 +92,7 @@ export function TableRow({ table, onUpdate, onRegeneratePin, onRegenerateQr }: T
         </form>
       ) : (
         <div className="flex flex-wrap items-center gap-4">
-          <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${table.is_active ? 'bg-subtle text-ink-soft' : 'bg-canvas text-line-strong'}`}>
+          <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${table.is_active ? 'bg-brand/10 text-brand' : 'bg-canvas text-line-strong'}`}>
             <ChairIcon size={20} aria-hidden />
           </span>
           <div className="min-w-0 flex-1 space-y-1">

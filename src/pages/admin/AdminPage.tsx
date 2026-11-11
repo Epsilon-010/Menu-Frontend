@@ -47,7 +47,10 @@ export function AdminPage() {
       width={pathname === '/admin/design' ? 'max-w-7xl' : undefined}
     >
       {pathname === '/admin' && <AdminWelcome name={user.full_name} business={tenant.name} />}
-      <Outlet />
+      {/* Keyed by the path: each section plays its entrance when it opens. */}
+      <div key={pathname} className="motion-safe:animate-card-rise">
+        <Outlet />
+      </div>
     </AppShell>
   )
 }

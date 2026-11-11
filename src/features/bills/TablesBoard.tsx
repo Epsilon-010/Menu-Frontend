@@ -239,6 +239,7 @@ export function TablesBoard({ refreshSignal = 0, onLoaded, focus = null }: Table
   return (
     <div className="space-y-8">
       <SectionHeader
+        icon={<ChairIcon size={24} weight="fill" aria-hidden />}
         title="Mesas"
         description="Una mesa se abre sola cuando alguien escanea su QR. Al registrar el pago se cierra la cuenta y la sesión de sus comensales."
       />

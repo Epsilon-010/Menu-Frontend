@@ -68,6 +68,7 @@ export function KitchenBoard() {
   return (
     <div className="space-y-8">
       <SectionHeader
+        icon={<CookingPotIcon size={24} weight="fill" aria-hidden />}
         title="Cocina"
         description={`Órdenes por preparar, de la más antigua a la más reciente. Se resaltan las que esperan más de ${lateMinutes} min.`}
         action={<SoundToggle enabled={sound.enabled} onToggle={sound.toggle} announces="órdenes nuevas" />}

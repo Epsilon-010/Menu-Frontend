@@ -107,6 +107,7 @@ export function ModifiersPanel() {
   const header = (
     <div className="space-y-4">
       <SectionHeader
+        icon={<SlidersHorizontalIcon size={24} weight="fill" aria-hidden />}
         title="Opciones y extras"
         description="Lo que los comensales eligen en un producto, como el tamaño o los extras. Asigna un grupo a todos los productos que quieras en Menú; al editarlo aquí cambia en todos."
         action={list.status === 'loaded' ? newGroupButton : undefined}

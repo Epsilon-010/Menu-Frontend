@@ -43,7 +43,7 @@ export function Skeleton({ className = '' }: { className?: string }) {
 /** A list of row skeletons inside a card, for panels that load a list. */
 export function ListSkeleton({ rows = 3, label }: { rows?: number; label: string }) {
   return (
-    <div role="status" aria-label={label} className="space-y-2 rounded-2xl border border-line bg-surface p-2">
+    <div role="status" aria-label={label} className="space-y-2 rounded-3xl border border-line/60 bg-surface p-2 shadow-sm shadow-brand/5">
       {Array.from({ length: rows }, (_, index) => (
         <div key={index} className="flex items-center gap-4 p-3">
           <Skeleton className="h-10 w-10" />
@@ -68,8 +68,8 @@ interface EmptyStateProps {
 /** A composed starting point instead of a blank panel. */
 export function EmptyState({ icon, title, children, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-line-strong bg-surface px-6 py-12 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-subtle text-ink-soft">{icon}</div>
+    <div className="flex flex-col items-center gap-4 rounded-3xl border border-dashed border-line-strong bg-surface px-6 py-12 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-brand">{icon}</div>
       <div className="max-w-sm space-y-2">
         <h3 className="font-semibold text-ink">{title}</h3>
         <p className="text-sm text-muted">{children}</p>

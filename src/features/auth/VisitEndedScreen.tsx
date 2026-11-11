@@ -18,12 +18,12 @@ export function VisitEndedScreen({ reason }: { reason: VisitEndReason }) {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-16">
       <div className="flex max-w-sm flex-col items-center gap-6 text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-950 text-white">
+        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand text-brand-ink">
           <QrCodeIcon size={24} weight="bold" aria-hidden />
         </span>
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight text-balance text-zinc-950">{title}</h1>
-          <p className="text-sm text-pretty text-zinc-500">{body}</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-balance text-ink">{title}</h1>
+          <p className="text-sm text-pretty text-muted">{body}</p>
         </div>
       </div>
     </main>

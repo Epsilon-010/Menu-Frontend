@@ -40,8 +40,8 @@ export function NewAdminForm({ onCreate }: NewAdminFormProps) {
     <Card className="p-6">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-1">
-          <h2 className="font-semibold text-zinc-950">Agregar un administrador</h2>
-          <p className="text-sm text-zinc-500">
+          <h2 className="font-semibold text-ink">Agregar un administrador</h2>
+          <p className="text-sm text-muted">
             Recibes una contraseña temporal para entregársela. Inicia sesión con su email y debe elegir su propia contraseña.
           </p>
         </div>

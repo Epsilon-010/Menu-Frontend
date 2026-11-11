@@ -57,7 +57,7 @@ export function SendConfirmation({ liveCart, onSend, onSent, onClose }: SendConf
   const hasDishes = reviewed.lines.some((line) => line.available)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/40 p-4 backdrop-blur-sm sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-4 backdrop-blur-sm sm:items-center">
       <div
         role="dialog"
         aria-modal="true"

@@ -170,6 +170,7 @@ export function StatsPanel() {
   return (
     <div className="space-y-8">
       <SectionHeader
+        icon={<ChartBarIcon size={24} weight="fill" aria-hidden />}
         title="Estadísticas"
         description="Lo que cobraste, lo que sigue en cuentas abiertas, lo que más se vende y cuánto tardan las órdenes."
       />

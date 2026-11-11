@@ -18,6 +18,13 @@ interface AppShellProps {
   /** Who or what is signed in on this device. */
   identity: string
   nav?: NavItem[]
+  /**
+   * A slim rail of icons on wide screens instead of the top bar (the waiter and kitchen screens): each item is an
+   * icon over its label. The top bar and its menu still serve narrow screens.
+   */
+  iconRail?: NavItem[]
+  /** The person signed in, for the icon rail (which has no room for the whole `identity`). */
+  person?: string
   onSignOut?: () => void
   signingOut?: boolean
   /** Text of the sign out button ("Leave" for a guest at a table). */
@@ -32,6 +39,18 @@ interface AppShellProps {
 function navLinkClass({ isActive }: { isActive: boolean }): string {
   const state = isActive ? 'bg-action text-action-ink' : 'text-ink-soft hover:bg-subtle hover:text-ink'
   return `inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold active:scale-[0.98] ${MOTION} ${state}`
+}
+
+/** Links of the colored side rail: white on the brand color, the current section raised on a white pill. */
+function railLinkClass({ isActive }: { isActive: boolean }): string {
+  const state = isActive ? 'bg-white text-brand shadow-md' : 'text-white/85 hover:translate-x-1 hover:bg-white/15 hover:text-white'
+  return `flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold active:scale-[0.98] ${MOTION} ${state}`
+}
+
+/** Items of the slim icon rail: the current screen on a tinted tile, like a pressed key. */
+function iconRailLinkClass({ isActive }: { isActive: boolean }): string {
+  const state = isActive ? 'bg-brand/10 text-brand' : 'text-muted hover:bg-subtle hover:text-ink'
+  return `flex w-full flex-col items-center gap-1 rounded-2xl px-1 py-3 text-xs font-semibold active:scale-[0.98] ${MOTION} ${state}`
 }
 
 // Full class names per breakpoint, so Tailwind finds them in the source.
@@ -69,6 +88,8 @@ export function AppShell({
   logoUrl,
   identity,
   nav = [],
+  iconRail,
+  person,
   onSignOut,
   signingOut = false,
   signOutLabel = 'Cerrar sesión',
@@ -122,16 +143,23 @@ export function AppShell({
       </a>
 
       {hasRail && (
-        <aside className="fixed inset-y-4 left-4 z-40 hidden w-60 flex-col gap-2 rounded-2xl border border-line bg-surface p-2 shadow-sm xl:flex">
-          <div className="flex min-w-0 items-center gap-3 p-2">
-            {brandMark}
-            {brandText}
+        <aside className="fixed inset-y-4 left-4 z-40 hidden w-60 flex-col gap-2 overflow-hidden rounded-3xl bg-linear-to-b from-brand to-action-hover p-3 text-white shadow-xl shadow-brand/25 xl:flex">
+          <div aria-hidden className="pointer-events-none absolute -top-16 -right-16 size-48 rounded-full border-[24px] border-white/10" />
+          <div className="relative flex min-w-0 items-center gap-3 p-2">
+            {logoUrl ? (
+              <img src={logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-xl bg-white object-contain" />
+            ) : (
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-brand">
+                <ForkKnifeIcon size={20} weight="bold" aria-hidden />
+              </span>
+            )}
+            <p className="truncate text-base font-semibold">{business}</p>
           </div>
-          <nav aria-label="Secciones" className="min-h-0 flex-1 overflow-y-auto">
+          <nav aria-label="Secciones" className="relative min-h-0 flex-1 overflow-y-auto">
             <ul className="space-y-1">
               {nav.map((item) => (
                 <li key={item.to}>
-                  <NavLink to={item.to} end={item.end} className={(link) => `${navLinkClass(link)} w-full`}>
+                  <NavLink to={item.to} end={item.end} className={railLinkClass}>
                     {item.icon}
                     {item.label}
                   </NavLink>
@@ -139,23 +167,72 @@ export function AppShell({
               ))}
             </ul>
           </nav>
-          {onSignOut && (
-            <button
-              type="button"
-              onClick={onSignOut}
-              disabled={signingOut}
-              className={`${buttonClass('ghost')} w-full justify-start`}
-            >
-              <SignOutIcon size={16} aria-hidden />
-              {signingOut ? 'Cerrando sesión…' : signOutLabel}
-            </button>
+          <div className="relative space-y-3 rounded-2xl bg-linear-to-br from-accent to-sun p-3 text-ink shadow-lg">
+            <div className="flex min-w-0 items-center gap-3">
+              <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-sm font-semibold text-brand">
+                {identity.trim().charAt(0).toUpperCase()}
+              </span>
+              <p className="truncate text-sm font-semibold">{identity}</p>
+            </div>
+            {onSignOut && (
+              <button
+                type="button"
+                onClick={onSignOut}
+                disabled={signingOut}
+                className={`flex w-full items-center justify-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-ink hover:bg-white/80 active:scale-[0.98] disabled:opacity-50 ${MOTION}`}
+              >
+                <SignOutIcon size={16} aria-hidden />
+                {signingOut ? 'Cerrando sesión…' : signOutLabel}
+              </button>
+            )}
+          </div>
+        </aside>
+      )}
+
+      {iconRail && (
+        <aside className="fixed inset-y-4 left-4 z-40 hidden w-24 flex-col items-center gap-4 rounded-3xl border border-line bg-surface p-3 shadow-lg shadow-brand/5 lg:flex">
+          {logoUrl ? (
+            <img src={logoUrl} alt="" className="size-12 shrink-0 rounded-2xl object-contain" />
+          ) : (
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-brand to-accent text-white">
+              <ForkKnifeIcon size={24} weight="bold" aria-hidden />
+            </span>
           )}
+          <nav aria-label="Pantallas" className="min-h-0 w-full flex-1 overflow-y-auto">
+            <ul className="space-y-2">
+              {iconRail.map((item) => (
+                <li key={item.to}>
+                  <NavLink to={item.to} end={item.end} className={iconRailLinkClass}>
+                    {item.icon}
+                    {item.label}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <div className="flex w-full flex-col items-center gap-2">
+            <span aria-hidden className="flex size-10 items-center justify-center rounded-full bg-linear-to-br from-accent to-sun text-sm font-semibold text-ink">
+              {(person ?? identity).trim().charAt(0).toUpperCase()}
+            </span>
+            <p className="w-full truncate text-center text-xs text-muted">{person ?? identity}</p>
+            {onSignOut && (
+              <button
+                type="button"
+                onClick={onSignOut}
+                disabled={signingOut}
+                className={`flex w-full flex-col items-center gap-1 rounded-2xl px-1 py-2 text-xs font-semibold text-muted hover:bg-subtle hover:text-ink active:scale-[0.98] disabled:opacity-50 ${MOTION}`}
+              >
+                <SignOutIcon size={20} aria-hidden />
+                {signingOut ? 'Saliendo…' : 'Salir'}
+              </button>
+            )}
+          </div>
         </aside>
       )}
 
       {/* In the page flow: the bar takes its own row, so it never sits on top of the content below it. */}
       <header
-        className={`${fixedBar ? 'sticky top-0' : 'relative'} z-40 border-b border-line bg-surface/90 backdrop-blur-md ${hasRail ? 'xl:hidden' : ''}`}
+        className={`${fixedBar ? 'sticky top-0' : 'relative'} z-40 border-b border-line bg-surface/90 backdrop-blur-md ${hasRail ? 'xl:hidden' : ''} ${iconRail ? 'lg:hidden' : ''}`}
       >
         <nav aria-label="Principal" className={`mx-auto flex h-16 ${width} items-center gap-4 px-4 sm:px-6`}>
           <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -254,7 +331,7 @@ export function AppShell({
         </div>
       )}
 
-      <div className={hasRail ? 'xl:pl-64' : undefined}>
+      <div className={hasRail ? 'xl:pl-64' : iconRail ? 'lg:pl-28' : undefined}>
         <main id="main" className={`mx-auto ${width} px-4 pt-8 pb-16 sm:px-6`}>
           {children}
         </main>

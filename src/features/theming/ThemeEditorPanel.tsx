@@ -391,6 +391,7 @@ export function ThemeEditorPanel() {
   return (
     <div className="space-y-4">
       <SectionHeader
+        icon={<PaletteIcon size={24} weight="fill" aria-hidden />}
         title="Diseño"
         description={<span role="status" className={dirty ? 'font-semibold text-warning' : undefined}>{statusText(saved, dirty)}</span>}
         action={

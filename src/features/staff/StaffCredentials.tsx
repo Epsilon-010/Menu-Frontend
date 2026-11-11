@@ -25,12 +25,12 @@ export function StaffCredentials({ member, onDismiss }: StaffCredentialsProps) {
       </div>
       <dl className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl bg-white p-4">
-          <dt className="text-xs font-medium text-zinc-500">Código</dt>
-          <dd className="font-mono text-2xl tracking-widest text-zinc-950">{normalizeStaffCode(member.code)}</dd>
+          <dt className="text-xs font-medium text-muted">Código</dt>
+          <dd className="font-mono text-2xl tracking-widest text-ink">{normalizeStaffCode(member.code)}</dd>
         </div>
         <div className="rounded-xl bg-white p-4">
-          <dt className="text-xs font-medium text-zinc-500">PIN</dt>
-          <dd className="font-mono text-2xl tracking-widest text-zinc-950">{member.pin}</dd>
+          <dt className="text-xs font-medium text-muted">PIN</dt>
+          <dd className="font-mono text-2xl tracking-widest text-ink">{member.pin}</dd>
         </div>
       </dl>
       <Button variant="secondary" onClick={onDismiss}>

@@ -29,7 +29,7 @@ interface Errors {
   form?: string
 }
 
-const LINK = 'font-medium text-zinc-950 underline underline-offset-4 hover:text-zinc-600'
+const LINK = 'font-semibold text-brand underline underline-offset-4 hover:text-action-hover'
 
 /** Self sign-up of a business: email and password, then the business name, then the admin panel. */
 export function RegisterPage() {
@@ -108,11 +108,11 @@ export function RegisterPage() {
       <form onSubmit={handleSubmit} noValidate className="w-full max-w-sm space-y-6">
         <div className="space-y-2">
           <AuthLogo />
-          <p className="text-xs font-medium text-zinc-500">Paso {step === 'credentials' ? 1 : 2} de 2</p>
-          <h2 className="text-2xl font-semibold tracking-tight text-zinc-950">
+          <p className="text-xs font-medium text-muted">Paso {step === 'credentials' ? 1 : 2} de 2</p>
+          <h1 className="text-4xl font-semibold tracking-tight text-ink">
             {step === 'credentials' ? 'Crea tu negocio' : 'Ponle nombre a tu negocio'}
-          </h2>
-          <p className="text-sm text-zinc-500">
+          </h1>
+          <p className="text-sm text-muted">
             {step === 'credentials'
               ? 'Con este correo y esta contraseña inicias sesión como administrador.'
               : 'Los comensales ven este nombre en el menú. Justo después puedes agregar mesas, personal y platillos.'}
@@ -194,7 +194,7 @@ export function RegisterPage() {
           )}
         </div>
 
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-muted">
           ¿Ya tienes una cuenta?{' '}
           <Link to="/login" className={LINK}>
             Inicia sesión

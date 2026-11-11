@@ -48,7 +48,7 @@ interface ModeTabProps {
 }
 
 function ModeTab({ selected, onSelect, icon, children }: ModeTabProps) {
-  const state = selected ? 'bg-white text-zinc-950 shadow-sm' : 'text-zinc-500 hover:text-zinc-950'
+  const state = selected ? 'bg-brand text-brand-ink shadow-md shadow-brand/30' : 'text-muted hover:bg-surface hover:text-ink'
   return (
     <button
       type="button"
@@ -104,11 +104,11 @@ export function LoginPage() {
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6">
         <div className="space-y-2">
           <AuthLogo />
-          <h2 className="text-2xl font-semibold tracking-tight text-zinc-950">Iniciar sesión</h2>
-          <p className="text-sm text-zinc-500">{INTROS[mode]}</p>
+          <h1 className="text-4xl font-semibold tracking-tight text-ink">Iniciar sesión</h1>
+          <p className="text-sm text-muted">{INTROS[mode]}</p>
         </div>
 
-        <div role="tablist" aria-label="Iniciar sesión como" className="flex gap-1 rounded-xl bg-zinc-100 p-1">
+        <div role="tablist" aria-label="Iniciar sesión como" className="flex gap-1 rounded-xl bg-subtle p-1">
           <ModeTab
             selected={mode === 'admin'}
             onSelect={() => switchMode('admin')}
@@ -229,14 +229,14 @@ export function LoginPage() {
         <button
           type="submit"
           disabled={submitting || state.status === 'loading'}
-          className={`w-full ${buttonClass('primary', 'md')}`}
+          className={`w-full rounded-xl py-3 shadow-lg shadow-brand/30 ${buttonClass('primary', 'md')}`}
         >
           {submitting ? 'Iniciando sesión…' : 'Iniciar sesión'}
         </button>
 
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-muted">
           ¿Eres nuevo?{' '}
-          <Link to="/register" className="font-medium text-zinc-950 underline underline-offset-4 hover:text-zinc-600">
+          <Link to="/register" className="font-semibold text-brand underline underline-offset-4 hover:text-action-hover">
             Crea tu negocio
           </Link>
         </p>

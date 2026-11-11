@@ -1,4 +1,4 @@
-import { KeyIcon } from '@phosphor-icons/react'
+import { KeyIcon, ShieldCheckIcon } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/useAuth.ts'
 import { Button } from '../../shared/ui/Button.tsx'
@@ -50,12 +50,12 @@ function TemporaryPassword({ admin, onDismiss }: { admin: AdminWithTemporaryPass
       </div>
       <dl className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl bg-white p-4">
-          <dt className="text-xs font-medium text-zinc-500">Email</dt>
-          <dd className="truncate text-lg text-zinc-950">{admin.email}</dd>
+          <dt className="text-xs font-medium text-muted">Email</dt>
+          <dd className="truncate text-lg text-ink">{admin.email}</dd>
         </div>
         <div className="rounded-xl bg-white p-4">
-          <dt className="text-xs font-medium text-zinc-500">Contraseña temporal</dt>
-          <dd className="font-mono text-2xl tracking-widest text-zinc-950">{admin.temporary_password}</dd>
+          <dt className="text-xs font-medium text-muted">Contraseña temporal</dt>
+          <dd className="font-mono text-2xl tracking-widest text-ink">{admin.temporary_password}</dd>
         </div>
       </dl>
       <Button variant="secondary" onClick={onDismiss}>
@@ -127,6 +127,7 @@ export function AdminsPanel() {
   return (
     <div className="space-y-8">
       <SectionHeader
+        icon={<ShieldCheckIcon size={24} weight="fill" aria-hidden />}
         title="Administradores"
         description="Los administradores gestionan todo el negocio. Agrega uno con nombre y email: recibes una contraseña temporal para entregársela. Desactivar a un administrador cierra su sesión en todos sus dispositivos de inmediato; no puedes desactivarte a ti mismo."
       />

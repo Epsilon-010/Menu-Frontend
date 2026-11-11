@@ -1,6 +1,5 @@
 import { CheckCircleIcon, CheckIcon } from '@phosphor-icons/react'
 import type { ReactNode } from 'react'
-import { cn } from '../../lib/utils.ts'
 import { Button } from '../../shared/ui/Button.tsx'
 import { ErrorText } from '../../shared/ui/Feedback.tsx'
 import { useRowAction } from '../../shared/ui/useRowAction.ts'
@@ -9,6 +8,7 @@ import { OrderTicketHeader } from '../kitchen/OrderTicketHeader.tsx'
 import { StatusBadge } from '../kitchen/StatusBadge.tsx'
 import { cancellationNote } from '../ordering/logic.ts'
 import { modifierSummary } from '../ordering/modifiers.ts'
+import { ticketClass } from '../kitchen/logic.ts'
 import { deliveryCounter, deliveryProgress, splitDelivery, visibleSections, type DeliverySection, type DeliveryView } from './logic.ts'
 
 interface DeliveryOrderCardProps {
@@ -58,10 +58,7 @@ export function DeliveryOrderCard({ order, now, late, view, onDeliver }: Deliver
     <article
       aria-busy={busy}
       aria-label={deliveryCounter(order)}
-      className={cn(
-        'flex flex-col gap-4 rounded-2xl border bg-surface p-4 shadow-xs',
-        late ? 'border-red-300 ring-2 ring-red-200' : 'border-line',
-      )}
+      className={ticketClass(late)}
     >
       <OrderTicketHeader
         order={order}

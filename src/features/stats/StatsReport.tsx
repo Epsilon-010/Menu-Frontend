@@ -1,3 +1,4 @@
+import { HourglassMediumIcon, MoneyIcon, ReceiptIcon, TimerIcon } from '@phosphor-icons/react'
 import type { ReactNode } from 'react'
 import { Card } from '../../shared/ui/Section.tsx'
 import { formatMoney } from '../catalog/price.ts'
@@ -7,12 +8,40 @@ import { SalesChart } from './SalesChart.tsx'
 
 const METHOD_LABELS = { cash: 'Efectivo', card: 'Tarjeta', other: 'Otro' } as const
 
-function Tile({ label, value, detail }: { label: string; value: string; detail?: string }) {
+type TileTone = 'brand' | 'accent' | 'sun' | 'leaf' | 'plain'
+
+// Full class names per tone, so Tailwind finds them in the source.
+const TILE_ICON: Record<TileTone, string> = {
+  brand: 'bg-white/20 text-white',
+  accent: 'bg-accent/15 text-accent',
+  sun: 'bg-sun/30 text-warning',
+  leaf: 'bg-leaf/15 text-leaf',
+  plain: 'bg-subtle text-ink-soft',
+}
+
+interface TileProps {
+  label: string
+  value: string
+  detail?: string
+  icon?: ReactNode
+  /** `brand` fills the whole tile (the headline figure); the others only tint the icon. */
+  tone?: TileTone
+}
+
+function Tile({ label, value, detail, icon, tone = 'plain' }: TileProps) {
+  const filled = tone === 'brand'
   return (
-    <Card className="space-y-1 p-4">
-      <p className="text-sm text-muted">{label}</p>
-      <p className="text-2xl font-semibold tracking-tight text-ink tabular-nums">{value}</p>
-      {detail && <p className="text-xs text-muted">{detail}</p>}
+    <Card
+      className={`space-y-1 p-4 transition duration-300 ease-smooth hover:-translate-y-1 hover:shadow-lg hover:shadow-brand/10 ${
+        filled ? 'border-transparent bg-linear-to-br from-brand to-accent' : ''
+      }`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <p className={`text-sm ${filled ? 'text-white/90' : 'text-muted'}`}>{label}</p>
+        {icon && <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${TILE_ICON[tone]}`}>{icon}</span>}
+      </div>
+      <p className={`text-3xl font-semibold tracking-tight tabular-nums ${filled ? 'text-white' : 'text-ink'}`}>{value}</p>
+      {detail && <p className={`text-xs ${filled ? 'text-white/90' : 'text-muted'}`}>{detail}</p>}
     </Card>
   )
 }
@@ -51,7 +80,7 @@ function Table<Row>({ rows, columns, rowKey, empty }: { rows: Row[]; columns: Co
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={rowKey(row)} className="border-b border-line last:border-0">
+            <tr key={rowKey(row)} className="border-b border-line transition-colors duration-300 ease-smooth last:border-0 hover:bg-subtle/60">
               {columns.map((column) => (
                 <td key={column.header} className={`py-2 pr-4 text-ink ${column.numeric ? 'text-right whitespace-nowrap tabular-nums' : ''}`}>
                   {column.cell(row)}
@@ -94,14 +123,16 @@ export function StatsReport({ stats }: { stats: Statistics }) {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Tile label="Cobrado" value={formatMoney(totals.collected_cents)} detail={plural(totals.paid_bills, 'cuenta pagada', 'cuentas pagadas')} />
-        <Tile label="Ticket promedio" value={formatMoney(totals.average_ticket_cents)} detail="Cobrado por cuenta pagada" />
+        <Tile tone="brand" icon={<MoneyIcon size={20} weight="fill" aria-hidden />} label="Cobrado" value={formatMoney(totals.collected_cents)} detail={plural(totals.paid_bills, 'cuenta pagada', 'cuentas pagadas')} />
+        <Tile tone="accent" icon={<ReceiptIcon size={20} weight="fill" aria-hidden />} label="Ticket promedio" value={formatMoney(totals.average_ticket_cents)} detail="Cobrado por cuenta pagada" />
         <Tile
+          tone="sun"
+          icon={<HourglassMediumIcon size={20} weight="fill" aria-hidden />}
           label="Pedido, aún sin cobrar"
           value={formatMoney(totals.pending_cents)}
           detail={`${plural(totals.pending_orders, 'orden', 'órdenes')} en cuentas abiertas`}
         />
-        <Tile label="Tiempo total de la orden" value={formatDuration(times.order.median_seconds)} detail={times.order.count === 0 ? 'No hay órdenes completadas' : `Mediana de ${plural(times.order.count, 'orden completada', 'órdenes completadas')}`} />
+        <Tile tone="leaf" icon={<TimerIcon size={20} weight="fill" aria-hidden />} label="Tiempo total de la orden" value={formatDuration(times.order.median_seconds)} detail={times.order.count === 0 ? 'No hay órdenes completadas' : `Mediana de ${plural(times.order.count, 'orden completada', 'órdenes completadas')}`} />
       </div>
 
       <Block title="Ventas por día" description="Lo cobrado cuenta en el día del pago; lo aún sin cobrar, en el día en que se envió la orden.">

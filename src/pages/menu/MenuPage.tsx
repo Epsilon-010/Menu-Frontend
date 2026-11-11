@@ -154,7 +154,7 @@ export function MenuPage() {
       fixedBar={layout.sticky_header}
       width={menuWidthClass(layout, categoryIds)}
     >
-      <div className={`grid gap-8 pb-24 ${placement.grid}`}>
+      <div className={`menu-motion grid gap-8 pb-24 ${placement.grid}`}>
         <div className={`min-w-0 space-y-12 ${placement.main}`}>
           <MenuSections
             sections={layout.sections}
@@ -216,7 +216,12 @@ export function MenuPage() {
           <span className="flex items-center gap-2 text-base font-semibold">
             <ShoppingBagIcon size={20} aria-hidden />
             Pedido de la mesa
-            {count > 0 && <span className="rounded-md bg-badge px-2 text-sm text-badge-ink tabular-nums">{count}</span>}
+            {/* Keyed by the count: the badge bumps each time a dish is added or removed. */}
+            {count > 0 && (
+              <span key={count} className="rounded-md bg-badge px-2 text-sm text-badge-ink tabular-nums motion-safe:animate-pop">
+                {count}
+              </span>
+            )}
           </span>
           {barTotal === null ? (
             <span role="status" aria-label="Cargando el total" className="h-6 w-16 animate-pulse rounded-lg bg-cart-ink/30" />
@@ -236,7 +241,7 @@ export function MenuPage() {
           sheetOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
       >
-        <div className="mx-auto max-w-lg space-y-4">
+        <div className={`mx-auto max-w-lg space-y-4 transition-transform duration-500 ease-smooth ${sheetOpen ? 'translate-y-0' : 'translate-y-8'}`}>
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-xl font-semibold tracking-tight text-ink">Pedido de la mesa</h2>
             <IconButton label="Cerrar el pedido" icon={<XIcon size={20} />} onClick={() => setSheetOpen(false)} />
@@ -267,7 +272,7 @@ export function MenuPage() {
         <div className={`pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center px-4 ${placement.notice}`}>
           <p
             role="status"
-            className="flex items-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-semibold text-white shadow-lg"
+            className="flex items-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-semibold text-white shadow-lg motion-safe:animate-toast-in"
           >
             <CheckCircleIcon size={16} aria-hidden />
             {notice}

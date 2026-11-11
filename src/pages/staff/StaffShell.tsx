@@ -7,11 +7,13 @@ import { AppShell, type NavItem } from '../../shared/ui/AppShell.tsx'
 interface StaffShellProps {
   title: string
   nav?: NavItem[]
+  /** The screens on the icon rail of wide displays; staff who only have this screen still see where they are. */
+  rail: NavItem[]
   children: ReactNode
 }
 
 /** Layout of the waiter and kitchen screens: business, who is signed in, optional navigation and sign out. */
-export function StaffShell({ title, nav, children }: StaffShellProps) {
+export function StaffShell({ title, nav, rail, children }: StaffShellProps) {
   const { state, signOut } = useAuth()
   const navigate = useNavigate()
   const [signingOut, setSigningOut] = useState(false)
@@ -31,6 +33,8 @@ export function StaffShell({ title, nav, children }: StaffShellProps) {
       business={tenant.name}
       identity={`${title} · ${user.full_name}`}
       nav={nav}
+      iconRail={rail}
+      person={user.full_name}
       onSignOut={() => void handleSignOut()}
       signingOut={signingOut}
       // Tickets and tables sit side by side on a wide screen.

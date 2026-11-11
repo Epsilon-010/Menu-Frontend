@@ -4,16 +4,19 @@ import { Badge } from '../../components/ui/badge.tsx'
 import { Button } from '../../components/ui/button.tsx'
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group.tsx'
 import { IconButton } from '../../shared/ui/Button.tsx'
+import { PILL, PILL_GROUP } from '../../shared/ui/pills.ts'
 import { useNow } from '../../shared/ui/useNow.ts'
 import { useSoundAlert } from '../../shared/sound/useSoundAlert.ts'
 import type { TableOverview } from '../bills/api.ts'
 import {
   billRequests,
   newBillRequests,
+  nextTableChoice,
   tableCardId,
   tableIdOf,
   withoutTable,
   type BillRequest,
+  type TableChoice,
 } from '../bills/logic.ts'
 import { TablesBoard } from '../bills/TablesBoard.tsx'
 import { useStaffEvents } from '../kitchen/useStaffEvents.ts'
@@ -44,6 +47,7 @@ export function ServiceBoard() {
   const [delivered, setDelivered] = useState<DeliveredNote[]>([])
   const [tab, setTab] = useState<ServiceTab>('deliveries')
   const [openTables, setOpenTables] = useState(0)
+  const [focus, setFocus] = useState<TableChoice | null>(null)
 
   const queue = useStaffQueue({
     load: fetchDeliveries,
@@ -84,6 +88,8 @@ export function ServiceBoard() {
 
   function goToTable(tableId: string) {
     setTab('tables')
+    // On a wide screen only the chosen table's bill is drawn: choose it before looking for its card.
+    setFocus({ tableId, at: nextTableChoice() })
     // The tables view may have been hidden until now: wait for it to be laid out before scrolling to the card.
     window.requestAnimationFrame(() => {
       const card = document.getElementById(tableCardId(tableId))
@@ -99,7 +105,7 @@ export function ServiceBoard() {
       {requests.length > 0 && (
         <div
           role="alert"
-          className="sticky top-20 z-10 space-y-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 shadow-md"
+          className="sticky top-20 z-10 space-y-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 shadow-md lg:top-4"
         >
           <p className="flex items-center gap-2 font-semibold text-amber-900">
             <BellRingingIcon size={18} aria-hidden />
@@ -144,17 +150,17 @@ export function ServiceBoard() {
       <ToggleGroup
         type="single"
         width="full"
-        className="sm:inline-flex sm:w-auto"
+        className={`${PILL_GROUP} sm:inline-flex sm:w-auto`}
         value={tab}
         aria-label="Vista"
         // Pressing the chosen view again would clear it; one view is always open.
         onValueChange={(next) => next && setTab(next as ServiceTab)}
       >
-        <ToggleGroupItem value="deliveries" className="min-h-11 sm:px-6">
+        <ToggleGroupItem value="deliveries" className={PILL}>
           Entregas
           {ready > 0 && <Badge variant="success">{ready}</Badge>}
         </ToggleGroupItem>
-        <ToggleGroupItem value="tables" className="min-h-11 sm:px-6">
+        <ToggleGroupItem value="tables" className={PILL}>
           Mesas
           {openTables > 0 && <Badge variant="default">{openTables === 1 ? '1 abierta' : `${openTables} abiertas`}</Badge>}
         </ToggleGroupItem>
@@ -176,7 +182,7 @@ export function ServiceBoard() {
       </div>
 
       <div hidden={tab !== 'tables'}>
-        <TablesBoard refreshSignal={tablesSignal} onLoaded={onTablesLoaded} />
+        <TablesBoard refreshSignal={tablesSignal} onLoaded={onTablesLoaded} focus={focus} />
       </div>
     </div>
   )

@@ -16,7 +16,7 @@ import { useRowAction } from '../../shared/ui/useRowAction.ts'
 import { cancellationNote } from '../ordering/logic.ts'
 import { modifierSummary } from '../ordering/modifiers.ts'
 import type { ItemTarget, StaffOrder, StaffOrderItem } from './api.ts'
-import { isPending, MAX_REASON_LENGTH, rejectReasonError } from './logic.ts'
+import { isPending, MAX_REASON_LENGTH, rejectReasonError, ticketClass } from './logic.ts'
 import { OrderTicketHeader } from './OrderTicketHeader.tsx'
 import { StatusBadge } from './StatusBadge.tsx'
 
@@ -89,10 +89,7 @@ export function KitchenOrderCard({ order, now, late, onAct }: KitchenOrderCardPr
     <article
       aria-busy={busy}
       aria-label={`Orden ${order.number}, ${order.table_name}`}
-      className={cn(
-        'flex flex-col gap-4 rounded-2xl border bg-surface p-4 shadow-xs',
-        late ? 'border-red-300 ring-2 ring-red-200' : 'border-line',
-      )}
+      className={ticketClass(late)}
     >
       <OrderTicketHeader order={order} now={now} late={late} size="large" />
 

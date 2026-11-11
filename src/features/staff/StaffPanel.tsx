@@ -104,6 +104,7 @@ export function StaffPanel() {
   return (
     <div className="space-y-8">
       <SectionHeader
+        icon={<UsersThreeIcon size={24} weight="fill" aria-hidden />}
         title="Personal"
         description="Agrega a alguien solo con su nombre: recibes un código y un PIN para entregárselos. Los nombres se pueden repetir; cada persona inicia sesión con su propio código. Desactivar a alguien, cambiar su rol o generar un nuevo PIN cierra su sesión en todos sus dispositivos de inmediato."
       />

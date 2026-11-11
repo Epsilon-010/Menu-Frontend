@@ -27,7 +27,7 @@ export function MenuHero({ theme, imageUrls, businessName }: MenuHeroProps) {
 
   const banner: ReactNode = bannerUrl ? (
     <div key="banner" className={`relative overflow-hidden rounded-2xl ${height}`}>
-      <img src={bannerUrl} alt="" className="h-full w-full object-cover" />
+      <img src={bannerUrl} alt="" className="h-full w-full object-cover motion-safe:animate-banner-in" />
       <div
         aria-hidden
         className="absolute inset-0"
@@ -50,7 +50,7 @@ export function MenuHero({ theme, imageUrls, businessName }: MenuHeroProps) {
   const closeColumn = () => {
     if (column.length > 0) {
       parts.push(
-        <div key={`text-${parts.length}`} className={`flex flex-col gap-3 ${centered ? 'items-center text-center' : 'items-start text-left'}`}>
+        <div key={`text-${parts.length}`} className={`flex flex-col gap-3 motion-safe:animate-card-rise ${centered ? 'items-center text-center' : 'items-start text-left'}`}>
           {column}
         </div>,
       )

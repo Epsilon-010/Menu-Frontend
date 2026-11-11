@@ -11,12 +11,12 @@ interface RouteErrorScreenProps {
 export function RouteErrorScreen({ onReload }: RouteErrorScreenProps) {
   return (
     <main role="alert" className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 text-center">
-      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-950 text-white">
+      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand text-brand-ink">
         <WarningCircleIcon size={24} weight="bold" aria-hidden />
       </span>
       <div className="max-w-md space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">Algo salió mal</h1>
-        <p className="text-zinc-500">No se pudo mostrar esta pantalla. Recarga para intentarlo de nuevo.</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">Algo salió mal</h1>
+        <p className="text-muted">No se pudo mostrar esta pantalla. Recarga para intentarlo de nuevo.</p>
       </div>
       <button type="button" onClick={onReload} className={buttonClass('primary', 'md')}>
         <ArrowClockwiseIcon size={16} aria-hidden />

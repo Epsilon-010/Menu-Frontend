@@ -41,6 +41,7 @@ export function DeliveryQueue({ list, now, lateMinutes, notice, onDismissNotice,
   return (
     <div className="space-y-6">
       <SectionHeader
+        icon={<CallBellIcon size={24} weight="fill" aria-hidden />}
         title="Listos para entregar"
         description={`Los platillos aparecen aquí, dentro de su orden, en cuanto la cocina los marca como listos. Se resaltan las órdenes que esperan más de ${lateMinutes} min.`}
         action={<SoundToggle enabled={sound.enabled} onToggle={sound.toggle} announces="platillos listos para llevar" />}

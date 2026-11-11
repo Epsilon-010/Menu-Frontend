@@ -19,6 +19,8 @@ function reducedMotion(): boolean {
  * - `data-reveal`: rises and fades in the first time it scrolls into view; neighbours entering together stagger.
  * - `data-words`: its `data-word` children light up one at a time as the block crosses the viewport.
  * - `data-parallax="<px>"`: drifts that many pixels while its section scrolls by.
+ * - `data-story`: a tall section whose `data-story-panel` children take turns on a screen that stays put (CSS
+ *   `sticky`) while it scrolls by; inside a panel, `data-from="left|right|up"` says where each part comes from.
  *
  * With reduced motion nothing moves: every element simply stays visible.
  */
@@ -53,7 +55,40 @@ export function usePageMotion(scope: RefObject<HTMLElement | null>): void {
         gsap.to(layer, {
           y: Number(layer.dataset.parallax),
           ease: 'none',
-          scrollTrigger: { trigger: layer.parentElement, start: 'top bottom', end: 'bottom top', scrub: 0.8 },
+          // Clamped: a layer already on screen when the page opens starts from its drawn position.
+          scrollTrigger: {
+            trigger: layer.closest('section') ?? layer.parentElement,
+            start: 'clamp(top bottom)',
+            end: 'bottom top',
+            scrub: 0.8,
+          },
+        })
+      }
+
+      for (const story of gsap.utils.toArray<HTMLElement>('[data-story]')) {
+        const timeline = gsap.timeline({
+          defaults: { ease: 'power2.out', duration: 0.5 },
+          scrollTrigger: { trigger: story, start: 'top top', end: 'bottom bottom', scrub: 0.6 },
+        })
+        const panels = Array.from(story.querySelectorAll<HTMLElement>('[data-story-panel]'))
+        panels.forEach((panel, index) => {
+          const from = (side: string) => panel.querySelectorAll(`[data-from="${side}"]`)
+          if (index > 0) {
+            timeline
+              .fromTo(panel, { autoAlpha: 0 }, { autoAlpha: 1 })
+              .fromTo(from('left'), { xPercent: -40 }, { xPercent: 0 }, '<')
+              .fromTo(from('right'), { xPercent: 40 }, { xPercent: 0 }, '<')
+              .fromTo(from('up'), { y: 96, scale: 0.9 }, { y: 0, scale: 1 }, '<')
+          }
+          // Each panel holds the screen for a while before the next one takes over.
+          timeline.to({}, { duration: 1 })
+          if (index < panels.length - 1) {
+            timeline
+              .to(panel, { autoAlpha: 0, ease: 'power2.in' })
+              .to(from('left'), { xPercent: -20, ease: 'power2.in' }, '<')
+              .to(from('right'), { xPercent: 20, ease: 'power2.in' }, '<')
+              .to(from('up'), { y: -64, scale: 0.94, ease: 'power2.in' }, '<')
+          }
         })
       }
     }, root)
@@ -78,34 +113,4 @@ export function useSmoothScroll(): void {
       lenis.destroy()
     }
   }, [])
-}
-
-/** The element leans toward the pointer while it is over `area` and settles back when it leaves. */
-export function usePointerTilt(area: RefObject<HTMLElement | null>, target: RefObject<HTMLElement | null>): void {
-  useLayoutEffect(() => {
-    const zone = area.current
-    const element = target.current
-    if (!zone || !element || reducedMotion() || !window.matchMedia('(pointer: fine)').matches) return
-
-    const rotateX = gsap.quickTo(element, 'rotationX', { duration: 0.8, ease: SMOOTH })
-    const rotateY = gsap.quickTo(element, 'rotationY', { duration: 0.8, ease: SMOOTH })
-    gsap.set(element, { transformPerspective: 900 })
-
-    const move = (event: PointerEvent) => {
-      const box = zone.getBoundingClientRect()
-      rotateY(((event.clientX - box.left) / box.width - 0.5) * 12)
-      rotateX(-((event.clientY - box.top) / box.height - 0.5) * 10)
-    }
-    const leave = () => {
-      rotateX(0)
-      rotateY(0)
-    }
-    zone.addEventListener('pointermove', move)
-    zone.addEventListener('pointerleave', leave)
-    return () => {
-      zone.removeEventListener('pointermove', move)
-      zone.removeEventListener('pointerleave', leave)
-      gsap.killTweensOf(element)
-    }
-  }, [area, target])
 }

@@ -1,16 +1,15 @@
 import {
   ArrowRightIcon,
   BowlFoodIcon,
-  CheckCircleIcon,
+  CallBellIcon,
   CookingPotIcon,
   HamburgerIcon,
   PizzaIcon,
   PlusIcon,
-  QrCodeIcon,
+  UserIcon,
 } from '@phosphor-icons/react'
-import { useRef, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { Link } from 'react-router'
-import { usePointerTilt } from '../../shared/motion/motion.ts'
 import { MOTION } from '../../shared/ui/classes.ts'
 
 const DISHES: { name: string; note: string; price: string; tile: string; icon: ReactNode }[] = [
@@ -19,108 +18,142 @@ const DISHES: { name: string; note: string; price: string; tile: string; icon: R
   { name: 'Bowl de pollo', note: 'Sin cebolla', price: '$129.00', tile: 'bg-leaf/15 text-leaf', icon: <BowlFoodIcon size={24} weight="fill" aria-hidden /> },
 ]
 
-/** A drawn table menu (no screenshots): what a guest sees on the phone, with the kitchen answering around it. */
-function MenuMock() {
+/** A drawn phone with the table menu (no screenshots): what a guest sees after scanning the QR code. */
+function PhoneMock() {
   return (
-    <div className="w-full max-w-sm rounded-3xl border border-line bg-surface p-4 shadow-2xl shadow-brand/20">
-      <div className="flex items-center justify-between rounded-2xl bg-linear-to-br from-brand to-accent p-4 text-white">
-        <div>
+    <div className="w-72 rounded-[2.5rem] bg-ink p-2 shadow-2xl sm:w-80">
+      <div className="rounded-4xl bg-surface p-3">
+        <div aria-hidden className="mx-auto mb-3 h-1 w-12 rounded-full bg-line-strong" />
+        <div className="rounded-2xl bg-brand p-4 text-brand-ink">
           <p className="text-xs font-medium text-white/80">Mesa 5 · 3 personas</p>
           <p className="text-lg font-semibold">La orden de la mesa</p>
         </div>
-        <QrCodeIcon size={32} aria-hidden />
+        <ul className="mt-2 space-y-2">
+          {DISHES.map((dish) => (
+            <li key={dish.name} className="flex items-center gap-2 rounded-2xl border border-line p-2">
+              <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${dish.tile}`}>{dish.icon}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold text-ink">{dish.name}</span>
+                <span className="block text-xs text-muted">
+                  {dish.note} · {dish.price}
+                </span>
+              </span>
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-ink text-white">
+                <PlusIcon size={16} weight="bold" aria-hidden />
+              </span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-2 flex items-center justify-between rounded-2xl bg-ink p-3 text-white">
+          <span className="text-sm">
+            3 platillos · <span className="font-semibold">$467.00</span>
+          </span>
+          <span className="rounded-lg bg-sun px-3 py-1 text-sm font-semibold text-ink">Enviar</span>
+        </div>
       </div>
-      <ul className="mt-3 space-y-2">
-        {DISHES.map((dish) => (
-          <li key={dish.name} className="flex items-center gap-3 rounded-2xl border border-line p-2">
-            <span className={`flex size-12 shrink-0 items-center justify-center rounded-xl ${dish.tile}`}>{dish.icon}</span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold text-ink">{dish.name}</span>
-              <span className="block text-xs text-muted">{dish.note}</span>
-            </span>
-            <span className="text-sm font-semibold text-ink">{dish.price}</span>
-            <span className="flex size-8 items-center justify-center rounded-lg bg-brand text-brand-ink">
-              <PlusIcon size={16} weight="bold" aria-hidden />
-            </span>
-          </li>
-        ))}
-      </ul>
-      <div className="mt-3 flex items-center justify-between rounded-2xl bg-ink p-3 text-white">
-        <span className="text-sm">
-          3 platillos · <span className="font-semibold">$467.00</span>
-        </span>
-        <span className="rounded-lg bg-sun px-3 py-1 text-sm font-semibold text-ink">Enviar orden</span>
+    </div>
+  )
+}
+
+/** One of the cards around the phone. It only moves with the scroll (`drift`, in pixels), never on its own. */
+function SideCard({ place, drift, children }: { place: string; drift: number; children: ReactNode }) {
+  return (
+    <div className={`absolute hidden lg:block ${place}`}>
+      <div data-parallax={drift} className="w-60 rounded-3xl border border-line bg-surface p-4 text-left shadow-xl">
+        {children}
       </div>
     </div>
   )
 }
 
 export function Hero() {
-  const stage = useRef<HTMLDivElement>(null)
-  const mock = useRef<HTMLDivElement>(null)
-  usePointerTilt(stage, mock)
-
   return (
-    <section className="relative overflow-hidden px-4 pt-32 pb-20 sm:px-6 lg:pt-40">
-      {/* Soft color fields behind the hero; they drift with the scroll. */}
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div data-parallax="120" className="absolute -top-24 -right-24 size-[32rem] rounded-full bg-accent/25 blur-3xl" />
-        <div data-parallax="-80" className="absolute top-64 -left-32 size-96 rounded-full bg-brand/15 blur-3xl" />
-        <div data-parallax="60" className="absolute right-1/3 bottom-0 size-72 rounded-full bg-sun/30 blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto grid max-w-6xl items-center gap-16 lg:grid-cols-2">
-        <div className="min-w-0 space-y-6">
-          <p data-enter className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-sm font-semibold text-brand shadow-xs">
-            <span aria-hidden className="size-2 rounded-full bg-brand motion-safe:animate-pulse" />
-            Menú digital para restaurantes
-          </p>
-          <h1 data-enter className="max-w-[680px] text-5xl font-semibold tracking-tight text-ink sm:text-6xl">
-            Tu menú en cada mesa,
-            <br />
-            <span className="bg-linear-to-r from-brand to-accent bg-clip-text text-transparent">tus órdenes directo a la cocina</span>
-          </h1>
-          <p data-enter className="max-w-[680px] text-lg text-muted">
-            Tus clientes escanean el código QR, arman juntos una sola orden y la envían. La cocina la recibe al instante y
-            el mesero sabe qué llevar a cada mesa.
-          </p>
-          <div data-enter className="flex flex-wrap items-center gap-4">
-            <Link
-              to="/register"
-              className={`group inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-3 text-base font-semibold text-brand-ink shadow-lg shadow-brand/30 hover:-translate-y-0.5 hover:bg-action-hover active:scale-[0.98] ${MOTION}`}
-            >
-              Crear mi negocio
-              <ArrowRightIcon size={16} weight="bold" aria-hidden className={`group-hover:translate-x-1 ${MOTION}`} />
-            </Link>
-            <Link to="/login" className={`rounded-xl px-3 py-3 text-base font-semibold text-ink-soft hover:text-brand ${MOTION}`}>
-              Ya tengo cuenta
-            </Link>
-          </div>
-          <ul data-enter className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-soft">
-            {['Sin instalar aplicaciones', 'Con código QR o tablet', 'Hasta 30 personas por mesa'].map((fact) => (
-              <li key={fact} className="flex items-center gap-2">
-                <CheckCircleIcon size={16} weight="fill" aria-hidden className="text-leaf" />
-                {fact}
-              </li>
-            ))}
-          </ul>
+    <section className="overflow-hidden px-4 pt-32 pb-24 sm:px-6 lg:pt-40">
+      <div className="mx-auto max-w-6xl text-center">
+        <h1 data-enter className="mx-auto max-w-5xl text-5xl font-semibold tracking-tight text-balance text-ink sm:text-6xl lg:text-7xl">
+          Tu menú en cada mesa.
+          <br />
+          <span className="text-brand">La orden, directo a cocina.</span>
+        </h1>
+        <p data-enter className="mx-auto mt-6 max-w-[680px] text-lg text-pretty text-muted">
+          Tus clientes escanean el código QR, arman juntos una sola orden y la envían. La cocina la recibe al instante y
+          el mesero sabe qué llevar a cada mesa.
+        </p>
+        <div data-enter className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Link
+            to="/register"
+            className={`group inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 text-base font-semibold text-white hover:-translate-y-0.5 hover:bg-brand active:scale-[0.98] ${MOTION}`}
+          >
+            Crear mi negocio
+            <ArrowRightIcon size={16} weight="bold" aria-hidden className={`group-hover:translate-x-1 ${MOTION}`} />
+          </Link>
+          <Link
+            to="/login"
+            className={`rounded-full border border-line-strong bg-surface px-6 py-3 text-base font-semibold text-ink hover:-translate-y-0.5 hover:border-ink active:scale-[0.98] ${MOTION}`}
+          >
+            Ya tengo cuenta
+          </Link>
         </div>
+        <p data-enter className="mt-4 text-sm text-muted">Sin instalar aplicaciones. Con código QR o con tablet.</p>
 
-        <div ref={stage} data-enter className="relative flex min-w-0 justify-center py-8">
-          <div ref={mock} className="relative w-full max-w-sm">
-            <MenuMock />
-            <p className="absolute -top-6 left-0 flex items-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-semibold text-ink shadow-xl motion-safe:animate-float sm:-left-12">
+        <div data-enter className="relative mx-auto mt-16 flex max-w-5xl justify-center">
+          {/* Hairlines from the side cards to the phone; they drift with the cards. */}
+          <svg
+            aria-hidden
+            data-parallax="-96"
+            viewBox="0 0 1000 560"
+            preserveAspectRatio="none"
+            fill="none"
+            className="pointer-events-none absolute inset-0 hidden size-full stroke-line-strong lg:block"
+          >
+            <path d="M150 190 C 150 330, 260 380, 350 380" />
+            <path d="M850 150 C 850 250, 740 270, 650 270" />
+            <path d="M830 470 C 760 520, 700 470, 650 440" />
+          </svg>
+
+          <SideCard place="top-8 left-0 -rotate-6" drift={-160}>
+            <p className="flex items-center gap-2 text-sm font-semibold text-ink">
               <span className="flex size-8 items-center justify-center rounded-lg bg-sun/30 text-warning">
                 <CookingPotIcon size={16} weight="fill" aria-hidden />
               </span>
-              Cocina recibió la orden 24
+              Cocina · Orden 24
             </p>
-            <p className="absolute right-0 -bottom-6 flex items-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-semibold text-ink shadow-xl motion-safe:animate-float-slow sm:-right-10">
+            <ul className="mt-3 space-y-2 text-sm text-ink-soft">
+              <li className="flex items-center justify-between gap-2">
+                Hamburguesa
+                <span className="rounded-full bg-sun/30 px-2 py-0.5 text-xs font-semibold text-warning">Preparando</span>
+              </li>
+              <li className="flex items-center justify-between gap-2">
+                Pizza margarita
+                <span className="rounded-full bg-leaf/15 px-2 py-0.5 text-xs font-semibold text-leaf">Lista</span>
+              </li>
+            </ul>
+          </SideCard>
+
+          <SideCard place="top-0 right-0 rotate-6" drift={-224}>
+            <div className="flex -space-x-2">
+              {['bg-brand', 'bg-accent', 'bg-leaf'].map((tone) => (
+                <span key={tone} className={`flex size-8 items-center justify-center rounded-full border-2 border-surface text-white ${tone}`}>
+                  <UserIcon size={16} weight="fill" aria-hidden />
+                </span>
+              ))}
+            </div>
+            <p className="mt-3 text-lg font-semibold text-ink">Tres celulares, una sola orden.</p>
+            <p className="mt-1 text-sm text-muted">Cada quien agrega lo suyo.</p>
+          </SideCard>
+
+          <SideCard place="right-8 bottom-8 -rotate-3" drift={-112}>
+            <p className="flex items-center gap-2 text-sm font-semibold text-ink">
               <span className="flex size-8 items-center justify-center rounded-lg bg-leaf/15 text-leaf">
-                <CheckCircleIcon size={16} weight="fill" aria-hidden />
+                <CallBellIcon size={16} weight="fill" aria-hidden />
               </span>
-              Pizza margarita lista
+              Listo para llevar
             </p>
+            <p className="mt-2 text-sm text-muted">Mesa 5 · Pizza margarita</p>
+          </SideCard>
+
+          <div data-parallax="-48" className="relative">
+            <PhoneMock />
           </div>
         </div>
       </div>

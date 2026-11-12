@@ -130,9 +130,10 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
   }
   const button = <AddButton name={item.name} cards={cards} onClick={() => setAdding(true)} />
   // Beside the name the price leaves the button alone in the foot; the two-column phone grid moves it down here
-  // (`card-footer-price`), so a narrow card is one row shorter.
+  // (`card-footer-price`), so a narrow card is one row shorter. Anywhere else the wrapper draws no box (`contents`):
+  // the button is laid out as the direct child of the card it always was.
   const footer = priceBesideName ? (
-    <div className="card-footer flex flex-col">
+    <div className="card-footer contents">
       <p className={`card-footer-price hidden ${priceClass}`}>{formatMoney(item.price_cents)}</p>
       {button}
     </div>

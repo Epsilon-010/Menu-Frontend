@@ -304,6 +304,7 @@
   }
   /* One row at the foot: the price and a compact add button, instead of a row for each. */
   .phone-duo .card-footer {
+    display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;

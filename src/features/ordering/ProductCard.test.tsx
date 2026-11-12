@@ -49,7 +49,7 @@ describe('the parts of a product card', () => {
 
   it('repeat the price, hidden, beside the add button when it sits by the name, for the two-column phone grid', () => {
     const top = render(DEFAULT_CARDS.blocks)
-    expect(top).toMatch(/<div class="card-footer flex flex-col"><p class="card-footer-price hidden [^"]*">\$89.00<\/p><button/)
+    expect(top).toMatch(/<div class="card-footer contents"><p class="card-footer-price hidden [^"]*">\$89.00<\/p><button/)
     const bottom = render(DEFAULT_CARDS.blocks, 'vertical', { price_position: 'bottom' })
     expect(bottom).not.toContain('card-footer-price')
     expect(bottom.split('$89.00')).toHaveLength(2)

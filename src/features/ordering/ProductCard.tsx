@@ -119,7 +119,7 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
   )
   const text: Record<TextBlock, ReactNode> = {
     heading: (
-      <div className="flex items-start justify-between gap-4">
+      <div className="card-heading flex items-start justify-between gap-4">
         <h3 className={`type-product-name flex-1 text-pretty ${overlay ? 'text-white' : 'text-ink'}`}>{item.name}</h3>
         {priceBesideName && price}
       </div>
@@ -134,14 +134,15 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
   const footer = priceBesideName ? (
     button
   ) : (
-    <div className="flex items-center justify-between gap-4">
+    <div className="card-footer flex items-center justify-between gap-4">
       {price}
       {button}
     </div>
   )
   // Closing unmounts the form, so the next open starts again from one dish and no options.
   const form = <AddLineForm item={item} onAdd={onAdd} onDone={() => setAdding(false)} />
-  const shell = `h-full overflow-hidden bg-surface ${cardShellClass(cards)}`
+  // `card-*` names are hooks for the two-column phone grid (see `.phone-duo` in index.css); an open add form takes the row.
+  const shell = `h-full overflow-hidden bg-surface ${cardShellClass(cards)}${adding ? ' card-adding' : ''}`
   // Parts with nothing to show (no description, no badges) are skipped, so the name and the next text stay together.
   const empty = (block: CardBlock) =>
     (block === 'description' && text.description === null) || (block === 'badges' && item.badges.length === 0)
@@ -160,11 +161,11 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
             style={{ opacity: cards.overlay_opacity / 100 }}
           />
           <div aria-hidden className={`[grid-area:1/1] w-full ${cardAspectClass(cards)}`} />
-          <div className={`relative flex min-w-0 flex-col gap-4 self-end [grid-area:1/1] ${padding}`}>
+          <div className={`relative flex min-w-0 flex-col gap-4 self-end [grid-area:1/1] card-body ${padding}`}>
             {arrange(blocks, text, adding ? null : footer)}
           </div>
         </div>
-        {adding && <div className={padding}>{form}</div>}
+        {adding && <div className={`card-body ${padding}`}>{form}</div>}
       </article>
     )
   }
@@ -172,7 +173,7 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
   const body = adding ? form : footer
   const segment = (part: CardBlock[], key: string, grow: boolean) =>
     part.some((block) => block !== 'image') ? (
-      <div key={key} className={['flex min-w-0', grow && 'flex-1', 'flex-col gap-4', padding].filter(Boolean).join(' ')}>
+      <div key={key} className={['flex min-w-0', grow && 'flex-1', 'flex-col gap-4 card-body', padding].filter(Boolean).join(' ')}>
         {arrange(part, text, body)}
       </div>
     ) : null

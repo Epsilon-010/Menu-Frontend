@@ -72,7 +72,7 @@ describe('the menu by its layout', () => {
   })
 
   it('lays the products out as a grid, a list or a carousel', () => {
-    expect(render({ columns: 1 })).toContain('class="grid gap-4 "')
+    expect(render({ columns: 1 })).toContain('class="grid gap-4"')
     expect(render({ product_view: 'list' })).toContain('flex-row')
     const carousel = render({ product_view: 'carousel' })
     expect(carousel).toContain('role="region" aria-label="Tacos, desliza para ver más"')

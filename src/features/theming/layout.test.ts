@@ -12,6 +12,7 @@ import {
   currentCategoryId,
   densitySpacing,
   gridColumnsClass,
+  phoneGridClass,
   menuWidthClass,
   normalizeLayout,
   showsOneCategory,
@@ -60,6 +61,25 @@ describe('grid columns', () => {
       expect(classes.every((name) => name.startsWith('@'))).toBe(true)
       if (columns > 1) expect(classes.at(-1)).toMatch(new RegExp(`grid-cols-${columns}$`))
     }
+  })
+})
+
+describe('grids on a phone', () => {
+  it('show two smaller cards per row when the layout has two or more columns', () => {
+    for (const columns of [2, 3, 4]) {
+      expect(phoneGridClass(columns, 'vertical')).toBe('phone-duo @max-[30rem]:grid-cols-2')
+      expect(phoneGridClass(columns, 'overlay')).toBe('phone-duo @max-[30rem]:grid-cols-2')
+    }
+  })
+
+  it('keep one card per row for a one-column layout and for rows with the image beside the text', () => {
+    expect(phoneGridClass(1, 'vertical')).toBe('')
+    expect(phoneGridClass(3, 'horizontal')).toBe('')
+  })
+
+  it('leave wider menus (tablets) with the columns they had', () => {
+    // Only a max-width rule: nothing applies from 30rem up.
+    expect(phoneGridClass(3, 'vertical').split(' ').filter((name) => name.includes('grid-cols'))).toEqual(['@max-[30rem]:grid-cols-2'])
   })
 })
 

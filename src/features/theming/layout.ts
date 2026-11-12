@@ -62,6 +62,15 @@ export function gridColumnsClass(columns: number): string {
   return GRID_COLUMNS[columns] ?? GRID_COLUMNS[DEFAULT_LAYOUT.columns]
 }
 
+/**
+ * On a phone-sized menu (under 30rem) a grid of two or more columns shows two smaller cards per row instead of one
+ * big one; `phone-duo` tightens the cards there (index.css). Rows with the image beside the text need the full width,
+ * and wider menus (tablets) keep `gridColumnsClass` as it was.
+ */
+export function phoneGridClass(columns: number, template: CardTemplate): string {
+  return columns >= 2 && template !== 'horizontal' ? 'phone-duo @max-[30rem]:grid-cols-2' : ''
+}
+
 const DENSITY: Record<Density, { sections: string; items: string }> = {
   compact: { sections: 'space-y-6', items: 'gap-2' },
   comfortable: { sections: 'space-y-8', items: 'gap-4' },

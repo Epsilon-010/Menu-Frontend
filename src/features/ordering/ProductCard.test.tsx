@@ -43,7 +43,7 @@ describe('the parts of a product card', () => {
     expect(drawnOrder(html)).toEqual(['image', 'badges', 'heading', 'description', 'add_button'])
     // The name and the description right below it stay together; the price sits beside the name.
     expect(html).toMatch(
-      /<div class="space-y-1"><div class="flex items-start justify-between gap-4"><h3[^>]*>Chilaquiles<\/h3><p[^>]*>\$89.00<\/p><\/div><p/,
+      /<div class="space-y-1"><div class="card-heading flex items-start justify-between gap-4"><h3[^>]*>Chilaquiles<\/h3><p[^>]*>\$89.00<\/p><\/div><p/,
     )
   })
 
@@ -81,6 +81,6 @@ describe('the parts of a product card', () => {
     expect(drawnOrder(html)).toEqual(['add_button', 'heading'])
     expect(html).not.toContain('<img')
     // Without an image the card is one padded stretch, not two around a missing picture.
-    expect(html.match(/flex-col gap-4 p-4/g)).toHaveLength(1)
+    expect(html.match(/flex-col gap-4 card-body p-4/g)).toHaveLength(1)
   })
 })

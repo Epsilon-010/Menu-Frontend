@@ -44,7 +44,7 @@ function AddButton({ name, cards, onClick }: AddButtonProps) {
       icon={style === 'text' ? undefined : <PlusIcon size={16} aria-hidden />}
       aria-label={style === 'icon' ? `Agregar ${name}` : undefined}
       onClick={onClick}
-      className={`type-button ${buttonShapeClass(shape)}`}
+      className={`type-button card-add ${style === 'both' ? 'card-add-labelled ' : ''}${buttonShapeClass(shape)}`}
     >
       {style === 'icon' ? null : 'Agregar'}
     </Button>
@@ -113,9 +113,8 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
   const padding = cardPaddingClass(cards)
   const priceBesideName = cards.price_position === 'top'
 
-  const price = (
-    <p className={`type-price shrink-0 tabular-nums ${overlay ? 'text-white' : 'text-price'}`}>{formatMoney(item.price_cents)}</p>
-  )
+  const priceClass = `type-price shrink-0 tabular-nums ${overlay ? 'text-white' : 'text-price'}`
+  const price = <p className={priceClass}>{formatMoney(item.price_cents)}</p>
   const text: Record<TextBlock, ReactNode> = {
     heading: (
       <div className="card-heading flex items-start justify-between gap-4">
@@ -130,8 +129,13 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
     badges: <Badges badges={item.badges} shape={cards.badge_shape} />,
   }
   const button = <AddButton name={item.name} cards={cards} onClick={() => setAdding(true)} />
+  // Beside the name the price leaves the button alone in the foot; the two-column phone grid moves it down here
+  // (`card-footer-price`), so a narrow card is one row shorter.
   const footer = priceBesideName ? (
-    button
+    <div className="card-footer flex flex-col">
+      <p className={`card-footer-price hidden ${priceClass}`}>{formatMoney(item.price_cents)}</p>
+      {button}
+    </div>
   ) : (
     <div className="card-footer flex items-center justify-between gap-4">
       {price}
@@ -195,7 +199,7 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
   return (
     <article className={`flex flex-col ${shell}`}>
       {segment(before, 'before', after.length === 0)}
-      {image && <img src={image} alt={item.name} loading="lazy" className={`w-full bg-subtle ${cardImageClass(cards)}`} />}
+      {image && <img src={image} alt={item.name} loading="lazy" className={`card-image w-full bg-subtle ${cardImageClass(cards)}`} />}
       {segment(after, 'after', true)}
       {dialog}
     </article>

@@ -288,8 +288,8 @@
   }
 }
 
-/* Two product cards per row on a phone-sized menu (`phoneGridClass`): tighter cards, the price over a full-width add
-   button, and text no larger than fits a ~170px card. Unlayered, so it wins over the theme's padding utilities. */
+/* Two product cards per row on a phone-sized menu (`phoneGridClass`): tighter cards, the price beside a compact add
+   button, a lower photo, and text no larger than fits a ~170px card. Unlayered, so it wins over the theme's padding utilities. */
 @container (max-width: 30rem) {
   .phone-duo {
     gap: 0.5rem;
@@ -302,10 +302,27 @@
     flex-direction: column;
     gap: 0.125rem;
   }
+  /* One row at the foot: the price and a compact add button, instead of a row for each. */
   .phone-duo .card-footer {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     gap: 0.375rem;
+  }
+  .phone-duo .card-footer-price {
+    display: block;
+  }
+  .phone-duo .card-heading .type-price {
+    display: none;
+  }
+  .phone-duo .card-add {
+    padding-inline: 0.75rem;
+  }
+  .phone-duo .card-add-labelled svg {
+    display: none;
+  }
+  .phone-duo .card-image {
+    aspect-ratio: 3 / 2;
   }
   .phone-duo .type-product-name {
     font-size: min(var(--type-product-name-size, 1rem), 0.9375rem);

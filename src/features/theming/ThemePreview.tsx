@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group.tsx'
 import { formatMoney } from '../catalog/price.ts'
 import { fetchMenu, type MenuCategory } from '../ordering/api.ts'
+import { previewMenu } from './sampleMenu.ts'
 import { MenuBrowser } from '../ordering/MenuBrowser.tsx'
 import { MenuSections } from '../ordering/MenuSections.tsx'
 import type { ImageUrls, Theme } from './api.ts'
@@ -64,6 +65,8 @@ export function ThemePreview({ theme, imageUrls, businessName, selectedSection, 
   const [device, setDevice] = useState<Device>('phone')
   const [menu, setMenu] = useState<MenuCategory[] | null>(null)
   const [menuFailed, setMenuFailed] = useState(false)
+  // A menu with only a few products is replaced by sample ones, so every template shows as a full menu.
+  const preview = menu ? previewMenu(menu) : null
   const frame = DEVICES[device]
   const { ref, scale } = useFitScale(frame.width, frame.height)
   const logoUrl = theme.brand.logo.image_id ? imageUrls[theme.brand.logo.image_id] : undefined
@@ -108,6 +111,11 @@ export function ThemePreview({ theme, imageUrls, businessName, selectedSection, 
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
+      {preview?.sample && (
+        <p className="max-w-sm text-center text-xs text-pretty text-muted">
+          Productos de muestra: tu menú aún tiene pocos. Con 6 o más, aquí verás los tuyos.
+        </p>
+      )}
 
       <div ref={ref} className="w-full">
         <div style={{ width: frame.width * scale, height: frame.height * scale }} className="mx-auto" aria-label={`Vista previa del menú, ${frame.label}`}>
@@ -126,11 +134,11 @@ export function ThemePreview({ theme, imageUrls, businessName, selectedSection, 
                     hero={<MenuHero theme={theme} imageUrls={imageUrls} businessName={businessName} />}
                     menu={
                       <>
-                        {menu && <MenuBrowser categories={menu} onAdd={noAdd} layout={layout} cards={cards} belowFixedBar={false} />}
+                        {preview && <MenuBrowser categories={preview.categories} onAdd={noAdd} layout={layout} cards={cards} belowFixedBar={false} />}
                         {menuFailed && <p className="text-sm text-muted">No se pudo cargar el menú para la vista previa.</p>}
                       </>
                     }
-                    categories={menu ?? []}
+                    categories={preview?.categories ?? []}
                     layout={layout}
                     cards={cards}
                     onAdd={noAdd}

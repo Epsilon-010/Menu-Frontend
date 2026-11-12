@@ -18,8 +18,7 @@ interface Look {
 const LOOKS: Look[] = [
   { name: 'Antojo', kind: 'Comida rápida', background: '#fff9f3', surface: '#ffffff', text: '#1c1917', muted: '#57534e', button: '#f26a1b', buttonText: '#1c1208', border: '#f4e3d3' },
   { name: 'Brasa', kind: 'Parrilla', background: '#000000', surface: '#1f1f1f', text: '#ffffff', muted: '#a8a8a8', button: '#f08a3c', buttonText: '#181818', border: '#f08a3c' },
-  { name: 'Umami', kind: 'Sushi', background: '#f5f5f4', surface: '#ffffff', text: '#18181b', muted: '#52525b', button: '#d6300a', buttonText: '#ffffff', border: '#e7e5e4' },
-  { name: 'Garden', kind: 'Saludable', background: '#f4faf5', surface: '#ffffff', text: '#13261a', muted: '#4a6352', button: '#276749', buttonText: '#ffffff', border: '#d7eadc' },
+  { name: 'Fresco', kind: 'Saludable', background: '#f1f5f2', surface: '#ffffff', text: '#111827', muted: '#4b5563', button: '#15803d', buttonText: '#ffffff', border: '#e2e8e4' },
   { name: 'Costa', kind: 'Mariscos', background: '#f3f8fa', surface: '#ffffff', text: '#0f2a35', muted: '#4b6470', button: '#0e6e8c', buttonText: '#ffffff', border: '#d5e6ec' },
   { name: 'Velada', kind: 'Cena de autor', background: '#131209', surface: '#1f1f1f', text: '#f7f1e8', muted: '#b5aa9a', button: '#f2994a', buttonText: '#131209', border: '#313131' },
 ]

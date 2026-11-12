@@ -9,124 +9,122 @@ import {
   QrCodeIcon,
   UsersThreeIcon,
 } from '@phosphor-icons/react'
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { MOTION } from '../../shared/ui/classes.ts'
 
+/** True while a dark section (`data-dark-section`) sits under the strip at the top of the screen where the nav lives. */
+function useOverDarkSection(): boolean {
+  const [dark, setDark] = useState(false)
+  useEffect(() => {
+    const under = new Set<Element>()
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) under.add(entry.target)
+          else under.delete(entry.target)
+        }
+        setDark(under.size > 0)
+      },
+      // Only a thin band near the top of the screen counts: the line the nav sits on.
+      { rootMargin: '-36px 0px -92% 0px' },
+    )
+    for (const section of document.querySelectorAll('[data-dark-section]')) observer.observe(section)
+    return () => observer.disconnect()
+  }, [])
+  return dark
+}
+
+/**
+ * Stays at the top while the page scrolls, without looking like a bar: it takes the color of the section under it
+ * (the page background, or the dark one over dark sections), so it never stands out from the background.
+ */
 export function LandingNav() {
+  const dark = useOverDarkSection()
+  const link = `rounded-full px-3 py-2 text-sm font-semibold ${dark ? 'text-white/70 hover:text-white' : 'text-ink-soft hover:text-brand'} ${MOTION}`
   return (
-    <header className="fixed inset-x-0 top-4 z-40 flex justify-center px-4">
-      <nav
-        aria-label="Principal"
-        className="flex items-center gap-2 rounded-2xl border border-line bg-surface/80 p-2 whitespace-nowrap shadow-lg shadow-brand/10 backdrop-blur-md"
-      >
-        <Link to="/" aria-current="page" className="flex items-center gap-2 px-2 text-base font-semibold text-ink">
-          <span className="flex size-8 items-center justify-center rounded-lg bg-linear-to-br from-brand to-accent text-white">
-            <ForkKnifeIcon size={16} weight="bold" aria-hidden />
-          </span>
+    <header className={`fixed inset-x-0 top-0 z-40 px-4 py-4 backdrop-blur-md sm:px-6 ${dark ? 'bg-ink/85 text-white' : 'bg-canvas/85 text-ink'} ${MOTION}`}>
+      <nav aria-label="Principal" className="mx-auto flex max-w-6xl items-center justify-between gap-4 whitespace-nowrap">
+        <Link to="/" aria-current="page" className="flex items-center gap-2 text-lg font-semibold">
+          <ForkKnifeIcon size={24} weight="fill" aria-hidden className={dark ? 'text-sun' : 'text-brand'} />
           Menú
         </Link>
-        <ul className="hidden items-center sm:flex">
+        <ul className="hidden items-center md:flex">
           {[
+            ['#flow', 'El servicio'],
             ['#benefits', 'Beneficios'],
-            ['#how', 'Cómo funciona'],
             ['#design', 'Diseño'],
             ['#faq', 'Preguntas'],
           ].map(([href, label]) => (
             <li key={href}>
-              <a href={href} className={`rounded-lg px-3 py-2 text-sm font-semibold text-ink-soft hover:bg-subtle hover:text-ink ${MOTION}`}>
+              <a href={href} className={link}>
                 {label}
               </a>
             </li>
           ))}
         </ul>
-        <Link to="/login" className={`hidden rounded-lg px-3 py-2 text-sm font-semibold text-ink-soft hover:bg-subtle hover:text-ink min-[26rem]:block ${MOTION}`}>
-          Iniciar sesión
-        </Link>
-        <Link
-          to="/register"
-          className={`rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-brand-ink hover:bg-action-hover active:scale-[0.98] ${MOTION}`}
-        >
-          Crear mi negocio
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link to="/login" className={`hidden min-[26rem]:block ${link}`}>
+            Iniciar sesión
+          </Link>
+          <Link
+            to="/register"
+            className={`rounded-full px-4 py-2 text-sm font-semibold active:scale-[0.98] ${dark ? 'bg-white text-ink hover:bg-sun' : 'bg-ink text-white hover:bg-brand'} ${MOTION}`}
+          >
+            Crear mi negocio
+          </Link>
+        </div>
       </nav>
     </header>
   )
 }
 
-const CUISINES = ['Tacos', 'Sushi', 'Hamburguesas', 'Café', 'Pizzas', 'Mariscos', 'Parrilla', 'Postres', 'Ensaladas', 'Alitas']
-
-/** A band of cuisines that never stops moving; the list is drawn twice so the loop has no seam. */
-export function CuisineTicker() {
-  return (
-    <div aria-hidden className="overflow-hidden bg-brand py-4 text-brand-ink">
-      <div className="flex w-max motion-safe:animate-ticker">
-        {[0, 1].map((copy) => (
-          <ul key={copy} className="flex shrink-0 items-center">
-            {CUISINES.map((cuisine) => (
-              <li key={cuisine} className="flex items-center gap-6 pr-6 text-lg font-semibold">
-                {cuisine}
-                <span className="size-2 rounded-full bg-sun" />
-              </li>
-            ))}
-          </ul>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-const BENEFITS: { title: string; body: string; icon: ReactNode; tile: string; span: string }[] = [
+const BENEFITS: { title: string; body: string; icon: ReactNode }[] = [
   {
     title: 'Una sola orden por mesa',
     body: 'Todos escanean el mismo código QR y agregan lo suyo desde su celular. La mesa ve el total en vivo y envía una vez.',
-    icon: <UsersThreeIcon size={24} weight="fill" aria-hidden />,
-    tile: 'bg-brand text-brand-ink',
-    span: 'lg:col-span-2',
+    icon: <UsersThreeIcon size={32} aria-hidden />,
   },
   {
     title: 'La cocina decide el ritmo',
     body: 'Cada orden llega como una comanda. Cocina marca cada platillo en preparación y listo, sin esperar al resto.',
-    icon: <CookingPotIcon size={24} weight="fill" aria-hidden />,
-    tile: 'bg-accent text-white',
-    span: '',
+    icon: <CookingPotIcon size={32} aria-hidden />,
   },
   {
     title: 'El mesero lleva lo que ya salió',
     body: 'Ve qué platillo está listo, de qué mesa es y qué falta. También cobra la cuenta al final.',
-    icon: <CallBellIcon size={24} weight="fill" aria-hidden />,
-    tile: 'bg-sun text-ink',
-    span: '',
+    icon: <CallBellIcon size={32} aria-hidden />,
   },
   {
     title: 'Números que sí usas',
     body: 'Ventas cobradas, platillos más pedidos y tiempos de espera por día, sin hojas de cálculo.',
-    icon: <ChartBarIcon size={24} weight="fill" aria-hidden />,
-    tile: 'bg-leaf text-white',
-    span: 'lg:col-span-2',
+    icon: <ChartBarIcon size={32} aria-hidden />,
   },
 ]
 
 export function Benefits() {
   return (
     <section id="benefits" className="px-4 py-24 sm:px-6">
-      <div className="mx-auto max-w-6xl space-y-12">
-        <div data-reveal className="space-y-4">
-          <p className="text-sm font-semibold text-brand">Beneficios</p>
-          <h2 className="max-w-[680px] text-4xl font-semibold tracking-tight text-ink">Menos vueltas a la mesa, más platillos servidos</h2>
+      <div data-leave className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-5">
+        <div className="lg:col-span-2">
+          <div data-reveal className="space-y-4 lg:sticky lg:top-32">
+            <p className="text-sm font-semibold text-brand">Beneficios</p>
+            <h2 className="text-4xl font-semibold tracking-tight text-balance text-ink sm:text-5xl">
+              Menos vueltas a la mesa, más platillos servidos
+            </h2>
+          </div>
         </div>
-        <ul className="grid gap-4 lg:grid-cols-3">
-          {BENEFITS.map((benefit) => (
-            <li
-              key={benefit.title}
-              data-reveal
-              className={`group rounded-3xl border border-line bg-surface p-6 shadow-xs hover:-translate-y-1 hover:shadow-xl hover:shadow-brand/10 ${MOTION} ${benefit.span}`}
-            >
-              <span className={`flex size-12 items-center justify-center rounded-2xl group-hover:scale-110 group-hover:-rotate-6 ${MOTION} ${benefit.tile}`}>
+        <ul className="divide-y divide-line-strong lg:col-span-3">
+          {BENEFITS.map((benefit, index) => (
+            <li key={benefit.title} data-reveal className="group flex gap-6 py-8 first:pt-0 last:pb-0">
+              <span className="w-8 shrink-0 pt-1 text-sm font-semibold text-faint">0{index + 1}</span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-2xl font-semibold text-ink">{benefit.title}</h3>
+                <p className="mt-2 max-w-xl text-base text-pretty text-muted">{benefit.body}</p>
+              </div>
+              <span className={`hidden shrink-0 text-line-strong group-hover:-translate-y-1 group-hover:text-brand sm:block ${MOTION}`}>
                 {benefit.icon}
               </span>
-              <h3 className="mt-6 text-xl font-semibold text-ink">{benefit.title}</h3>
-              <p className="mt-2 max-w-xl text-base text-muted">{benefit.body}</p>
             </li>
           ))}
         </ul>
@@ -156,7 +154,7 @@ const STEPS: { title: string; body: string; icon: ReactNode }[] = [
 export function HowItWorks() {
   return (
     <section id="how" className="bg-subtle px-4 py-24 sm:px-6">
-      <div className="mx-auto max-w-6xl space-y-12">
+      <div data-leave className="mx-auto max-w-6xl space-y-12">
         <div data-reveal className="space-y-4 text-center">
           <p className="text-sm font-semibold text-brand">Cómo funciona</p>
           <h2 className="mx-auto max-w-[680px] text-4xl font-semibold tracking-tight text-ink">Listo para tu primer servicio en tres pasos</h2>
@@ -183,7 +181,7 @@ const TAGLINE = 'La mesa pide cuando quiere. La cocina cocina sin interrupciones
 /** The words light up one at a time as the block crosses the screen (see `data-words` in the page motion). */
 export function Tagline() {
   return (
-    <section className="bg-ink px-4 py-32 sm:px-6">
+    <section data-dark-section className="bg-ink px-4 py-32 sm:px-6">
       <p data-words className="mx-auto max-w-4xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
         {TAGLINE.split(' ').map((word, index) => (
           <span key={index} data-word>
@@ -207,7 +205,7 @@ const QUESTIONS: [string, string][] = [
 export function Faq() {
   return (
     <section id="faq" className="px-4 py-24 sm:px-6">
-      <div className="mx-auto max-w-3xl space-y-12">
+      <div data-leave className="mx-auto max-w-3xl space-y-12">
         <div data-reveal className="space-y-4 text-center">
           <p className="text-sm font-semibold text-brand">Preguntas frecuentes</p>
           <h2 className="text-4xl font-semibold tracking-tight text-ink">Lo que nos preguntan antes de empezar</h2>
@@ -233,23 +231,18 @@ export function Faq() {
 export function FinalCta() {
   return (
     <section className="px-4 pb-24 sm:px-6">
-      <div
-        data-reveal
-        className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-linear-to-br from-brand to-accent px-6 py-20 text-center text-white shadow-2xl shadow-brand/30"
-      >
-        <div aria-hidden className="pointer-events-none absolute -top-24 -right-16 size-80 rounded-full border-[40px] border-white/10" />
-        <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-16 size-96 rounded-full border-[40px] border-white/10" />
-        <div className="relative space-y-6">
-          <h2 className="mx-auto max-w-[680px] text-4xl font-semibold tracking-tight sm:text-5xl">Abre tu menú digital hoy</h2>
-          <p className="mx-auto max-w-[680px] text-lg text-white/90">Registra tu negocio con un correo y una contraseña. Funciona en el navegador.</p>
-          <Link
-            to="/register"
-            className={`group inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-semibold text-brand shadow-lg hover:-translate-y-0.5 active:scale-[0.98] ${MOTION}`}
-          >
-            Crear mi negocio
-            <ArrowRightIcon size={16} weight="bold" aria-hidden className={`group-hover:translate-x-1 ${MOTION}`} />
-          </Link>
-        </div>
+      <div data-reveal className="mx-auto max-w-6xl rounded-3xl bg-brand px-6 py-24 text-center text-brand-ink">
+        <h2 className="mx-auto max-w-4xl text-5xl font-semibold tracking-tight text-balance sm:text-7xl">Abre tu menú digital hoy</h2>
+        <p className="mx-auto mt-6 max-w-[680px] text-lg text-pretty text-white/90">
+          Registra tu negocio con un correo y una contraseña. Funciona en el navegador.
+        </p>
+        <Link
+          to="/register"
+          className={`group mt-8 inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 text-base font-semibold text-white hover:-translate-y-0.5 active:scale-[0.98] ${MOTION}`}
+        >
+          Crear mi negocio
+          <ArrowRightIcon size={16} weight="bold" aria-hidden className={`group-hover:translate-x-1 ${MOTION}`} />
+        </Link>
       </div>
     </section>
   )

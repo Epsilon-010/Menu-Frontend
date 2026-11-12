@@ -41,15 +41,15 @@ function navLinkClass({ isActive }: { isActive: boolean }): string {
   return `inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold active:scale-[0.98] ${MOTION} ${state}`
 }
 
-/** Links of the colored side rail: white on the brand color, the current section raised on a white pill. */
+/** Links of the side rail: plain on the white rail, the current section on a pill of the brand color. */
 function railLinkClass({ isActive }: { isActive: boolean }): string {
-  const state = isActive ? 'bg-white text-brand shadow-md' : 'text-white/85 hover:translate-x-1 hover:bg-white/15 hover:text-white'
-  return `flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold active:scale-[0.98] ${MOTION} ${state}`
+  const state = isActive ? 'bg-brand text-brand-ink' : 'text-ink-soft hover:bg-subtle hover:text-ink'
+  return `flex w-full items-center gap-3 rounded-full px-4 py-2 text-sm font-semibold active:scale-[0.98] ${MOTION} ${state}`
 }
 
-/** Items of the slim icon rail: the current screen on a tinted tile, like a pressed key. */
+/** Items of the slim icon rail: the current screen on a tile of the brand color. */
 function iconRailLinkClass({ isActive }: { isActive: boolean }): string {
-  const state = isActive ? 'bg-brand/10 text-brand' : 'text-muted hover:bg-subtle hover:text-ink'
+  const state = isActive ? 'bg-brand text-brand-ink' : 'text-muted hover:bg-subtle hover:text-ink'
   return `flex w-full flex-col items-center gap-1 rounded-2xl px-1 py-3 text-xs font-semibold active:scale-[0.98] ${MOTION} ${state}`
 }
 
@@ -100,7 +100,7 @@ export function AppShell({
   const [menuOpen, setMenuOpen] = useState(false)
   // The full height menu holds the links; with none, sign out stays in the bar and there is nothing to open.
   const hasMenu = nav.length > 0
-  // A long navigation (the admin's eleven sections) gets a side rail on wide screens instead of hiding behind the toggle.
+  // A long navigation (the admin's eleven sections) gets a white side rail on wide screens instead of hiding behind the toggle.
   const hasRail = nav.length > 8
   const bar =
     nav.length === 0
@@ -143,19 +143,18 @@ export function AppShell({
       </a>
 
       {hasRail && (
-        <aside className="fixed inset-y-4 left-4 z-40 hidden w-60 flex-col gap-2 overflow-hidden rounded-3xl bg-linear-to-b from-brand to-action-hover p-3 text-white shadow-xl shadow-brand/25 xl:flex">
-          <div aria-hidden className="pointer-events-none absolute -top-16 -right-16 size-48 rounded-full border-[24px] border-white/10" />
-          <div className="relative flex min-w-0 items-center gap-3 p-2">
+        <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col gap-6 bg-surface p-4 xl:flex">
+          <div className="flex min-w-0 items-center gap-3 px-2 pt-2">
             {logoUrl ? (
-              <img src={logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-xl bg-white object-contain" />
+              <img src={logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-xl object-contain" />
             ) : (
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-brand">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand text-brand-ink">
                 <ForkKnifeIcon size={20} weight="bold" aria-hidden />
               </span>
             )}
-            <p className="truncate text-base font-semibold">{business}</p>
+            <p className="truncate text-base font-semibold text-ink">{business}</p>
           </div>
-          <nav aria-label="Secciones" className="relative min-h-0 flex-1 overflow-y-auto">
+          <nav aria-label="Secciones" className="min-h-0 flex-1 overflow-y-auto">
             <ul className="space-y-1">
               {nav.map((item) => (
                 <li key={item.to}>
@@ -167,19 +166,19 @@ export function AppShell({
               ))}
             </ul>
           </nav>
-          <div className="relative space-y-3 rounded-2xl bg-linear-to-br from-accent to-sun p-3 text-ink shadow-lg">
-            <div className="flex min-w-0 items-center gap-3">
-              <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-sm font-semibold text-brand">
+          <div className="space-y-2">
+            <div className="flex min-w-0 items-center gap-2 rounded-full border border-line p-1 pr-4">
+              <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand/10 text-sm font-semibold text-brand">
                 {identity.trim().charAt(0).toUpperCase()}
               </span>
-              <p className="truncate text-sm font-semibold">{identity}</p>
+              <p className="truncate text-sm font-semibold text-ink">{identity}</p>
             </div>
             {onSignOut && (
               <button
                 type="button"
                 onClick={onSignOut}
                 disabled={signingOut}
-                className={`flex w-full items-center justify-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-ink hover:bg-white/80 active:scale-[0.98] disabled:opacity-50 ${MOTION}`}
+                className={`flex w-full items-center gap-3 rounded-full px-4 py-2 text-sm font-semibold text-ink-soft hover:bg-subtle hover:text-ink active:scale-[0.98] disabled:opacity-50 ${MOTION}`}
               >
                 <SignOutIcon size={16} aria-hidden />
                 {signingOut ? 'Cerrando sesión…' : signOutLabel}
@@ -190,11 +189,11 @@ export function AppShell({
       )}
 
       {iconRail && (
-        <aside className="fixed inset-y-4 left-4 z-40 hidden w-24 flex-col items-center gap-4 rounded-3xl border border-line bg-surface p-3 shadow-lg shadow-brand/5 lg:flex">
+        <aside className="fixed inset-y-0 left-0 z-40 hidden w-24 flex-col items-center gap-4 bg-surface p-3 lg:flex">
           {logoUrl ? (
             <img src={logoUrl} alt="" className="size-12 shrink-0 rounded-2xl object-contain" />
           ) : (
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-brand to-accent text-white">
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-brand-ink">
               <ForkKnifeIcon size={24} weight="bold" aria-hidden />
             </span>
           )}
@@ -211,7 +210,7 @@ export function AppShell({
             </ul>
           </nav>
           <div className="flex w-full flex-col items-center gap-2">
-            <span aria-hidden className="flex size-10 items-center justify-center rounded-full bg-linear-to-br from-accent to-sun text-sm font-semibold text-ink">
+            <span aria-hidden className="flex size-10 items-center justify-center rounded-full bg-brand/10 text-sm font-semibold text-brand">
               {(person ?? identity).trim().charAt(0).toUpperCase()}
             </span>
             <p className="w-full truncate text-center text-xs text-muted">{person ?? identity}</p>
@@ -331,7 +330,7 @@ export function AppShell({
         </div>
       )}
 
-      <div className={hasRail ? 'xl:pl-64' : iconRail ? 'lg:pl-28' : undefined}>
+      <div className={hasRail ? 'xl:pl-60' : iconRail ? 'lg:pl-24' : undefined}>
         <main id="main" className={`mx-auto ${width} px-4 pt-8 pb-16 sm:px-6`}>
           {children}
         </main>

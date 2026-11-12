@@ -19,6 +19,8 @@ function reducedMotion(): boolean {
  * - `data-reveal`: rises and fades in the first time it scrolls into view; neighbours entering together stagger.
  * - `data-words`: its `data-word` children light up one at a time as the block crosses the viewport.
  * - `data-parallax="<px>"`: drifts that many pixels while its section scrolls by.
+ * - `data-tilt`: lies back in 3D and stands up as it scrolls into view.
+ * - `data-leave`: fades and moves up as it scrolls out through the top, so the next section takes over.
  *
  * With reduced motion nothing moves: every element simply stays visible.
  */
@@ -34,7 +36,7 @@ export function usePageMotion(scope: RefObject<HTMLElement | null>): void {
       }
 
       const revealing = gsap.utils.toArray<HTMLElement>('[data-reveal]')
-      gsap.set(revealing, { y: 32, opacity: 0 })
+      gsap.set(revealing, { y: 64, opacity: 0 })
       ScrollTrigger.batch(revealing, {
         start: 'top 88%',
         once: true,
@@ -53,7 +55,31 @@ export function usePageMotion(scope: RefObject<HTMLElement | null>): void {
         gsap.to(layer, {
           y: Number(layer.dataset.parallax),
           ease: 'none',
-          scrollTrigger: { trigger: layer.parentElement, start: 'top bottom', end: 'bottom top', scrub: 0.8 },
+          // Clamped: a layer already on screen when the page opens starts from its drawn position.
+          scrollTrigger: {
+            trigger: layer.closest('section') ?? layer.parentElement,
+            start: 'clamp(top bottom)',
+            end: 'bottom top',
+            scrub: 0.8,
+          },
+        })
+      }
+
+      for (const element of gsap.utils.toArray<HTMLElement>('[data-tilt]')) {
+        gsap.fromTo(
+          element,
+          { rotationX: 38, scale: 0.82, y: 48, transformPerspective: 1400, transformOrigin: '50% 100%' },
+          { rotationX: 0, scale: 1, y: 0, ease: 'none', scrollTrigger: { trigger: element.parentElement, start: 'top 95%', end: 'top 20%', scrub: 0.8 } },
+        )
+      }
+
+      for (const element of gsap.utils.toArray<HTMLElement>('[data-leave]')) {
+        gsap.to(element, {
+          y: -96,
+          scale: 0.96,
+          opacity: 0,
+          ease: 'none',
+          scrollTrigger: { trigger: element, start: 'bottom 50%', end: 'bottom top', scrub: true },
         })
       }
     }, root)
@@ -78,34 +104,4 @@ export function useSmoothScroll(): void {
       lenis.destroy()
     }
   }, [])
-}
-
-/** The element leans toward the pointer while it is over `area` and settles back when it leaves. */
-export function usePointerTilt(area: RefObject<HTMLElement | null>, target: RefObject<HTMLElement | null>): void {
-  useLayoutEffect(() => {
-    const zone = area.current
-    const element = target.current
-    if (!zone || !element || reducedMotion() || !window.matchMedia('(pointer: fine)').matches) return
-
-    const rotateX = gsap.quickTo(element, 'rotationX', { duration: 0.8, ease: SMOOTH })
-    const rotateY = gsap.quickTo(element, 'rotationY', { duration: 0.8, ease: SMOOTH })
-    gsap.set(element, { transformPerspective: 900 })
-
-    const move = (event: PointerEvent) => {
-      const box = zone.getBoundingClientRect()
-      rotateY(((event.clientX - box.left) / box.width - 0.5) * 12)
-      rotateX(-((event.clientY - box.top) / box.height - 0.5) * 10)
-    }
-    const leave = () => {
-      rotateX(0)
-      rotateY(0)
-    }
-    zone.addEventListener('pointermove', move)
-    zone.addEventListener('pointerleave', leave)
-    return () => {
-      zone.removeEventListener('pointermove', move)
-      zone.removeEventListener('pointerleave', leave)
-      gsap.killTweensOf(element)
-    }
-  }, [area, target])
 }

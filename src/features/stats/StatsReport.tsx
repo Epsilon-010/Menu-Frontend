@@ -33,7 +33,7 @@ function Tile({ label, value, detail, icon, tone = 'plain' }: TileProps) {
   return (
     <Card
       className={`space-y-1 p-4 transition duration-300 ease-smooth hover:-translate-y-1 hover:shadow-lg hover:shadow-brand/10 ${
-        filled ? 'border-transparent bg-linear-to-br from-brand to-accent' : ''
+        filled ? 'border-transparent bg-brand' : ''
       }`}
     >
       <div className="flex items-center justify-between gap-3">

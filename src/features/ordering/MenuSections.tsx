@@ -54,15 +54,24 @@ function Featured({ section, categories, layout, cards, onAdd }: {
   )
 }
 
+/**
+ * A message of the business. It reads as a statement, not as a product description: the title and the body use the
+ * theme's fonts at a larger size (`type-statement`, `type-lead`), under a short accent rule.
+ */
 function Text({ section }: { section: TextSection }) {
-  const box = section.style === 'highlight' ? 'rounded-2xl bg-brand px-6 py-8 text-brand-ink' : 'px-1'
-  const align = section.align === 'center' ? 'text-center' : 'text-left'
-  const ink = section.style === 'highlight' ? '' : 'text-secondary'
+  const highlight = section.style === 'highlight'
+  const centered = section.align === 'center'
+  const box = highlight ? 'rounded-2xl bg-brand px-6 py-10 text-brand-ink' : 'px-1 py-2'
   return (
-    <section className={`space-y-2 ${box} ${align}`}>
-      {section.title && <h2 className={`type-category ${ink}`}>{section.title}</h2>}
+    <section className={`space-y-3 ${box} ${centered ? 'text-center' : 'text-left'}`}>
+      <span aria-hidden className={`block h-1 w-12 rounded-full ${highlight ? 'bg-brand-ink/60' : 'bg-accent'} ${centered ? 'mx-auto' : ''}`} />
+      {section.title && <h2 className={`type-statement text-balance ${highlight ? '' : 'text-secondary'}`}>{section.title}</h2>}
       {section.body && (
-        <p className={`type-description whitespace-pre-line ${section.style === 'highlight' ? 'opacity-90' : 'text-ink-soft'}`}>
+        <p
+          className={`type-lead max-w-[60ch] text-pretty whitespace-pre-line ${centered ? 'mx-auto' : ''} ${
+            highlight ? 'opacity-90' : 'text-ink-soft'
+          }`}
+        >
           {section.body}
         </p>
       )}

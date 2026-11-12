@@ -208,6 +208,26 @@
 }
 
 /* The larger (md) menu buttons take the button font, weight, style, spacing and case, but keep their size. */
+/* Text sections of the menu page: the category and description fonts, larger, so a message never reads as fine
+   print. No alignment here: the section's own setting decides it. */
+.type-statement {
+  font-family: var(--type-category-family, inherit);
+  font-size: calc(var(--type-category-size, 1.25rem) * 1.3);
+  font-weight: var(--type-category-weight, 600);
+  font-style: var(--type-category-style, normal);
+  line-height: 1.15;
+  letter-spacing: var(--type-category-letter-spacing, -0.025em);
+  text-transform: var(--type-category-transform, none);
+}
+
+.type-lead {
+  font-family: var(--type-description-family, inherit);
+  font-size: max(calc(var(--type-description-size, 0.875rem) * 1.25), 1.0625rem);
+  font-weight: var(--type-description-weight, 400);
+  font-style: var(--type-description-style, normal);
+  line-height: 1.55;
+}
+
 .type-button-face {
   font-family: var(--type-button-family, inherit);
   font-weight: var(--type-button-weight, 600);

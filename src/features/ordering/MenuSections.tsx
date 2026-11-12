@@ -136,8 +136,9 @@ export function MenuSections({
         data-section={section.type}
         data-selected={selected ? 'true' : undefined}
         onClick={() => onSelect(section.id)}
-        className={`-m-2 cursor-pointer rounded-2xl p-2 outline-2 outline-offset-2 ${
-          selected ? 'outline outline-brand' : 'hover:outline hover:outline-dashed hover:outline-line-strong'
+        // The width goes with each state: `outline-2` alone already draws a solid outline around every section.
+        className={`-m-2 cursor-pointer rounded-2xl p-2 outline-offset-2 ${
+          selected ? 'outline-2 outline-brand' : 'hover:outline-2 hover:outline-dashed hover:outline-line-strong'
         }`}
       >
         {content}

@@ -291,8 +291,10 @@
 /* Two product cards per row on a phone-sized menu (`phoneGridClass`): tighter cards, the price beside a compact add
    button, a lower photo, and text no larger than fits a ~170px card. Unlayered, so it wins over the theme's padding utilities. */
 @container (max-width: 30rem) {
+  /* The row reaches half a rem into the page's side padding, so each card is as wide as two per row allow. */
   .phone-duo {
     gap: 0.5rem;
+    margin-inline: -0.5rem;
   }
   .phone-duo .card-body {
     gap: 0.5rem;

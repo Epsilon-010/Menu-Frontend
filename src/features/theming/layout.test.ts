@@ -64,11 +64,11 @@ describe('grid columns', () => {
   })
 })
 
-describe('grids on a phone', () => {
+describe('grids below the tablet widths', () => {
   it('show two smaller cards per row when the layout has two or more columns', () => {
     for (const columns of [2, 3, 4]) {
-      expect(phoneGridClass(columns, 'vertical')).toBe('phone-duo @max-[30rem]:grid-cols-2')
-      expect(phoneGridClass(columns, 'overlay')).toBe('phone-duo @max-[30rem]:grid-cols-2')
+      expect(phoneGridClass(columns, 'vertical')).toBe('phone-duo grid-cols-2')
+      expect(phoneGridClass(columns, 'overlay')).toBe('phone-duo grid-cols-2')
     }
   })
 
@@ -77,9 +77,8 @@ describe('grids on a phone', () => {
     expect(phoneGridClass(3, 'horizontal')).toBe('')
   })
 
-  it('leave wider menus (tablets) with the columns they had', () => {
-    // Only a max-width rule: nothing applies from 30rem up.
-    expect(phoneGridClass(3, 'vertical').split(' ').filter((name) => name.includes('grid-cols'))).toEqual(['@max-[30rem]:grid-cols-2'])
+  it('add only the base two columns, so wider menus (tablets) keep the columns of their own widths', () => {
+    expect(phoneGridClass(3, 'vertical').split(' ').filter((name) => name.includes('grid-cols'))).toEqual(['grid-cols-2'])
   })
 })
 

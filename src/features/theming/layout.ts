@@ -63,12 +63,12 @@ export function gridColumnsClass(columns: number): string {
 }
 
 /**
- * On a phone-sized menu (under 30rem) a grid of two or more columns shows two smaller cards per row instead of one
- * big one; `phone-duo` tightens the cards there (index.css). Rows with the image beside the text need the full width,
- * and wider menus (tablets) keep `gridColumnsClass` as it was.
+ * A grid of two or more columns never drops to one card per row: below the widths of `gridColumnsClass` it shows two,
+ * and on a phone-sized menu (under 30rem) `phone-duo` tightens the cards so they fit (index.css). Rows with the image
+ * beside the text need the full width, so they keep one per row.
  */
 export function phoneGridClass(columns: number, template: CardTemplate): string {
-  return columns >= 2 && template !== 'horizontal' ? 'phone-duo @max-[30rem]:grid-cols-2' : ''
+  return columns >= 2 && template !== 'horizontal' ? 'phone-duo grid-cols-2' : ''
 }
 
 const DENSITY: Record<Density, { sections: string; items: string }> = {

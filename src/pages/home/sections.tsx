@@ -9,18 +9,44 @@ import {
   QrCodeIcon,
   UsersThreeIcon,
 } from '@phosphor-icons/react'
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { MOTION } from '../../shared/ui/classes.ts'
 
-/** Part of the page, not a bar over it: no surface of its own, and it scrolls away with the hero. */
+/** True while a dark section (`data-dark-section`) sits under the strip at the top of the screen where the nav lives. */
+function useOverDarkSection(): boolean {
+  const [dark, setDark] = useState(false)
+  useEffect(() => {
+    const under = new Set<Element>()
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) under.add(entry.target)
+          else under.delete(entry.target)
+        }
+        setDark(under.size > 0)
+      },
+      // Only a thin band near the top of the screen counts: the line the nav sits on.
+      { rootMargin: '-36px 0px -92% 0px' },
+    )
+    for (const section of document.querySelectorAll('[data-dark-section]')) observer.observe(section)
+    return () => observer.disconnect()
+  }, [])
+  return dark
+}
+
+/**
+ * Stays at the top while the page scrolls, without looking like a bar: it takes the color of the section under it
+ * (the page background, or the dark one over dark sections), so it never stands out from the background.
+ */
 export function LandingNav() {
-  const link = `rounded-full px-3 py-2 text-sm font-semibold text-ink-soft hover:text-brand ${MOTION}`
+  const dark = useOverDarkSection()
+  const link = `rounded-full px-3 py-2 text-sm font-semibold ${dark ? 'text-white/70 hover:text-white' : 'text-ink-soft hover:text-brand'} ${MOTION}`
   return (
-    <header className="absolute inset-x-0 top-0 z-40 px-4 py-6 sm:px-6">
+    <header className={`fixed inset-x-0 top-0 z-40 px-4 py-4 backdrop-blur-md sm:px-6 ${dark ? 'bg-ink/85 text-white' : 'bg-canvas/85 text-ink'} ${MOTION}`}>
       <nav aria-label="Principal" className="mx-auto flex max-w-6xl items-center justify-between gap-4 whitespace-nowrap">
-        <Link to="/" aria-current="page" className="flex items-center gap-2 text-lg font-semibold text-ink">
-          <ForkKnifeIcon size={24} weight="fill" aria-hidden className="text-brand" />
+        <Link to="/" aria-current="page" className="flex items-center gap-2 text-lg font-semibold">
+          <ForkKnifeIcon size={24} weight="fill" aria-hidden className={dark ? 'text-sun' : 'text-brand'} />
           Menú
         </Link>
         <ul className="hidden items-center md:flex">
@@ -44,7 +70,7 @@ export function LandingNav() {
           </Link>
           <Link
             to="/register"
-            className={`rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-brand active:scale-[0.98] ${MOTION}`}
+            className={`rounded-full px-4 py-2 text-sm font-semibold active:scale-[0.98] ${dark ? 'bg-white text-ink hover:bg-sun' : 'bg-ink text-white hover:bg-brand'} ${MOTION}`}
           >
             Crear mi negocio
           </Link>
@@ -156,7 +182,7 @@ const TAGLINE = 'La mesa pide cuando quiere. La cocina cocina sin interrupciones
 /** The words light up one at a time as the block crosses the screen (see `data-words` in the page motion). */
 export function Tagline() {
   return (
-    <section className="bg-ink px-4 py-32 sm:px-6">
+    <section data-dark-section className="bg-ink px-4 py-32 sm:px-6">
       <p data-words className="mx-auto max-w-4xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
         {TAGLINE.split(' ').map((word, index) => (
           <span key={index} data-word>

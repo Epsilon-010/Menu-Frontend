@@ -17,7 +17,7 @@ function Tablet({ children }: { children: ReactNode }) {
 /** First half: the table menu on a tablet. It lies back and stands up as the section scrolls in (`data-tilt`). */
 export function AppShowcase() {
   return (
-    <section id="app" className="overflow-hidden bg-ink px-4 py-24 text-white sm:px-6">
+    <section id="app" data-dark-section className="overflow-hidden bg-ink px-4 py-24 text-white sm:px-6">
       <div className="mx-auto max-w-6xl">
         <div data-reveal className="mx-auto max-w-3xl space-y-4 text-center">
           <p className="text-sm font-semibold text-sun">La app en la mesa</p>

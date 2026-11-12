@@ -16,7 +16,7 @@ export function SectionHeader({ title, icon, description, action }: SectionHeade
         {icon && (
           <span
             aria-hidden
-            className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-brand to-accent text-white shadow-lg shadow-brand/25"
+            className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand"
           >
             {icon}
           </span>

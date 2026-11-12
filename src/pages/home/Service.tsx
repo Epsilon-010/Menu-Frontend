@@ -98,7 +98,7 @@ export function ServiceFlow() {
           <div id="flow-panel" role="tabpanel" aria-labelledby={`flow-tab-${selected}`} className="lg:col-span-7 lg:col-start-6 lg:row-span-3 lg:row-start-1">
             {/* Lies back and stands up as it scrolls in (`data-tilt`), then keeps a slow float. Its width also follows
                 the screen height (4:3), so the whole tablet fits in one screen. */}
-            <div data-tilt className="mx-auto lg:max-w-[calc((100svh-13rem)*4/3)]">
+            <div data-tilt className="mx-auto lg:max-w-[calc((100svh_-_13rem)*4/3)]">
               <div className="rounded-4xl bg-neutral-800 p-2 shadow-2xl ring-1 ring-white/10 motion-safe:animate-float-slow sm:p-3">
                 <div className="relative aspect-4/3 overflow-hidden rounded-2xl bg-surface">
                   {STEPS.map((option, index) => (

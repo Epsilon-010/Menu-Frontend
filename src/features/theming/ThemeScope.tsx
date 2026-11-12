@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import type { ImageUrls, Theme } from './api.ts'
 import { backgroundPatternStyle, themeVariables } from './style.ts'
+import { ThemeVarsContext } from './themeVars.ts'
 import { googleFontsUrl, typographyVariables } from './typography.ts'
 import { useFontStylesheet } from './useFontStylesheet.ts'
 
@@ -56,14 +57,14 @@ export function ThemeScope({ theme, imageUrls, contained = false, className = ''
     ...themeVariables(theme.colors),
     ...typographyVariables(theme.typography),
     fontFamily: 'var(--type-body-family)',
-  }
+  } as CSSProperties
   return (
     <div
-      style={style as CSSProperties}
+      style={style}
       className={`@container relative isolate bg-canvas text-ink ${className}`}
     >
       <BackgroundLayer theme={theme} imageUrls={imageUrls} contained={contained} />
-      {children}
+      <ThemeVarsContext.Provider value={style}>{children}</ThemeVarsContext.Provider>
     </div>
   )
 }

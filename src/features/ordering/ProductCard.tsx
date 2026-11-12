@@ -14,7 +14,7 @@ import {
   cardShellClass,
   descriptionClampClass,
 } from '../theming/cards.ts'
-import { AddLineForm } from './AddLineForm.tsx'
+import { ProductDialog } from './ProductDialog.tsx'
 import type { MenuItem } from './api.ts'
 
 function Badges({ badges, shape }: { badges: Badge[]; shape: BadgeShape }) {
@@ -111,8 +111,7 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
   const overlay = template === 'overlay' && image !== null
   const clamp = descriptionClampClass(cards.description_lines)
   const padding = cardPaddingClass(cards)
-  // The add form takes the footer's place, so the price moves next to the name while it is open.
-  const priceBesideName = cards.price_position === 'top' || adding
+  const priceBesideName = cards.price_position === 'top'
 
   const price = (
     <p className={`type-price shrink-0 tabular-nums ${overlay ? 'text-white' : 'text-price'}`}>{formatMoney(item.price_cents)}</p>
@@ -139,10 +138,10 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
       {button}
     </div>
   )
-  // Closing unmounts the form, so the next open starts again from one dish and no options.
-  const form = <AddLineForm item={item} onAdd={onAdd} onDone={() => setAdding(false)} />
-  // `card-*` names are hooks for the two-column phone grid (see `.phone-duo` in index.css); an open add form takes the row.
-  const shell = `h-full overflow-hidden bg-surface ${cardShellClass(cards)}${adding ? ' card-adding' : ''}`
+  // Options, quantity and note are chosen in a window over the menu, so the card never changes size.
+  const dialog = <ProductDialog item={item} open={adding} onOpenChange={setAdding} onAdd={onAdd} />
+  // `card-*` names are hooks for the two-column phone grid (see `.phone-duo` in index.css).
+  const shell = `h-full overflow-hidden bg-surface ${cardShellClass(cards)}`
   // Parts with nothing to show (no description, no badges) are skipped, so the name and the next text stay together.
   const empty = (block: CardBlock) =>
     (block === 'description' && text.description === null) || (block === 'badges' && item.badges.length === 0)
@@ -162,19 +161,18 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
           />
           <div aria-hidden className={`[grid-area:1/1] w-full ${cardAspectClass(cards)}`} />
           <div className={`relative flex min-w-0 flex-col gap-4 self-end [grid-area:1/1] card-body ${padding}`}>
-            {arrange(blocks, text, adding ? null : footer)}
+            {arrange(blocks, text, footer)}
           </div>
         </div>
-        {adding && <div className={`card-body ${padding}`}>{form}</div>}
+        {dialog}
       </article>
     )
   }
 
-  const body = adding ? form : footer
   const segment = (part: CardBlock[], key: string, grow: boolean) =>
     part.some((block) => block !== 'image') ? (
       <div key={key} className={['flex min-w-0', grow && 'flex-1', 'flex-col gap-4 card-body', padding].filter(Boolean).join(' ')}>
-        {arrange(part, text, body)}
+        {arrange(part, text, footer)}
       </div>
     ) : null
 
@@ -184,6 +182,7 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
       <article className={`flex ${direction} ${shell}`}>
         {image && <img src={image} alt={item.name} loading="lazy" className={`w-28 shrink-0 bg-subtle ${cardFitClass(cards)} @2xl:w-40`} />}
         {segment(blocks, 'body', true)}
+        {dialog}
       </article>
     )
   }
@@ -198,6 +197,7 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
       {segment(before, 'before', after.length === 0)}
       {image && <img src={image} alt={item.name} loading="lazy" className={`w-full bg-subtle ${cardImageClass(cards)}`} />}
       {segment(after, 'after', true)}
+      {dialog}
     </article>
   )
 }

@@ -19,7 +19,6 @@ function reducedMotion(): boolean {
  * - `data-reveal`: rises and fades in the first time it scrolls into view; neighbours entering together stagger.
  * - `data-words`: its `data-word` children light up one at a time as the block crosses the viewport.
  * - `data-parallax="<px>"`: drifts that many pixels while its section scrolls by.
- * - `data-parallax-x="<px>"`: the same, sideways.
  * - `data-tilt`: lies back in 3D and stands up as it scrolls into view.
  * - `data-leave`: fades and moves up as it scrolls out through the top, so the next section takes over.
  *
@@ -66,18 +65,10 @@ export function usePageMotion(scope: RefObject<HTMLElement | null>): void {
         })
       }
 
-      for (const layer of gsap.utils.toArray<HTMLElement>('[data-parallax-x]')) {
-        gsap.to(layer, {
-          x: Number(layer.dataset.parallaxX),
-          ease: 'none',
-          scrollTrigger: { trigger: layer.closest('section') ?? layer.parentElement, start: 'top bottom', end: 'bottom top', scrub: 0.8 },
-        })
-      }
-
       for (const element of gsap.utils.toArray<HTMLElement>('[data-tilt]')) {
         gsap.fromTo(
           element,
-          { rotationX: 38, scale: 0.82, y: 96, transformPerspective: 1400, transformOrigin: '50% 100%' },
+          { rotationX: 38, scale: 0.82, y: 48, transformPerspective: 1400, transformOrigin: '50% 100%' },
           { rotationX: 0, scale: 1, y: 0, ease: 'none', scrollTrigger: { trigger: element.parentElement, start: 'top 95%', end: 'top 20%', scrub: 0.8 } },
         )
       }

@@ -51,7 +51,6 @@ export function LandingNav() {
         </Link>
         <ul className="hidden items-center md:flex">
           {[
-            ['#app', 'La app'],
             ['#flow', 'El servicio'],
             ['#benefits', 'Beneficios'],
             ['#design', 'Diseño'],

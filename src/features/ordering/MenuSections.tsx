@@ -136,9 +136,10 @@ export function MenuSections({
         data-section={section.type}
         data-selected={selected ? 'true' : undefined}
         onClick={() => onSelect(section.id)}
-        // The width goes with each state: `outline-2` alone already draws a solid outline around every section.
+        // Width and style go with each state. In Tailwind 4 `outline-2` on the base classes also sets a style
+        // (solid by default), which drew an outline around every section, picked or not.
         className={`-m-2 cursor-pointer rounded-2xl p-2 outline-offset-2 ${
-          selected ? 'outline-2 outline-brand' : 'hover:outline-2 hover:outline-dashed hover:outline-line-strong'
+          selected ? 'outline-2 outline-solid outline-brand' : 'hover:outline-2 hover:outline-dashed hover:outline-line-strong'
         }`}
       >
         {content}

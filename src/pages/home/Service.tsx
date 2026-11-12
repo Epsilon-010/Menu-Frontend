@@ -42,20 +42,28 @@ export function ServiceFlow() {
   const next = (selected + 1) % STEPS.length
 
   return (
-    <section id="flow" data-dark-section className="overflow-hidden bg-ink px-4 py-24 text-white sm:px-6">
-      <div className="mx-auto max-w-6xl">
-        <div data-reveal className="max-w-3xl space-y-4">
-          <p className="text-sm font-semibold text-sun">El servicio, paso a paso</p>
-          <h2 className="text-4xl font-semibold tracking-tight text-balance sm:text-6xl">De la mesa a la cocina, sin intermediarios</h2>
-          <p className="max-w-[680px] text-lg text-pretty text-white/70">Toca un paso para ver esa pantalla de la app.</p>
-        </div>
+    // From `lg` up the section is one full screen: the text and steps on the left, the tablet on the right, both
+    // centered, so it never shows cut in half. The wrapper grows with the screen instead of stopping at 72rem.
+    <section
+      id="flow"
+      data-dark-section
+      className="overflow-hidden bg-ink px-4 py-24 text-white sm:px-6 lg:flex lg:min-h-svh lg:items-center lg:px-12 lg:short:pt-20 lg:short:pb-4"
+    >
+      <div className="mx-auto w-full max-w-6xl lg:max-w-[100rem]">
+        <div className="grid gap-8 lg:grid-cols-12 lg:items-center lg:gap-x-12 lg:gap-y-8 lg:short:gap-y-4 2xl:gap-x-20">
+          <div data-reveal className="space-y-4 lg:col-span-5 lg:col-start-1 lg:row-start-1 lg:self-end">
+            <p className="text-sm font-semibold text-sun">El servicio, paso a paso</p>
+            <h2 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-4xl xl:text-5xl xl:short:text-4xl 2xl:text-6xl">
+              De la mesa a la cocina, sin intermediarios
+            </h2>
+            <p className="max-w-[680px] text-lg text-pretty text-white/70">Toca un paso para ver esa pantalla de la app.</p>
+          </div>
 
-        <div className="mt-12 grid gap-8 lg:grid-cols-12 lg:gap-x-12 lg:gap-y-8">
           <div
             data-reveal
             role="tablist"
             aria-label="Pasos del servicio"
-            className="grid grid-cols-3 gap-2 lg:col-span-4 lg:grid-cols-1 lg:gap-3 lg:self-start"
+            className="grid grid-cols-3 gap-2 lg:col-span-5 lg:col-start-1 lg:row-start-2 lg:grid-cols-1 lg:gap-3 lg:short:gap-2"
           >
             {STEPS.map((option, index) => (
               <button
@@ -66,7 +74,7 @@ export function ServiceFlow() {
                 aria-selected={index === selected}
                 aria-controls="flow-panel"
                 onClick={() => setSelected(index)}
-                className={`flex flex-col items-center gap-2 rounded-2xl border p-3 text-center text-sm font-semibold active:scale-[0.98] lg:flex-row lg:gap-4 lg:p-4 lg:text-left lg:text-lg ${MOTION} ${
+                className={`flex flex-col items-center gap-2 rounded-2xl border p-3 text-center text-sm font-semibold active:scale-[0.98] lg:flex-row lg:gap-4 lg:p-4 lg:text-left lg:text-lg lg:short:p-2.5 lg:short:text-base ${MOTION} ${
                   index === selected
                     ? 'border-white bg-white text-ink shadow-xl'
                     : 'border-white/15 text-white/70 hover:border-white/40 hover:bg-white/5 hover:text-white'
@@ -87,9 +95,10 @@ export function ServiceFlow() {
             ))}
           </div>
 
-          <div id="flow-panel" role="tabpanel" aria-labelledby={`flow-tab-${selected}`} className="lg:col-span-8 lg:row-span-2">
-            {/* Lies back and stands up as it scrolls in (`data-tilt`), then keeps a slow float. */}
-            <div data-tilt>
+          <div id="flow-panel" role="tabpanel" aria-labelledby={`flow-tab-${selected}`} className="lg:col-span-7 lg:col-start-6 lg:row-span-3 lg:row-start-1">
+            {/* Lies back and stands up as it scrolls in (`data-tilt`), then keeps a slow float. Its width also follows
+                the screen height (4:3), so the whole tablet fits in one screen. */}
+            <div data-tilt className="mx-auto lg:max-w-[calc((100svh-13rem)*4/3)]">
               <div className="rounded-4xl bg-neutral-800 p-2 shadow-2xl ring-1 ring-white/10 motion-safe:animate-float-slow sm:p-3">
                 <div className="relative aspect-4/3 overflow-hidden rounded-2xl bg-surface">
                   {STEPS.map((option, index) => (
@@ -110,8 +119,8 @@ export function ServiceFlow() {
           </div>
 
           {/* Keyed by step so the text rises in again each time the step changes. */}
-          <div key={selected} className="motion-safe:animate-card-rise lg:col-span-4 lg:self-start">
-            <h3 className="text-2xl font-semibold text-balance">{step.title}</h3>
+          <div key={selected} className="motion-safe:animate-card-rise lg:col-span-5 lg:col-start-1 lg:row-start-3 lg:min-h-44 lg:self-start lg:short:min-h-40">
+            <h3 className="text-2xl font-semibold text-balance lg:short:text-xl">{step.title}</h3>
             <p className="mt-2 text-base text-pretty text-white/70">{step.body}</p>
             <button
               type="button"

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Low screens (laptops up to 960px high): full-screen sections tighten up so they still fit in one screen. */
+@custom-variant short (@media (max-height: 960px));
+
 @theme {
   --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;

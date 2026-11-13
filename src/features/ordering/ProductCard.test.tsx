@@ -43,8 +43,16 @@ describe('the parts of a product card', () => {
     expect(drawnOrder(html)).toEqual(['image', 'badges', 'heading', 'description', 'add_button'])
     // The name and the description right below it stay together; the price sits beside the name.
     expect(html).toMatch(
-      /<div class="space-y-1"><div class="flex items-start justify-between gap-4"><h3[^>]*>Chilaquiles<\/h3><p[^>]*>\$89.00<\/p><\/div><p/,
+      /<div class="space-y-1"><div class="card-heading flex items-start justify-between gap-4"><h3[^>]*>Chilaquiles<\/h3><p[^>]*>\$89.00<\/p><\/div><p/,
     )
+  })
+
+  it('repeat the price, hidden, beside the add button when it sits by the name, for the two-column phone grid', () => {
+    const top = render(DEFAULT_CARDS.blocks)
+    expect(top).toMatch(/<div class="card-footer contents"><p class="card-footer-price hidden [^"]*">\$89.00<\/p><button/)
+    const bottom = render(DEFAULT_CARDS.blocks, 'vertical', { price_position: 'bottom' })
+    expect(bottom).not.toContain('card-footer-price')
+    expect(bottom.split('$89.00')).toHaveLength(2)
   })
 
   it('follow the theme order, the image included in the vertical template', () => {
@@ -52,7 +60,7 @@ describe('the parts of a product card', () => {
     const html = render(blocks)
     expect(drawnOrder(html)).toEqual(blocks)
     // The image stays full width between the padded parts above and below it.
-    expect(html).toMatch(/p-4"><div class="flex-1 space-y-2">.*<\/div><\/div><img [^>]*class="w-full/)
+    expect(html).toMatch(/p-4"><div class="flex-1 space-y-2">.*<\/div><\/div><img [^>]*class="card-image w-full/)
   })
 
   it('keep the image beside the text in the horizontal and overlay templates, ordering only the text', () => {
@@ -81,6 +89,6 @@ describe('the parts of a product card', () => {
     expect(drawnOrder(html)).toEqual(['add_button', 'heading'])
     expect(html).not.toContain('<img')
     // Without an image the card is one padded stretch, not two around a missing picture.
-    expect(html.match(/flex-col gap-4 p-4/g)).toHaveLength(1)
+    expect(html.match(/flex-col gap-4 card-body p-4/g)).toHaveLength(1)
   })
 })

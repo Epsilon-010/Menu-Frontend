@@ -14,7 +14,7 @@ import {
   cardShellClass,
   descriptionClampClass,
 } from '../theming/cards.ts'
-import { AddLineForm } from './AddLineForm.tsx'
+import { ProductDialog } from './ProductDialog.tsx'
 import type { MenuItem } from './api.ts'
 
 function Badges({ badges, shape }: { badges: Badge[]; shape: BadgeShape }) {
@@ -44,7 +44,7 @@ function AddButton({ name, cards, onClick }: AddButtonProps) {
       icon={style === 'text' ? undefined : <PlusIcon size={16} aria-hidden />}
       aria-label={style === 'icon' ? `Agregar ${name}` : undefined}
       onClick={onClick}
-      className={`type-button ${buttonShapeClass(shape)}`}
+      className={`type-button card-add ${style === 'both' ? 'card-add-labelled ' : ''}${buttonShapeClass(shape)}`}
     >
       {style === 'icon' ? null : 'Agregar'}
     </Button>
@@ -111,15 +111,13 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
   const overlay = template === 'overlay' && image !== null
   const clamp = descriptionClampClass(cards.description_lines)
   const padding = cardPaddingClass(cards)
-  // The add form takes the footer's place, so the price moves next to the name while it is open.
-  const priceBesideName = cards.price_position === 'top' || adding
+  const priceBesideName = cards.price_position === 'top'
 
-  const price = (
-    <p className={`type-price shrink-0 tabular-nums ${overlay ? 'text-white' : 'text-price'}`}>{formatMoney(item.price_cents)}</p>
-  )
+  const priceClass = `type-price shrink-0 tabular-nums ${overlay ? 'text-white' : 'text-price'}`
+  const price = <p className={priceClass}>{formatMoney(item.price_cents)}</p>
   const text: Record<TextBlock, ReactNode> = {
     heading: (
-      <div className="flex items-start justify-between gap-4">
+      <div className="card-heading flex items-start justify-between gap-4">
         <h3 className={`type-product-name flex-1 text-pretty ${overlay ? 'text-white' : 'text-ink'}`}>{item.name}</h3>
         {priceBesideName && price}
       </div>
@@ -131,16 +129,23 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
     badges: <Badges badges={item.badges} shape={cards.badge_shape} />,
   }
   const button = <AddButton name={item.name} cards={cards} onClick={() => setAdding(true)} />
+  // Beside the name the price leaves the button alone in the foot; the two-column phone grid moves it down here
+  // (`card-footer-price`), so a narrow card is one row shorter. Anywhere else the wrapper draws no box (`contents`):
+  // the button is laid out as the direct child of the card it always was.
   const footer = priceBesideName ? (
-    button
+    <div className="card-footer contents">
+      <p className={`card-footer-price hidden ${priceClass}`}>{formatMoney(item.price_cents)}</p>
+      {button}
+    </div>
   ) : (
-    <div className="flex items-center justify-between gap-4">
+    <div className="card-footer flex items-center justify-between gap-4">
       {price}
       {button}
     </div>
   )
-  // Closing unmounts the form, so the next open starts again from one dish and no options.
-  const form = <AddLineForm item={item} onAdd={onAdd} onDone={() => setAdding(false)} />
+  // Options, quantity and note are chosen in a window over the menu, so the card never changes size.
+  const dialog = <ProductDialog item={item} open={adding} onOpenChange={setAdding} onAdd={onAdd} />
+  // `card-*` names are hooks for the two-column phone grid (see `.phone-duo` in index.css).
   const shell = `h-full overflow-hidden bg-surface ${cardShellClass(cards)}`
   // Parts with nothing to show (no description, no badges) are skipped, so the name and the next text stay together.
   const empty = (block: CardBlock) =>
@@ -160,20 +165,19 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
             style={{ opacity: cards.overlay_opacity / 100 }}
           />
           <div aria-hidden className={`[grid-area:1/1] w-full ${cardAspectClass(cards)}`} />
-          <div className={`relative flex min-w-0 flex-col gap-4 self-end [grid-area:1/1] ${padding}`}>
-            {arrange(blocks, text, adding ? null : footer)}
+          <div className={`relative flex min-w-0 flex-col gap-4 self-end [grid-area:1/1] card-body ${padding}`}>
+            {arrange(blocks, text, footer)}
           </div>
         </div>
-        {adding && <div className={padding}>{form}</div>}
+        {dialog}
       </article>
     )
   }
 
-  const body = adding ? form : footer
   const segment = (part: CardBlock[], key: string, grow: boolean) =>
     part.some((block) => block !== 'image') ? (
-      <div key={key} className={['flex min-w-0', grow && 'flex-1', 'flex-col gap-4', padding].filter(Boolean).join(' ')}>
-        {arrange(part, text, body)}
+      <div key={key} className={['flex min-w-0', grow && 'flex-1', 'flex-col gap-4 card-body', padding].filter(Boolean).join(' ')}>
+        {arrange(part, text, footer)}
       </div>
     ) : null
 
@@ -183,6 +187,7 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
       <article className={`flex ${direction} ${shell}`}>
         {image && <img src={image} alt={item.name} loading="lazy" className={`w-28 shrink-0 bg-subtle ${cardFitClass(cards)} @2xl:w-40`} />}
         {segment(blocks, 'body', true)}
+        {dialog}
       </article>
     )
   }
@@ -195,8 +200,9 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
   return (
     <article className={`flex flex-col ${shell}`}>
       {segment(before, 'before', after.length === 0)}
-      {image && <img src={image} alt={item.name} loading="lazy" className={`w-full bg-subtle ${cardImageClass(cards)}`} />}
+      {image && <img src={image} alt={item.name} loading="lazy" className={`card-image w-full bg-subtle ${cardImageClass(cards)}`} />}
       {segment(after, 'after', true)}
+      {dialog}
     </article>
   )
 }

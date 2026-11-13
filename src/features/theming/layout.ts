@@ -62,6 +62,24 @@ export function gridColumnsClass(columns: number): string {
   return GRID_COLUMNS[columns] ?? GRID_COLUMNS[DEFAULT_LAYOUT.columns]
 }
 
+// Two cards per row below the first width of `GRID_COLUMNS`, as a max-width rule that ends exactly where that width
+// starts: the two ranges never overlap, so the columns do not depend on the order of the rules in the stylesheet.
+const PHONE_GRID: Record<number, string> = {
+  2: '@max-[39rem]:grid-cols-2',
+  3: '@max-[37rem]:grid-cols-2',
+  4: '@max-[37rem]:grid-cols-2',
+}
+
+/**
+ * A grid of two or more columns never drops to one card per row: below the widths of `gridColumnsClass` it shows two,
+ * and on a phone-sized menu (under 30rem) `phone-duo` tightens the cards so they fit (index.css). Rows with the image
+ * beside the text need the full width, so they keep one per row.
+ */
+export function phoneGridClass(columns: number, template: CardTemplate): string {
+  const twoPerRow = PHONE_GRID[columns]
+  return twoPerRow && template !== 'horizontal' ? `phone-duo ${twoPerRow}` : ''
+}
+
 const DENSITY: Record<Density, { sections: string; items: string }> = {
   compact: { sections: 'space-y-6', items: 'gap-2' },
   comfortable: { sections: 'space-y-8', items: 'gap-4' },

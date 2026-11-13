@@ -10,6 +10,7 @@ import {
   DEFAULT_LAYOUT,
   densitySpacing,
   gridColumnsClass,
+  phoneGridClass,
   showsOneCategory,
 } from '../theming/layout.ts'
 import type { MenuCategory, MenuItem } from './api.ts'
@@ -104,7 +105,7 @@ export function ProductList({ items, label, view, columns, template, density, ca
       </div>
     )
   }
-  return <div className={`grid ${gap} ${gridColumnsClass(columns)}`}>{items.map(card)}</div>
+  return <div className={['grid', gap, gridColumnsClass(columns), phoneGridClass(columns, template)].filter(Boolean).join(' ')}>{items.map(card)}</div>
 }
 
 interface ProductsProps {

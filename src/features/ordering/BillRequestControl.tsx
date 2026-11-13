@@ -21,7 +21,7 @@ export function BillRequestControl({ requestedAt, onChange }: BillRequestControl
     <div aria-busy={busy} className="space-y-2">
       {asked ? (
         <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <p role="status" className="flex flex-1 items-center gap-2 text-sm font-medium text-amber-900">
+          <p role="status" className="flex flex-1 basis-48 items-center gap-2 text-sm font-medium text-amber-900">
             <BellRingingIcon size={18} aria-hidden />
             Cuenta pedida a las {clockTime(asked)}. Tu mesero va en camino.
           </p>

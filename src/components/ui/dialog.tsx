@@ -23,7 +23,7 @@ export function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          'fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto',
+          'fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] grid-cols-[minmax(0,1fr)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto',
           'rounded-2xl border border-line bg-surface p-6 text-ink shadow-lg motion-safe:data-[state=open]:animate-popover-in',
           className,
         )}
@@ -32,7 +32,7 @@ export function DialogContent({
         {children}
         <DialogPrimitive.Close
           className={cn(
-            'absolute top-4 right-4 rounded-lg p-2 text-muted hover:bg-subtle hover:text-ink active:scale-[0.98]',
+            'absolute top-4 right-4 rounded-lg p-2 text-muted pointer-coarse:top-3 pointer-coarse:right-3 pointer-coarse:p-3 hover:bg-subtle hover:text-ink active:scale-[0.98]',
             MOTION,
             FOCUS_RING,
           )}

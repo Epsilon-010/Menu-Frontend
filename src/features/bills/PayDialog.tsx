@@ -74,8 +74,8 @@ export function PayDialog({ open, tableName, bill, method, onMethod, busy, error
           {lines.map((line) => {
             const left = scope === 'delivered' && !line.delivered
             return (
-              <li key={line.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-                <span className={`min-w-0 ${left ? 'text-faint line-through' : 'text-ink'}`}>
+              <li key={line.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-3 py-2 text-sm">
+                <span className={`min-w-0 flex-1 basis-32 wrap-anywhere ${left ? 'text-faint line-through' : 'text-ink'}`}>
                   <span className="font-semibold tabular-nums">{line.quantity} ×</span> {line.name}
                 </span>
                 <span className="flex shrink-0 items-center gap-2">
@@ -122,7 +122,7 @@ export function PayDialog({ open, tableName, bill, method, onMethod, busy, error
           </div>
         )}
 
-        <div className="flex items-baseline justify-between gap-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <span className="text-sm font-medium text-ink-soft">Total a cobrar</span>
           <span className="text-4xl font-semibold tracking-tight text-ink tabular-nums">{formatMoney(total)}</span>
         </div>
@@ -141,7 +141,7 @@ export function PayDialog({ open, tableName, bill, method, onMethod, busy, error
             onValueChange={(next) => next && onMethod(next as PaymentMethod)}
           >
             {PAYMENT_METHODS.map((option) => (
-              <ToggleGroupItem key={option.value} value={option.value} className="min-h-11 text-base">
+              <ToggleGroupItem key={option.value} value={option.value} className="min-h-11 text-sm max-[23rem]:gap-1 max-[23rem]:px-1 min-[23rem]:text-base">
                 {METHOD_ICONS[option.value]}
                 {option.label}
               </ToggleGroupItem>

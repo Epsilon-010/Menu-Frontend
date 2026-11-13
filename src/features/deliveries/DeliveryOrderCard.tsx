@@ -31,7 +31,7 @@ function DishLine({ item, children }: { item: StaffOrderItem; children?: ReactNo
   const note = cancellationNote(item)
   return (
     <li className="flex items-center justify-between gap-3 py-2 text-sm">
-      <div className="min-w-0 space-y-1">
+      <div className="min-w-0 space-y-1 wrap-anywhere">
         <p className={item.status === 'cancelled' ? 'text-faint line-through' : 'text-ink'}>
           <span className="font-semibold tabular-nums">{item.quantity} ×</span> <span className="font-medium">{item.name}</span>
           <span className="text-muted"> · {item.added_by}</span>

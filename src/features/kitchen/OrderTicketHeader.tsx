@@ -20,8 +20,8 @@ export function OrderTicketHeader({ order, now, late, title, size = 'regular' }:
   const large = size === 'large'
   const sentAt = clockTime(order.created_at)
   return (
-    <header className="flex items-start justify-between gap-3">
-      <div className="min-w-0 flex-1 space-y-1">
+    <header className="flex flex-wrap items-start justify-between gap-3">
+      <div className="min-w-0 flex-1 basis-32 space-y-1">
         <h2 className={cn('font-semibold tracking-tight text-balance text-ink', large ? 'text-2xl' : 'text-lg')}>
           {title ?? (
             <>

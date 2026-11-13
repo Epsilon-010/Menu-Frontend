@@ -39,7 +39,7 @@ function LineRow({ line, item, onChange, onRemove }: LineRowProps) {
           {formatMoney(line.subtotal_cents)}
         </p>
       </div>
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <QuantityStepper
           value={line.quantity}
           label={line.name}

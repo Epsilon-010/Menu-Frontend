@@ -32,7 +32,7 @@ export function OrderCard({ order, showPrices = true, itemActions, footer }: Ord
       <ul className="space-y-2">
         {order.items.map((item) => (
           <li key={item.id} className="flex items-start justify-between gap-4 text-sm">
-            <div className="min-w-0 space-y-1">
+            <div className="min-w-0 space-y-1 wrap-anywhere">
               <p className={item.status === 'cancelled' ? 'text-faint line-through' : 'text-ink'}>
                 <span className="font-semibold tabular-nums">{item.quantity} ×</span> {item.name}
                 <span className="text-muted"> · {item.added_by}</span>

@@ -74,7 +74,7 @@ export function ItemRow({ item, categories, modifierGroups, isFirst, isLast, act
 
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className={`font-medium ${item.is_available ? 'text-ink' : 'text-faint'}`}>{item.name}</p>
+            <p className={`font-medium wrap-anywhere ${item.is_available ? 'text-ink' : 'text-faint'}`}>{item.name}</p>
             {!item.is_available && <Badge tone="warning">Oculto</Badge>}
           </div>
           {item.description && <p className="line-clamp-1 text-sm text-muted">{item.description}</p>}

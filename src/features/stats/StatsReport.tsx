@@ -48,7 +48,7 @@ function Tile({ label, value, detail, icon, tone = 'plain' }: TileProps) {
 
 function Block({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
-    <Card className="space-y-4 p-4">
+    <Card className="min-w-0 space-y-4 p-4">
       <div className="space-y-1">
         <h2 className="font-semibold text-ink">{title}</h2>
         {description && <p className="text-sm text-muted">{description}</p>}
@@ -150,7 +150,7 @@ export function StatsReport({ stats }: { stats: Statistics }) {
         </details>
       </Block>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Block title="Métodos de pago" description="Cuentas pagadas en este rango.">
           <Table
             rows={stats.payment_methods}

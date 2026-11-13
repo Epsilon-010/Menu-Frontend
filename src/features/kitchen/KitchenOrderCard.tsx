@@ -35,7 +35,7 @@ const ACTION = 'min-h-12'
 function DishText({ item, dimmed = false }: { item: StaffOrderItem; dimmed?: boolean }) {
   const note = cancellationNote(item)
   return (
-    <div className="min-w-0 space-y-1">
+    <div className="min-w-0 flex-1 basis-32 space-y-1 wrap-anywhere">
       <p
         className={cn(
           'font-semibold text-pretty',
@@ -102,7 +102,7 @@ export function KitchenOrderCard({ order, now, late, onAct }: KitchenOrderCardPr
               item.status === 'preparing' ? 'border-amber-300 bg-amber-50' : 'border-line bg-canvas',
             )}
           >
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
               <DishText item={item} />
               <StatusBadge status={item.status} className="mt-1 shrink-0 text-sm" />
             </div>

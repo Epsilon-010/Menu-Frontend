@@ -131,6 +131,9 @@
 
   body {
     @apply bg-canvas font-sans text-ink antialiased;
+    /* A long word with no spaces (a product name, a note) breaks where its box cannot grow. Not `anywhere`: that
+       would let tabs, toggles and table columns shrink below their words and split short labels. */
+    overflow-wrap: break-word;
   }
 
   h1,
@@ -194,6 +197,8 @@
   letter-spacing: var(--type-product-name-letter-spacing, 0em);
   text-transform: var(--type-product-name-transform, none);
   text-align: var(--type-product-name-align, left);
+  /* Written by the business: a long word with no spaces must not widen its card. */
+  overflow-wrap: anywhere;
 }
 
 .type-description {
@@ -205,6 +210,8 @@
   letter-spacing: var(--type-description-letter-spacing, 0em);
   text-transform: var(--type-description-transform, none);
   text-align: var(--type-description-align, left);
+  /* Written by the business: a long word with no spaces must not widen its card. */
+  overflow-wrap: anywhere;
 }
 
 .type-price {
@@ -311,6 +318,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: 0.375rem;
   }
   .phone-duo .card-footer-price {

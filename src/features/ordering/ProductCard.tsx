@@ -97,7 +97,7 @@ function arrange(blocks: CardBlock[], text: Record<TextBlock, ReactNode>, button
 
 interface ProductCardProps {
   item: MenuItem
-  onAdd: (quantity: number, note: string, optionIds: string[]) => Promise<string | null>
+  onAdd: (quantity: number, note: string, optionIds: string[], lineId: string) => Promise<string | null>
   cards: ThemeCards
   /** The template this card is drawn with (the category's own, or the general one; list rows are horizontal). */
   template: CardTemplate
@@ -138,7 +138,7 @@ export function ProductCard({ item, onAdd, cards, template }: ProductCardProps) 
       {button}
     </div>
   ) : (
-    <div className="card-footer flex items-center justify-between gap-4">
+    <div className="card-footer flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
       {price}
       {button}
     </div>

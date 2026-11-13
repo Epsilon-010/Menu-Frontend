@@ -92,7 +92,7 @@ export function TableBillCard({
         >
           <ChairIcon size={20} aria-hidden />
         </span>
-        <div className="min-w-0 flex-1 space-y-1">
+        <div className="min-w-0 flex-1 basis-40 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-lg font-semibold tracking-tight text-ink">{table.table_name}</h2>
             {bill ? (

@@ -105,7 +105,7 @@ export function ServiceBoard() {
       {requests.length > 0 && (
         <div
           role="alert"
-          className="sticky top-20 z-10 space-y-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 shadow-md lg:top-4"
+          className="z-10 space-y-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 shadow-md lg:sticky lg:top-4"
         >
           <p className="flex items-center gap-2 font-semibold text-amber-900">
             <BellRingingIcon size={18} aria-hidden />

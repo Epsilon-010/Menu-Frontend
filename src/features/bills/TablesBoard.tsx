@@ -106,7 +106,11 @@ function TableGroups({ tables, card, split, selectedId, onSelect }: TableGroupsP
     </section>
   )
 
-  const selected = shownOpenTable(open, selectedId)
+  // Remembered so a reordered list never swaps the bill on screen (state adjusted while rendering, no effect).
+  const [onScreenId, setOnScreenId] = useState<string | null>(null)
+  const selected = shownOpenTable(open, selectedId, onScreenId)
+  const selectedTableId = selected?.table_id ?? null
+  if (selectedTableId !== onScreenId) setOnScreenId(selectedTableId)
   if (!split || selected === null) {
     return (
       <div className="space-y-8">

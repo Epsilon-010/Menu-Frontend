@@ -67,3 +67,26 @@ describe('shownOpenTable', () => {
     expect(shownOpenTable([], 'a')).toBeNull()
   })
 })
+
+describe('shownOpenTable, with a table already on screen', () => {
+  const a = openTable('a')
+  const b = openTable('b')
+
+  it('keeps the table on screen when the list reorders and nothing was chosen', () => {
+    expect(shownOpenTable([b, a], null, 'a')).toBe(a)
+  })
+
+  it('still follows a choice over the table on screen', () => {
+    expect(shownOpenTable([a, b], 'b', 'a')).toBe(b)
+  })
+
+  it('goes back to the first open table once the one on screen closed', () => {
+    expect(shownOpenTable([b], null, 'a')).toBe(b)
+    expect(shownOpenTable([b], 'a', 'a')).toBe(b)
+  })
+
+  it('shows the first open table when nothing was on screen yet', () => {
+    expect(shownOpenTable([a, b], null, null)).toBe(a)
+    expect(shownOpenTable([], null, 'a')).toBeNull()
+  })
+})

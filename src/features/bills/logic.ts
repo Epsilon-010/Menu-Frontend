@@ -201,9 +201,18 @@ export function latestTableChoice(outside: TableChoice | null, picked: TableChoi
   return picked?.tableId ?? null
 }
 
-/** The open table to show: the chosen one while it is still open, else the first (the longest waiting for its bill). */
-export function shownOpenTable(open: TableOverview[], chosenId: string | null): TableOverview | null {
-  return open.find((table) => table.table_id === chosenId) ?? open[0] ?? null
+/**
+ * The open table to show: the chosen one while it is still open, else the one already on screen (the list reorders
+ * when a table asks for its bill, and the bill being charged must not be swapped for another), else the first (the
+ * longest waiting for its bill).
+ */
+export function shownOpenTable(
+  open: TableOverview[],
+  chosenId: string | null,
+  onScreenId: string | null = null,
+): TableOverview | null {
+  const byId = (id: string | null) => (id === null ? undefined : open.find((table) => table.table_id === id))
+  return byId(chosenId) ?? byId(onScreenId) ?? open[0] ?? null
 }
 
 let tableChoices = 0

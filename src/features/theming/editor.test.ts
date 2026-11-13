@@ -227,6 +227,26 @@ describe('reset, export and import', () => {
     expect(reset.brand).toBe(brand)
   })
 
+  it("keeps the page's own sections when resetting, and only then (a template brings its page)", () => {
+    const sections = [
+      { id: 's-menu', type: 'menu' },
+      { id: 's-text', type: 'text', title: 'Our story', body: 'Since 1990' },
+    ] as Theme['layout']['sections']
+    const theme = {
+      colors: LIGHT,
+      brand,
+      typography: DEFAULT_TYPOGRAPHY,
+      layout: { ...DEFAULT_LAYOUT, navigation: 'tabs', sections },
+      cards: DEFAULT_CARDS,
+    } as Theme
+    const classic = preset('classic', '#c2410c')
+
+    const reset = withDefaults(theme, [classic])
+
+    expect(reset.layout).toEqual({ ...DEFAULT_LAYOUT, sections })
+    expect(withPreset(theme, classic).layout.sections).toEqual(classic.layout.sections)
+  })
+
   it('leaves the theme as it is when the server sent no templates', () => {
     const theme = { colors: LIGHT, brand } as Theme
     expect(withDefaults(theme, [])).toBe(theme)

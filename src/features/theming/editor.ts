@@ -99,11 +99,14 @@ export function withPreset(theme: Theme, preset: ThemePreset): Theme {
 }
 
 /**
- * Colors, typography, layout and cards back to the default design; the brand stays. The server sends the default
- * design as the first template (pinned by its tests), so this is applying that template.
+ * Colors, typography, layout and cards back to the default design; the brand and the page's sections (the
+ * business's own texts and pictures) stay. The server sends the default design as the first template (pinned by
+ * its tests), so this is applying that template without its page.
  */
 export function withDefaults(theme: Theme, presets: ThemePreset[]): Theme {
-  return presets.length > 0 ? withPreset(theme, presets[0]) : theme
+  if (presets.length === 0) return theme
+  const reset = withPreset(theme, presets[0])
+  return { ...reset, layout: { ...reset.layout, sections: theme.layout.sections } }
 }
 
 const NOT_A_DESIGN = 'Ese archivo no es un diseño de menú. Elige un archivo .json exportado desde este editor.'

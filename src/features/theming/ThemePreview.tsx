@@ -138,7 +138,8 @@ export function ThemePreview({ theme, imageUrls, businessName, selectedSection, 
                         {menuFailed && <p className="text-sm text-muted">No se pudo cargar el menú para la vista previa.</p>}
                       </>
                     }
-                    categories={preview?.categories ?? []}
+                    // The featured picks are the business's own products, also while sample ones fill the menu.
+                    categories={menu ?? []}
                     layout={layout}
                     cards={cards}
                     onAdd={noAdd}

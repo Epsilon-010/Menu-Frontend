@@ -5,7 +5,13 @@ import { featuredItems } from '../theming/sections.ts'
 import type { MenuCategory } from './api.ts'
 import { CategoryHeading, ProductList } from './MenuBrowser.tsx'
 
-type OnAdd = (itemId: string, quantity: number, note: string, optionIds: string[]) => Promise<string | null>
+type OnAdd = (
+  itemId: string,
+  quantity: number,
+  note: string,
+  optionIds: string[],
+  lineId: string,
+) => Promise<string | null>
 
 interface MenuSectionsProps {
   sections: MenuSection[]

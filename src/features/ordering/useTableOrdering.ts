@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { createDraftIds, type DraftIds } from '../../shared/api/idempotency.ts'
 import {
   addCartLine,
   cancelBillRequest,
@@ -17,7 +16,7 @@ import {
   type MenuCategory,
   type Order,
 } from './api.ts'
-import { createOrderSender, lineDraftKey, needsCartReload, unavailableNames } from './logic.ts'
+import { createOrderSender, needsCartReload, unavailableNames } from './logic.ts'
 import { menuAfterFailure, menuAfterLoad, scheduleMenuRefresh } from './menuFreshness.ts'
 import { useTableEvents } from './useTableEvents.ts'
 
@@ -51,8 +50,6 @@ export function useTableOrdering() {
   const billRequests = useRef(0)
   const menuRequests = useRef(0)
   const shownVersion = useRef<number | null>(null)
-  // One draft id per menu item being added, kept until that add succeeds.
-  const lineDrafts = useRef(new Map<string, DraftIds>())
   const [sender] = useState(() => createOrderSender(submitOrder))
 
   const applyCart = useCallback((request: number, next: Cart) => {
@@ -155,23 +152,21 @@ export function useTableOrdering() {
     refresh()
   }
 
-  function draftsFor(itemId: string): DraftIds {
-    let drafts = lineDrafts.current.get(itemId)
-    if (!drafts) {
-      drafts = createDraftIds()
-      lineDrafts.current.set(itemId, drafts)
-    }
-    return drafts
-  }
-
-  /** Each change resolves to an error message, or null when it was saved. */
-  async function addLine(itemId: string, quantity: number, note: string, optionIds: string[] = []): Promise<string | null> {
-    const drafts = draftsFor(itemId)
-    // Another selection of options is another add, with its own client id.
-    const id = drafts.idFor(lineDraftKey(itemId, quantity, note, optionIds))
+  /**
+   * Each change resolves to an error message, or null when it was saved. `lineId` is the client id the form chose
+   * for this add: the form keeps it for a retry and drops it when it closes (`createLineAdder`).
+   */
+  async function addLine(
+    itemId: string,
+    quantity: number,
+    note: string,
+    optionIds: string[],
+    lineId: string,
+  ): Promise<string | null> {
     try {
-      await withCart(() => addCartLine({ id, item_id: itemId, quantity, note: note.trim(), modifier_option_ids: optionIds }))
-      drafts.reset()
+      await withCart(() =>
+        addCartLine({ id: lineId, item_id: itemId, quantity, note: note.trim(), modifier_option_ids: optionIds }),
+      )
       return null
     } catch (error) {
       return describeUnavailable(error)

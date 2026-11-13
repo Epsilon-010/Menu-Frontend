@@ -4,6 +4,7 @@ import { formatMoney } from '../catalog/price.ts'
 import {
   cartBarTotal,
   cartVersionOf,
+  createLineAdder,
   createOrderSender,
   groupByPerson,
   hasSomethingToPay,
@@ -191,5 +192,59 @@ describe('hasSomethingToPay', () => {
     expect(hasSomethingToPay([])).toBe(false)
     expect(hasSomethingToPay([{ total_cents: 0 }, { total_cents: 0 }])).toBe(false)
     expect(hasSomethingToPay([{ total_cents: 0 }, { total_cents: 1200 }])).toBe(true)
+  })
+})
+
+describe('createLineAdder', () => {
+  function form() {
+    const ids = ['l1', 'l2', 'l3']
+    return createLineAdder('beer', () => ids.shift() ?? 'none')
+  }
+  const lost = () => vi.fn<(lineId: string) => Promise<string | null>>(async () => 'No se pudo conectar')
+  const saved = () => vi.fn<(lineId: string) => Promise<string | null>>(async () => null)
+
+  it('reuses the id when the same choice is retried in the same form, so a lost answer never adds the line twice', async () => {
+    const adder = form()
+    const first = lost()
+    const retry = saved()
+
+    expect(await adder.add(first, 1, '', [])).toBe('No se pudo conectar')
+    expect(await adder.add(retry, 1, '', [])).toBeNull()
+
+    expect([first.mock.calls, retry.mock.calls]).toEqual([[['l1']], [['l1']]])
+  })
+
+  it('gives another choice its own id', async () => {
+    const adder = form()
+    const first = lost()
+    const changed = saved()
+
+    await adder.add(first, 1, '', [])
+    await adder.add(changed, 2, '', ['large'])
+
+    expect(changed.mock.calls).toEqual([['l2']])
+  })
+
+  it('gives the same choice a new id once it was saved', async () => {
+    const adder = form()
+    const first = saved()
+    const again = saved()
+
+    await adder.add(first, 1, '', [])
+    await adder.add(again, 1, '', [])
+
+    expect([first.mock.calls, again.mock.calls]).toEqual([[['l1']], [['l2']]])
+  })
+
+  it('never shares ids between two openings of the form, so a lost answer cannot swallow a later identical add', async () => {
+    const ids = ['l1', 'l2']
+    const newId = () => ids.shift() ?? 'none'
+    const abandoned = lost()
+    const later = saved()
+
+    await createLineAdder('beer', newId).add(abandoned, 1, '', [])
+    await createLineAdder('beer', newId).add(later, 1, '', [])
+
+    expect([abandoned.mock.calls, later.mock.calls]).toEqual([[['l1']], [['l2']]])
   })
 })

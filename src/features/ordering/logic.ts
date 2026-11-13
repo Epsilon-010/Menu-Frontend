@@ -155,3 +155,25 @@ export function createOrderSender(
     },
   }
 }
+
+/**
+ * The client ids of the lines one opening of a product's form adds. A retry of the same choice after a lost answer
+ * reuses its id, so the line is never added twice. The ids end with the form: the server answers a repeated id as
+ * "already added", so an id kept after the form closed would swallow a later, identical add.
+ */
+export function createLineAdder(itemId: string, newId: () => string = () => crypto.randomUUID()) {
+  const drafts = createDraftIds(newId)
+  return {
+    /** `send` resolves to an error message, or null when the line was saved. */
+    async add(
+      send: (lineId: string) => Promise<string | null>,
+      quantity: number,
+      note: string,
+      optionIds: string[],
+    ): Promise<string | null> {
+      const failure = await send(drafts.idFor(lineDraftKey(itemId, quantity, note, optionIds)))
+      if (failure === null) drafts.reset()
+      return failure
+    },
+  }
+}

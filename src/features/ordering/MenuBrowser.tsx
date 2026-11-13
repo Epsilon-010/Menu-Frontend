@@ -18,7 +18,7 @@ import { ProductCard } from './ProductCard.tsx'
 
 interface MenuBrowserProps {
   categories: MenuCategory[]
-  onAdd: (itemId: string, quantity: number, note: string, optionIds: string[]) => Promise<string | null>
+  onAdd: (itemId: string, quantity: number, note: string, optionIds: string[], lineId: string) => Promise<string | null>
   /** How the menu is arranged (the default arrangement while there is no theme). */
   layout?: ThemeLayout
   /** How each product card looks (the default card while there is no theme). */
@@ -85,7 +85,7 @@ export function ProductList({ items, label, view, columns, template, density, ca
       item={item}
       cards={cards}
       template={template}
-      onAdd={(quantity, note, optionIds) => onAdd(item.id, quantity, note, optionIds)}
+      onAdd={(quantity, note, optionIds, lineId) => onAdd(item.id, quantity, note, optionIds, lineId)}
     />
   )
   if (view === 'list') return <div className={`flex flex-col ${gap}`}>{items.map(card)}</div>

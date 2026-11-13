@@ -4,6 +4,7 @@ import { Field, TextInput } from '../../shared/ui/Field.tsx'
 import { ErrorText } from '../../shared/ui/Feedback.tsx'
 import { formatMoney } from '../catalog/price.ts'
 import { MAX_NOTE_LENGTH, type MenuItem } from './api.ts'
+import { createLineAdder } from './logic.ts'
 import { ModifierPicker } from './ModifierPicker.tsx'
 import { initialSelection as startingSelection, selectionError, unitPrice } from './modifiers.ts'
 import { QuantityStepper } from './QuantityStepper.tsx'
@@ -11,7 +12,7 @@ import { QuantityStepper } from './QuantityStepper.tsx'
 interface AddLineFormProps {
   item: MenuItem
   /** Resolves to an error message, or null when the line was added. */
-  onAdd: (quantity: number, note: string, optionIds: string[]) => Promise<string | null>
+  onAdd: (quantity: number, note: string, optionIds: string[], lineId: string) => Promise<string | null>
   /** Closes the form (after adding, or on Cancel). */
   onDone: () => void
   /** Options already chosen when the form opens (none by default). */
@@ -25,6 +26,7 @@ export function AddLineForm({ item, onAdd, onDone, initialSelection = [] }: AddL
   const [note, setNote] = useState('')
   const [selected, setSelected] = useState<string[]>(() => startingSelection(groups, initialSelection))
   const [busy, setBusy] = useState(false)
+  const [adder] = useState(() => createLineAdder(item.id))
   const [error, setError] = useState<string | null>(null)
   const unmet = selectionError(groups, selected)
 
@@ -32,7 +34,7 @@ export function AddLineForm({ item, onAdd, onDone, initialSelection = [] }: AddL
     event.preventDefault()
     if (unmet !== null) return
     setBusy(true)
-    const failure = await onAdd(quantity, note, selected)
+    const failure = await adder.add((lineId) => onAdd(quantity, note, selected, lineId), quantity, note, selected)
     setBusy(false)
     if (failure === null) onDone()
     else setError(failure)

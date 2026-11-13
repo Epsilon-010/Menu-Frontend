@@ -11,7 +11,7 @@ interface ProductDialogProps {
   item: MenuItem
   open: boolean
   onOpenChange: (open: boolean) => void
-  onAdd: (quantity: number, note: string, optionIds: string[]) => Promise<string | null>
+  onAdd: (quantity: number, note: string, optionIds: string[], lineId: string) => Promise<string | null>
 }
 
 /**

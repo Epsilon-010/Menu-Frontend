@@ -66,9 +66,10 @@ describe('grid columns', () => {
 
 describe('grids below the tablet widths', () => {
   it('show two smaller cards per row when the layout has two or more columns', () => {
-    for (const columns of [2, 3, 4]) {
-      expect(phoneGridClass(columns, 'vertical')).toBe('phone-duo grid-cols-2')
-      expect(phoneGridClass(columns, 'overlay')).toBe('phone-duo grid-cols-2')
+    for (const template of ['vertical', 'overlay'] as const) {
+      expect(phoneGridClass(2, template)).toBe('phone-duo @max-[39rem]:grid-cols-2')
+      expect(phoneGridClass(3, template)).toBe('phone-duo @max-[37rem]:grid-cols-2')
+      expect(phoneGridClass(4, template)).toBe('phone-duo @max-[37rem]:grid-cols-2')
     }
   })
 
@@ -77,8 +78,14 @@ describe('grids below the tablet widths', () => {
     expect(phoneGridClass(3, 'horizontal')).toBe('')
   })
 
-  it('add only the base two columns, so wider menus (tablets) keep the columns of their own widths', () => {
-    expect(phoneGridClass(3, 'vertical').split(' ').filter((name) => name.includes('grid-cols'))).toEqual(['grid-cols-2'])
+  it('end the two-column class at the width where the class of the chosen columns starts', () => {
+    // The two ranges never overlap, so which rule the stylesheet lists last cannot change the columns.
+    for (const columns of [2, 3, 4]) {
+      const below = /@max-\[(\d+rem)\]:grid-cols-2/.exec(phoneGridClass(columns, 'vertical'))?.[1]
+      const from = /^@\[(\d+rem)\]:grid-cols-/.exec(gridColumnsClass(columns))?.[1]
+      expect(below).toBeDefined()
+      expect(below).toBe(from)
+    }
   })
 })
 

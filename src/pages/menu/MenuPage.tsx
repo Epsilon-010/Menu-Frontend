@@ -154,7 +154,7 @@ export function MenuPage() {
       fixedBar={layout.sticky_header}
       width={menuWidthClass(layout, categoryIds)}
     >
-      <div className={`menu-motion grid gap-8 pb-24 ${placement.grid}`}>
+      <div className={`menu-motion grid gap-8 pb-24 [--page-gutter:1rem] ${placement.grid}`}>
         <div className={`min-w-0 space-y-12 ${placement.main}`}>
           <MenuSections
             sections={layout.sections}

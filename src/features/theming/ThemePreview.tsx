@@ -127,7 +127,7 @@ export function ThemePreview({ theme, imageUrls, businessName, selectedSection, 
               {layout.sticky_header && header}
 
               <div className="flex min-h-0 flex-1">
-                <div className="min-w-0 flex-1 space-y-8 overflow-y-auto p-4">
+                <div className="min-w-0 flex-1 space-y-8 overflow-y-auto p-4 [--page-gutter:1rem]">
                   {!layout.sticky_header && header}
                   <MenuSections
                     sections={layout.sections}
